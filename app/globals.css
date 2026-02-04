@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Natural earth tone palette */
+  --cream: #F5F3EE;
+  --cream-dark: #EAE6DE;
+  --cream-light: #FFFBF5;
+  --ink: #1A1A1A;
+  --ink-light: #4A4A4A;
+  --ink-muted: #6B6B6B;
+  --accent: #8B7355;
+  --accent-glow: rgba(139, 115, 85, 0.2);
+  --accent-secondary: #A68B5B;
+  --card-dark: #1A1A1A;
+  --card-dark-border: #2A2A2A;
+
+  --background: var(--cream);
+  --foreground: var(--ink);
 }
 
 @theme inline {
@@ -10,17 +23,114 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-playfair);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Agent Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Subtle glow effect for tagline */
+.glow-text {
+  text-shadow: 0 0 40px var(--accent-glow);
+}
+
+/* Button hover effects */
+.btn-primary {
+  background: var(--ink);
+  color: var(--cream);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--ink-light);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+/* Dark card styling */
+.dark-card {
+  background: var(--card-dark);
+  border: 1px solid var(--card-dark-border);
+  color: var(--cream);
+}
+
+/* Number emphasis animation */
+@keyframes pulse-scale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.stat-number {
+  animation: pulse-scale 3s ease-in-out infinite;
+}
+
+/* Scroll reveal base styles */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+/* Animated gradient orbs */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.15;
+    transform: scale(1.1);
+  }
 }
