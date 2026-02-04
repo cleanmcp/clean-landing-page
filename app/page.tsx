@@ -28,7 +28,7 @@ export default function Home() {
         {/* Subtle dot grid */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000003_1px,transparent_1px),linear-gradient(to_bottom,#00000003_1px,transparent_1px)] bg-[size:3rem_3rem]" />
         {/* Subtle texture overlay */}
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(139,115,85,0.03) 0%, transparent 50%)' }} />
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(9,70,63,0.03) 0%, transparent 50%)' }} />
       </div>
 
       <Navbar />
