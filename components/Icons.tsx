@@ -1,3 +1,56 @@
+export function UngroupIcon({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 32 32"
+      fill="currentColor"
+    >
+      <path d="M12 14.5c0 0.825-0.675 1.5-1.5 1.5h-3c-0.825 0-1.5-0.675-1.5-1.5v-3c0-0.825 0.675-1.5 1.5-1.5h3c0.825 0 1.5 0.675 1.5 1.5v3z"></path>
+      <path d="M22 14.5c0 0.825-0.675 1.5-1.5 1.5h-3c-0.825 0-1.5-0.675-1.5-1.5v-3c0-0.825 0.675-1.5 1.5-1.5h3c0.825 0 1.5 0.675 1.5 1.5v3z"></path>
+      <path d="M12 24.5c0 0.825-0.675 1.5-1.5 1.5h-3c-0.825 0-1.5-0.675-1.5-1.5v-3c0-0.825 0.675-1.5 1.5-1.5h3c0.825 0 1.5 0.675 1.5 1.5v3z"></path>
+      <path d="M22 24.5c0 0.825-0.675 1.5-1.5 1.5h-3c-0.825 0-1.5-0.675-1.5-1.5v-3c0-0.825 0.675-1.5 1.5-1.5h3c0.825 0 1.5 0.675 1.5 1.5v3z"></path>
+      <path d="M28.503 5l3.497-3.497v-1.503h-1.503l-3.497 3.497-3.497-3.497h-1.503v1.503l3.497 3.497-3.497 3.497v1.503h1.503l3.497-3.497 3.497 3.497h1.503v-1.503z"></path>
+      <path d="M0 24h2v4h-2v-4z"></path>
+      <path d="M0 18h2v4h-2v-4z"></path>
+      <path d="M26 14h2v4h-2v-4z"></path>
+      <path d="M26 26h2v4h-2v-4z"></path>
+      <path d="M26 20h2v4h-2v-4z"></path>
+      <path d="M0 12h2v4h-2v-4z"></path>
+      <path d="M0 6h2v4h-2v-4z"></path>
+      <path d="M16 4h4v2h-4v-2z"></path>
+      <path d="M10 4h4v2h-4v-2z"></path>
+      <path d="M4 4h4v2h-4v-2z"></path>
+      <path d="M14 30h4v2h-4v-2z"></path>
+      <path d="M20 30h4v2h-4v-2z"></path>
+      <path d="M8 30h4v2h-4v-2z"></path>
+      <path d="M2 30h4v2h-4v-2z"></path>
+    </svg>
+  );
+}
+
+export function EnlargeIcon({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" fill="currentColor">
+      <path d="M32 0h-13l5 5-6 6 3 3 6-6 5 5z"></path>
+      <path d="M32 32v-13l-5 5-6-6-3 3 6 6-5 5z"></path>
+      <path d="M0 32h13l-5-5 6-6-3-3-6 6-5-5z"></path>
+      <path d="M0 0v13l5-5 6 6 3-3-6-6 5-5z"></path>
+    </svg>
+  );
+}
+
+export function CoinDollarIcon({
+  className = "w-6 h-6",
+}: {
+  className?: string;
+}) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" fill="currentColor">
+      <path d="M15 2c-8.284 0-15 6.716-15 15s6.716 15 15 15c8.284 0 15-6.716 15-15s-6.716-15-15-15zM15 29c-6.627 0-12-5.373-12-12s5.373-12 12-12c6.627 0 12 5.373 12 12s-5.373 12-12 12zM16 16v-4h4v-2h-4v-2h-2v2h-4v8h4v4h-4v2h4v2h2v-2h4l-0-8h-4zM14 16h-2v-4h2v4zM18 22h-2v-4h2v4z"></path>
+    </svg>
+  );
+}
+
 export function FlameIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
     <svg

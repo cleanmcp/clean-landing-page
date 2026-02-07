@@ -8,12 +8,11 @@ import FeatureCard from "@/components/FeatureCard";
 import RotatingText from "@/components/RotatingText";
 import ScrollVelocity from "@/components/ScrollVelocity";
 import {
-  FlameIcon,
-  LinkIcon,
-  UsersIcon,
+  UngroupIcon,
+  EnlargeIcon,
+  CoinDollarIcon,
   CodeIcon,
   BoltIcon,
-  SparklesIcon,
   SyncIcon,
   PlugIcon,
   NetworkIcon,
@@ -153,19 +152,19 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-3">
             {[
               {
-                icon: <FlameIcon className="h-6 w-6" />,
+                icon: <CoinDollarIcon className="h-6 w-6" />,
                 title: "Wasted Tokens",
                 description:
                   "Every agent re-explores your codebase from scratch. That's 300,000 tokens burned per session.",
               },
               {
-                icon: <LinkIcon className="h-6 w-6" />,
+                icon:<UngroupIcon className="h-6 w-6" /> ,
                 title: "Lost Context",
                 description:
                   "Switching between agents? All that context disappears. Start explaining everything again.",
               },
               {
-                icon: <UsersIcon className="h-6 w-6" />,
+                icon: <EnlargeIcon className="h-6 w-6" />,
                 title: "Teams Out of Sync",
                 description:
                   "Your team's agents don't share knowledge. Everyone's duplicating work in isolation.",
@@ -240,7 +239,15 @@ export default function Home() {
               },
               {
                 label: "All Agents Synced",
-                icon: <SparklesIcon className="h-8 w-8" />,
+                icon: (
+                  <svg
+                    viewBox="0 0 640 640"
+                    className="h-8 w-8"
+                    aria-hidden="true"
+                  >
+                    <path d="M352 64C352 46.3 337.7 32 320 32C302.3 32 288 46.3 288 64L288 128L192 128C139 128 96 171 96 224L96 448C96 501 139 544 192 544L448 544C501 544 544 501 544 448L544 224C544 171 501 128 448 128L352 128L352 64zM160 432C160 418.7 170.7 408 184 408L216 408C229.3 408 240 418.7 240 432C240 445.3 229.3 456 216 456L184 456C170.7 456 160 445.3 160 432zM280 432C280 418.7 290.7 408 304 408L336 408C349.3 408 360 418.7 360 432C360 445.3 349.3 456 336 456L304 456C290.7 456 280 445.3 280 432zM400 432C400 418.7 410.7 408 424 408L456 408C469.3 408 480 418.7 480 432C480 445.3 469.3 456 456 456L424 456C410.7 456 400 445.3 400 432zM224 240C250.5 240 272 261.5 272 288C272 314.5 250.5 336 224 336C197.5 336 176 314.5 176 288C176 261.5 197.5 240 224 240zM368 288C368 261.5 389.5 240 416 240C442.5 240 464 261.5 464 288C464 314.5 442.5 336 416 336C389.5 336 368 314.5 368 288zM64 288C64 270.3 49.7 256 32 256C14.3 256 0 270.3 0 288L0 384C0 401.7 14.3 416 32 416C49.7 416 64 401.7 64 384L64 288zM608 256C590.3 256 576 270.3 576 288L576 384C576 401.7 590.3 416 608 416C625.7 416 640 401.7 640 384L640 288C640 270.3 625.7 256 608 256z" />
+                  </svg>
+                ),
               },
             ].map((step, index) => (
               <motion.div
@@ -402,24 +409,28 @@ export default function Home() {
               title="Synced Context"
               description="Every agent works from the same understanding. No more repeated codebase exploration."
               index={0}
+              previewVariant="sync"
             />
             <FeatureCard
               icon={<NetworkIcon className="h-5 w-5" />}
               title="Team Alignment"
               description="Share context across your entire team. Everyone's agents speak the same language."
               index={1}
+              previewVariant="graph"
             />
             <FeatureCard
               icon={<PlugIcon className="h-5 w-5" />}
               title="Universal Compatibility"
               description="Works with Claude, Cursor, Codex, Windsurf, and any MCP-compatible agent."
               index={2}
+              previewVariant="plugins"
             />
             <FeatureCard
               icon={<BoltIcon className="h-5 w-5" />}
               title="One-time Setup"
               description="Configure once, benefit forever. Clean keeps your index fresh automatically."
               index={3}
+              previewVariant="setup"
             />
           </div>
         </div>
