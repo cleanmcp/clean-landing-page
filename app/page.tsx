@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import TokenCounter from "@/components/TokenCounter";
@@ -244,7 +245,7 @@ export default function Home() {
           </motion.div>
 
           {/* Visual Flow */}
-          <div className="mb-16 flex flex-col items-center justify-center gap-4 md:flex-row md:gap-8">
+          <div className="mb-16 flex flex-col items-center justify-center gap-6 md:flex-row md:gap-8">
             {[
               {
                 label: "Your Codebase",
@@ -268,30 +269,31 @@ export default function Home() {
                 ),
               },
             ].map((step, index) => (
-              <motion.div
-                key={step.label}
-                className="flex items-center gap-4"
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-              >
-                <div
-                  className={`flex h-20 w-20 items-center justify-center rounded-2xl ${
-                    step.highlight
-                      ? "bg-[var(--accent)] text-white"
-                      : "border border-[var(--cream-dark)] bg-[var(--cream)]"
-                  }`}
-                >
-                  {step.icon}
-                </div>
-                <span className="font-medium">{step.label}</span>
-                {index < 2 && (
-                  <span className="hidden text-2xl text-[var(--ink-muted)] md:block">
-                    <ArrowRightIcon className="h-6 w-6" />
+              <React.Fragment key={step.label}>
+                {index > 0 && (
+                  <span className="text-[var(--ink-muted)]">
+                    <ArrowRightIcon className="h-5 w-5 rotate-90 md:rotate-0" />
                   </span>
                 )}
-              </motion.div>
+                <motion.div
+                  className="flex flex-col items-center gap-3 md:flex-row md:gap-4"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                >
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-2xl md:h-20 md:w-20 ${
+                      step.highlight
+                        ? "bg-[var(--accent)] text-white"
+                        : "border border-[var(--cream-dark)] bg-[var(--cream)]"
+                    }`}
+                  >
+                    {step.icon}
+                  </div>
+                  <span className="text-sm font-medium md:text-base">{step.label}</span>
+                </motion.div>
+              </React.Fragment>
             ))}
           </div>
 

@@ -31,11 +31,15 @@ function FeaturePreview({ variant }: { variant: FeaturePreviewVariant }) {
 
         {variant === "graph" && (
           <div className="relative h-[140px]">
-            <div className="feature-preview__node feature-preview__node--a" />
-            <div className="feature-preview__node feature-preview__node--b" />
-            <div className="feature-preview__node feature-preview__node--c" />
-            <div className="feature-preview__line feature-preview__line--ab" />
-            <div className="feature-preview__line feature-preview__line--ac" />
+            <svg className="absolute inset-0 h-full w-full" viewBox="0 0 300 140" preserveAspectRatio="none" aria-hidden="true">
+              {/* Lines connecting node centers */}
+              <line x1="60" y1="35" x2="240" y2="55" stroke="rgba(9,70,63,0.22)" strokeWidth="1.5" />
+              <line x1="60" y1="35" x2="105" y2="105" stroke="rgba(9,70,63,0.22)" strokeWidth="1.5" />
+            </svg>
+            {/* Nodes use same coordinate basis: viewBox is 300×140 mapped to full container */}
+            <div className="feature-preview__node" style={{ position: 'absolute', left: 'calc(20% - 17px)', top: 'calc(25% - 17px)' }} />
+            <div className="feature-preview__node" style={{ position: 'absolute', left: 'calc(80% - 17px)', top: 'calc(39.3% - 17px)', animationDelay: '0.3s' }} />
+            <div className="feature-preview__node" style={{ position: 'absolute', left: 'calc(35% - 17px)', top: 'calc(75% - 17px)', animationDelay: '0.6s' }} />
           </div>
         )}
 

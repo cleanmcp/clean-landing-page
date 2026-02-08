@@ -187,33 +187,13 @@ html {
   animation: fp-pulse 2.2s ease-in-out infinite;
 }
 
-.feature-preview__node--a { left: 20%; top: 15px; animation-delay: 0s; }
-.feature-preview__node--b { right: 12%; top: 40px; animation-delay: 0.3s; }
-.feature-preview__node--c { left: 30%; bottom: 15px; animation-delay: 0.6s; }
-
-.feature-preview__line {
-  position: absolute;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(9,70,63,0), rgba(9,70,63,0.35), rgba(9,70,63,0));
-  transform-origin: left center;
-  opacity: 0.8;
-}
-
-/* Line from A center to B center */
-.feature-preview__line--ab {
-  left: calc(20% + 30px);
-  top: 32px;
-  width: calc(88% - 20% - 64px);
-  transform: rotate(5deg);
-}
-
-/* Line from A center to C center */
-.feature-preview__line--ac {
-  left: calc(20% + 20px);
-  top: 42px;
-  width: 80px;
-  transform: rotate(58deg);
-}
+/* Nodes positioned so their centers match SVG line endpoints:
+   A center ≈ 17%, 24%  →  left: calc(17% - 17px), top: calc(24% - 17px)
+   B center ≈ 78%, 40%  →  right: calc(22% - 17px), top: calc(40% - 17px)
+   C center ≈ 32%, 78%  →  left: calc(32% - 17px), bottom: calc(22% - 17px) */
+.feature-preview__node--a { left: calc(17% - 17px); top: calc(24% - 17px); animation-delay: 0s; }
+.feature-preview__node--b { left: calc(78% - 17px); top: calc(40% - 17px); animation-delay: 0.3s; }
+.feature-preview__node--c { left: calc(32% - 17px); top: calc(78% - 17px); animation-delay: 0.6s; }
 
 .feature-preview__pill {
   display: inline-flex;
