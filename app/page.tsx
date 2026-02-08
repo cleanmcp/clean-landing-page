@@ -33,15 +33,15 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="flex min-h-screen flex-col items-center justify-center px-3 pt-20 text-center">
+      <section className="flex min-h-screen flex-col items-center justify-center px-5 pt-20 text-center sm:px-6">
         <motion.div
-          className="mx-auto max-w-6xl"
+          className="mx-auto w-full max-w-6xl overflow-hidden"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
           {/* Main Headline - 2 lines */}
-          <h1 className="mb-6 text-4xl font-medium leading-tight tracking-tight md:text-6xl lg:text-7xl">
+          <h1 className="mb-6 text-3xl font-medium leading-tight tracking-tight sm:text-4xl md:text-6xl lg:text-7xl">
             <div className="text-[var(--ink-light)]" style={{ fontFamily: "var(--font-playfair)" }}>
               Stop burning tokens.
             </div>
@@ -67,7 +67,7 @@ export default function Home() {
 
           {/* Sub-headline with glow */}
           <motion.p
-            className="glow-text mb-12 text-xl font-medium text-[var(--accent)] md:text-2xl"
+            className="glow-text mb-12 px-2 text-base font-medium text-[var(--accent)] sm:text-xl md:text-2xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
@@ -112,7 +112,7 @@ export default function Home() {
       {/* Scroll Velocity Divider */}
       <div className="overflow-hidden border-y border-[var(--cream-dark)] bg-[var(--ink)] py-4">
         <ScrollVelocity
-          texts={["SYNC", "CONTEXT", "AGENTS", "CLEAN MCP"]}
+          texts={["SYNC", "CONTEXT", "AGENTS", "CLEAN"]}
           velocity={60}
           damping={100}
           stiffness={150}
@@ -213,12 +213,30 @@ export default function Home() {
             <p className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
               [ THE SOLUTION ]
             </p>
-            <h2
-              className="mb-6 text-3xl font-bold leading-tight md:text-4xl lg:text-5xl"
-              style={{ fontFamily: "var(--font-geist-sans)" }}
+            <motion.div
+              className="relative inline-block mb-6"
+              initial={{ opacity: 1 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              onViewportEnter={(entry) => {
+                if (entry?.target) {
+                  const el = entry.target.querySelector('.selection-box');
+                  if (el) el.setAttribute('data-in-view', 'true');
+                }
+              }}
             >
-              How Clean Works
-            </h2>
+              <h2
+                className="text-3xl font-bold leading-tight md:text-4xl lg:text-5xl"
+                style={{ fontFamily: "var(--font-geist-sans)" }}
+              >
+                How Clean Works
+              </h2>
+              {/* Selection overlay - border + corners scale together */}
+              <div className="selection-box" data-in-view="false">
+                <span className="selection-box__corner selection-box__corner--tl" />
+                <span className="selection-box__corner selection-box__corner--br" />
+              </div>
+            </motion.div>
             <p className="mx-auto max-w-2xl text-lg text-[var(--ink-light)]">
               One MCP server that pre-indexes your codebase and syncs context
               across every agent your team uses.
@@ -503,7 +521,7 @@ export default function Home() {
             </a>
           </div>
           <span className="text-sm text-[var(--ink-muted)]">
-            2025 Clean. All rights reserved.
+            2026 Clean. All rights reserved.
           </span>
         </div>
       </footer>

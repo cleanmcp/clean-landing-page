@@ -187,9 +187,9 @@ html {
   animation: fp-pulse 2.2s ease-in-out infinite;
 }
 
-.feature-preview__node--a { left: 16px; top: 16px; animation-delay: 0s; }
-.feature-preview__node--b { right: 18px; top: 34px; animation-delay: 0.3s; }
-.feature-preview__node--c { left: 54px; bottom: 20px; animation-delay: 0.6s; }
+.feature-preview__node--a { left: 20%; top: 15px; animation-delay: 0s; }
+.feature-preview__node--b { right: 12%; top: 40px; animation-delay: 0.3s; }
+.feature-preview__node--c { left: 30%; bottom: 15px; animation-delay: 0.6s; }
 
 .feature-preview__line {
   position: absolute;
@@ -199,8 +199,21 @@ html {
   opacity: 0.8;
 }
 
-.feature-preview__line--ab { left: 45px; top: 35px; width: 150px; transform: rotate(10deg); }
-.feature-preview__line--ac { left: 45px; top: 48px; width: 90px; transform: rotate(55deg); }
+/* Line from A center to B center */
+.feature-preview__line--ab {
+  left: calc(20% + 30px);
+  top: 32px;
+  width: calc(88% - 20% - 64px);
+  transform: rotate(5deg);
+}
+
+/* Line from A center to C center */
+.feature-preview__line--ac {
+  left: calc(20% + 20px);
+  top: 42px;
+  width: 80px;
+  transform: rotate(58deg);
+}
 
 .feature-preview__pill {
   display: inline-flex;
@@ -391,6 +404,54 @@ html {
 .feature-preview__packet--3 { --sx: -5px; --sy: 8px; --tx: 50px; --ty: -60px; animation-delay: 0.5s; }
 .feature-preview__packet--4 { --sx: -5px; --sy: 8px; --tx: 112px; --ty: -52px; animation-delay: 0.75s; }
 
+/* Selection animation - scales from top-left to bottom-right like Photoshop selection */
+@keyframes selection-scale {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* The whole selection overlay: border + corners, all scale from top-left together */
+.selection-box {
+  position: absolute;
+  inset: -8px -16px;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  transform-origin: top left;
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.selection-box[data-in-view="true"] {
+  animation: selection-scale 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.3s;
+}
+
+/* Corner handles */
+.selection-box__corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.selection-box__corner--tl {
+  top: -5px;
+  left: -5px;
+}
+
+.selection-box__corner--br {
+  bottom: -5px;
+  right: -5px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .feature-preview__node,
   .feature-preview__node::after,
@@ -400,5 +461,11 @@ html {
   .feature-preview__packet,
   .feature-preview__cursor {
     animation: none !important;
+  }
+
+  .selection-box {
+    animation: none !important;
+    transform: scale(1);
+    opacity: 1;
   }
 }
