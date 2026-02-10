@@ -11,7 +11,7 @@ interface TokenCounterProps {
 
 export default function TokenCounter({
   from = 300000,
-  to = 10000,
+  to = 100000,
   duration = 3,
 }: TokenCounterProps) {
   const [isVisible, setIsVisible] = useState(false);
