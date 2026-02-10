@@ -73,7 +73,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            One MCP. Every agent synced. 70% less spend.
+            One MCP. Every agent synced. 50% less spend.
           </motion.p>
 
           {/* Token Counter */}
@@ -345,7 +345,7 @@ export default function Home() {
         {/* Background scroll text */}
         <div className="pointer-events-none absolute inset-0 flex items-center opacity-[0.03]">
           <ScrollVelocity
-            texts={["70% LESS SPEND", "3X FASTER", "ONE MCP"]}
+            texts={["50% LESS SPEND", "3X FASTER", "ONE MCP"]}
             velocity={30}
             damping={100}
             stiffness={150}
@@ -367,7 +367,7 @@ export default function Home() {
           </motion.div>
           <div className="grid gap-12 text-center md:grid-cols-3">
             {[
-              { value: "70%", label: "less token spend" },
+              { value: "50%", label: "less token spend" },
               { value: "3x", label: "faster onboarding" },
               { value: "1", label: "MCP to rule them all" },
             ].map((stat, index) => (
