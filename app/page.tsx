@@ -77,7 +77,7 @@ export default function Home() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
-                One MCP. Every agent synced. 50% less spend.
+                Every agent synced. 50% less spend. 3x faster.
               </motion.p>
             </motion.div>
 
@@ -152,13 +152,6 @@ export default function Home() {
                 hundreds of thousands of tokens re-exploring code that another
                 agent already understood.
               </p>
-              <a
-                href="#solution"
-                className="inline-flex items-center gap-2 text-base font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-secondary)]"
-              >
-                See how Clean fixes this
-                <ArrowRightIcon className="h-4 w-4" />
-              </a>
             </motion.div>
 
             {/* Right — token waste chart */}
@@ -487,7 +480,7 @@ export default function Home() {
           <div className="grid gap-12 text-center md:grid-cols-3">
             {[
               { value: "50%", label: "less token spend" },
-              { value: "3x", label: "faster onboarding" },
+              { value: "3x", label: "faster sessions" },
               { value: "1", label: "MCP to rule them all" },
             ].map((stat, index) => (
               <motion.div
