@@ -15,11 +15,24 @@ export default function Navbar() {
       <a href="/" className="flex items-center gap-2">
         <span
           className="text-2xl font-medium tracking-tight"
-          style={{ fontFamily: "var(--font-playfair)" }}
+          style={{ fontFamily: "var(--font-display)" }}
         >
           Clean
         </span>
       </a>
+
+      {/* Nav Links */}
+      <div className="hidden md:flex items-center gap-8">
+        <a href="#pricing" className="text-sm font-medium text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">
+          Pricing
+        </a>
+        <a href="#docs" className="text-sm font-medium text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">
+          Docs
+        </a>
+        <a href="#resources" className="text-sm font-medium text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]">
+          Resources
+        </a>
+      </div>
 
       {/* CTA */}
       <div className="flex items-center gap-4">
