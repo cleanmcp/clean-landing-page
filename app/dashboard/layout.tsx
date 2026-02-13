@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
 import {
@@ -29,17 +30,19 @@ export default function DashboardLayout({
   const { signOut } = useClerk();
   const router = useRouter();
 
-  if (!isLoaded) {
+  // Must be above ALL early returns so hook order is stable every render
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push("/sign-in");
+    }
+  }, [isLoaded, user, router]);
+
+  if (!isLoaded || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--cream)]">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" />
       </div>
     );
-  }
-
-  if (!user) {
-    router.push("/sign-in");
-    return null;
   }
 
   return (

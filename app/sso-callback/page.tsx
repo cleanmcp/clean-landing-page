@@ -5,16 +5,16 @@ import { AuthenticateWithRedirectCallback } from "@clerk/nextjs";
 export default function SSOCallbackPage() {
   return (
     <div
-      className="flex min-h-screen items-center justify-center"
+      className="flex min-h-screen flex-col items-center justify-center gap-4"
       style={{ background: "var(--cream)" }}
     >
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--ink) border-t-transparent" />
       <AuthenticateWithRedirectCallback
         signInForceRedirectUrl="/dashboard"
         signUpForceRedirectUrl="/dashboard"
-        signInFallbackRedirectUrl="/dashboard"
-        signUpFallbackRedirectUrl="/dashboard"
-        transferable
       />
+      {/* Clerk needs this for bot-protection during OAuth callback */}
+      <div id="clerk-captcha" />
     </div>
   );
 }

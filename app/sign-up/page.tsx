@@ -1,14 +1,13 @@
 "use client";
 
-import { useSignUp, useUser } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
+import { useSignUp } from "@clerk/nextjs";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OAuthStrategy } from "@clerk/types";
 
 export default function SignUpPage() {
   const { signUp, isLoaded, setActive } = useSignUp();
-  const { isSignedIn } = useUser();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -16,12 +15,6 @@ export default function SignUpPage() {
   const [step, setStep] = useState<"details" | "verify">("details");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isSignedIn) router.push("/dashboard");
-  }, [isSignedIn, router]);
-
-  if (isSignedIn) return null;
 
   if (!isLoaded) {
     return (
@@ -90,7 +83,6 @@ export default function SignUpPage() {
       style={{ background: "var(--cream)" }}
     >
       <div className="w-full max-w-md">
-        {/* Logo */}
         <Link href="/" className="mb-8 block text-center">
           <span
             className="text-3xl font-normal tracking-tight"
@@ -100,7 +92,6 @@ export default function SignUpPage() {
           </span>
         </Link>
 
-        {/* Card */}
         <div
           className="rounded-2xl border p-8"
           style={{
@@ -125,7 +116,6 @@ export default function SignUpPage() {
 
           {step === "details" ? (
             <>
-              {/* GitHub OAuth */}
               <button
                 type="button"
                 onClick={() => handleOAuth("oauth_github")}
@@ -142,7 +132,6 @@ export default function SignUpPage() {
                 Continue with GitHub
               </button>
 
-              {/* Divider */}
               <div className="my-5 flex items-center gap-3">
                 <div className="h-px flex-1" style={{ background: "var(--cream-dark)" }} />
                 <span className="text-xs font-medium" style={{ color: "var(--ink-muted)" }}>
@@ -151,7 +140,6 @@ export default function SignUpPage() {
                 <div className="h-px flex-1" style={{ background: "var(--cream-dark)" }} />
               </div>
 
-              {/* Email */}
               <form onSubmit={handleEmailSubmit}>
                 <label
                   htmlFor="email"
@@ -189,11 +177,8 @@ export default function SignUpPage() {
                 </button>
               </form>
 
-              {/* Clerk CAPTCHA widget mount point for bot protection */}
-              <div id="clerk-captcha" className="mt-3" />
             </>
           ) : (
-            /* Verification step */
             <form onSubmit={handleVerify}>
               <label
                 htmlFor="code"
@@ -245,9 +230,11 @@ export default function SignUpPage() {
               </button>
             </form>
           )}
+
+          {/* Always render captcha mount point so Clerk can find it */}
+          <div id="clerk-captcha" className="mt-3" />
         </div>
 
-        {/* Footer */}
         <p className="mt-6 text-center text-sm" style={{ color: "var(--ink-muted)" }}>
           Already have an account?{" "}
           <a

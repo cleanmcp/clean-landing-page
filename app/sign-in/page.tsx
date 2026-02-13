@@ -1,14 +1,13 @@
 "use client";
 
-import { useSignIn, useUser } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
+import { useSignIn } from "@clerk/nextjs";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OAuthStrategy } from "@clerk/types";
 
 export default function SignInPage() {
   const { signIn, isLoaded, setActive } = useSignIn();
-  const { isSignedIn } = useUser();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -16,12 +15,6 @@ export default function SignInPage() {
   const [step, setStep] = useState<"identifier" | "verify">("identifier");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isSignedIn) router.push("/dashboard");
-  }, [isSignedIn, router]);
-
-  if (isSignedIn) return null;
 
   if (!isLoaded) {
     return (
@@ -59,7 +52,6 @@ export default function SignInPage() {
         return;
       }
 
-      // Find the email code factor
       const emailCodeFactor = result.supportedFirstFactors?.find(
         (f) => f.strategy === "email_code"
       );
@@ -112,7 +104,6 @@ export default function SignInPage() {
       style={{ background: "var(--cream)" }}
     >
       <div className="w-full max-w-md">
-        {/* Logo */}
         <Link href="/" className="mb-8 block text-center">
           <span
             className="text-3xl font-normal tracking-tight"
@@ -122,7 +113,6 @@ export default function SignInPage() {
           </span>
         </Link>
 
-        {/* Card */}
         <div
           className="rounded-2xl border p-8"
           style={{
@@ -147,7 +137,6 @@ export default function SignInPage() {
 
           {step === "identifier" ? (
             <>
-              {/* GitHub OAuth */}
               <button
                 type="button"
                 onClick={() => handleOAuth("oauth_github")}
@@ -164,7 +153,6 @@ export default function SignInPage() {
                 Continue with GitHub
               </button>
 
-              {/* Divider */}
               <div className="my-5 flex items-center gap-3">
                 <div className="h-px flex-1" style={{ background: "var(--cream-dark)" }} />
                 <span className="text-xs font-medium" style={{ color: "var(--ink-muted)" }}>
@@ -173,7 +161,6 @@ export default function SignInPage() {
                 <div className="h-px flex-1" style={{ background: "var(--cream-dark)" }} />
               </div>
 
-              {/* Email */}
               <form onSubmit={handleEmailSubmit}>
                 <label
                   htmlFor="email"
@@ -211,11 +198,8 @@ export default function SignInPage() {
                 </button>
               </form>
 
-              {/* Clerk CAPTCHA widget mount point for bot protection */}
-              <div id="clerk-captcha" className="mt-3" />
             </>
           ) : (
-            /* Verification step */
             <form onSubmit={handleVerify}>
               <label
                 htmlFor="code"
@@ -267,9 +251,11 @@ export default function SignInPage() {
               </button>
             </form>
           )}
+
+          {/* Always render captcha mount point so Clerk can find it */}
+          <div id="clerk-captcha" className="mt-3" />
         </div>
 
-        {/* Footer */}
         <p className="mt-6 text-center text-sm" style={{ color: "var(--ink-muted)" }}>
           Don&apos;t have an account?{" "}
           <a
