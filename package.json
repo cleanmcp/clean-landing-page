@@ -10,6 +10,7 @@
     "remotion": "remotion studio video/video_1/index.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.37.3",
     "@remotion/cli": "4.0.399",
     "@remotion/player": "4.0.399",
     "framer-motion": "^12.31.0",
