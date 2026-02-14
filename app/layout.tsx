@@ -31,17 +31,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
-        <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}
-        >
-          <IconSprite />
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
-
+  const body = (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}
+      >
+        <IconSprite />
+        {children}
+      </body>
+    </html>
   );
+
+  // ClerkProvider requires the publishable key which is only available at
+  // runtime. During static generation (e.g. /_not-found) the key is missing,
+  // so we render without the provider to avoid crashing the build.
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return body;
+  }
+
+  return <ClerkProvider>{body}</ClerkProvider>;
 }
