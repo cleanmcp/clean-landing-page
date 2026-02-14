@@ -482,10 +482,10 @@ export default function KeysPage() {
                 </p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-[13px] leading-relaxed text-[var(--ink)]">
-                    npx create-clean
+                    npx @tryclean/create
                   </code>
                   <button
-                    onClick={() => copyToClipboard("npx create-clean", "cmd")}
+                    onClick={() => copyToClipboard("npx @tryclean/create", "cmd")}
                     className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                       copied === "cmd"
                         ? "border-green-200 bg-green-50 text-green-700"
