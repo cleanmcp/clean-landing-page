@@ -30,7 +30,7 @@ export default function SignUpPage() {
       await signUp.authenticateWithRedirect({
         strategy,
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/dashboard",
+        redirectUrlComplete: "/onboarding",
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "OAuth sign-up failed";
@@ -65,7 +65,7 @@ export default function SignUpPage() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/dashboard");
+        router.push("/onboarding");
       } else {
         setError("Verification incomplete. Please try again.");
       }

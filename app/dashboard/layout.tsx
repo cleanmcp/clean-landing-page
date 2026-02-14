@@ -1,10 +1,11 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
 import {
+  LayoutDashboard,
   FolderGit2,
   Users,
   FileText,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Overview", exact: true },
   { href: "/dashboard/repositories", icon: FolderGit2, label: "Repositories" },
   { href: "/dashboard/team", icon: Users, label: "Team" },
   { href: "/dashboard/keys", icon: Key, label: "Keys" },
@@ -30,6 +32,8 @@ export default function DashboardLayout({
   const { signOut } = useClerk();
   const router = useRouter();
 
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
   // Must be above ALL early returns so hook order is stable every render
   useEffect(() => {
     if (isLoaded && !user) {
@@ -37,7 +41,21 @@ export default function DashboardLayout({
     }
   }, [isLoaded, user, router]);
 
-  if (!isLoaded || !user) {
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    fetch("/api/onboarding")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && data.step < 2) {
+          router.push("/onboarding");
+        } else {
+          setOnboardingChecked(true);
+        }
+      })
+      .catch(() => setOnboardingChecked(true)); // fail open
+  }, [isLoaded, user, router]);
+
+  if (!isLoaded || !user || !onboardingChecked) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--cream)]">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" />
@@ -85,7 +103,9 @@ export default function DashboardLayout({
         <aside className="group flex w-16 flex-col items-center gap-4 border-r border-[var(--cream-dark)] bg-[var(--cream)] py-6 transition-all duration-300 hover:w-48">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname.startsWith(item.href);
+            const isActive = (item as { exact?: boolean }).exact
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
