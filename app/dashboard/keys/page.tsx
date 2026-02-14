@@ -444,7 +444,7 @@ export default function KeysPage() {
             Tunnel provisioning... If this persists, contact support.
           </div>
         ) : (
-          /* Tunnel exists — read-only status display */
+          /* License + tunnel exist — setup instructions */
           <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)] bg-white">
             <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-4 py-3">
               <div className="flex items-center gap-2">
@@ -474,52 +474,58 @@ export default function KeysPage() {
               </button>
             </div>
 
-            <div className="space-y-4 p-4">
-              <TunnelField
-                label="URL"
-                value={tunnel.url}
-                onCopy={() => copyToClipboard(tunnel.url, "url")}
-                isCopied={copied === "url"}
-              />
-              <TunnelField
-                label="MCP Endpoint"
-                value={`${tunnel.url}/mcp/sse`}
-                onCopy={() =>
-                  copyToClipboard(`${tunnel.url}/mcp/sse`, "mcp")
-                }
-                isCopied={copied === "mcp"}
-              />
-              <TunnelField
-                label="Tunnel Token"
-                value={tunnel.token}
-                onCopy={() => copyToClipboard(tunnel.token, "token")}
-                isCopied={copied === "token"}
-              />
+            <div className="space-y-5 p-4">
+              {/* Step 1: Run the command */}
+              <div>
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+                  Step 1 — Run the installer
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-[13px] leading-relaxed text-[var(--ink)]">
+                    npx create-clean
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard("npx create-clean", "cmd")}
+                    className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      copied === "cmd"
+                        ? "border-green-200 bg-green-50 text-green-700"
+                        : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
+                    }`}
+                  >
+                    {copied === "cmd" ? (
+                      <>
+                        <Check className="h-3 w-3" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" /> Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
 
-              {/* Quick start command */}
+              {/* Step 2: Paste license key when prompted */}
               {orgInfo?.licenseKey && (
                 <div>
                   <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
-                    Quick Start
+                    Step 2 — Paste your license key when prompted
                   </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 break-all rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-xs leading-relaxed text-[var(--ink)]">
-                      npx create-clean --license {orgInfo.licenseKey.slice(0, 20)}...
+                      {orgInfo.licenseKey}
                     </code>
                     <button
                       onClick={() =>
-                        copyToClipboard(
-                          `npx create-clean --license ${orgInfo.licenseKey}`,
-                          "cmd"
-                        )
+                        copyToClipboard(orgInfo.licenseKey!, "license")
                       }
                       className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                        copied === "cmd"
+                        copied === "license"
                           ? "border-green-200 bg-green-50 text-green-700"
                           : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
                       }`}
                     >
-                      {copied === "cmd" ? (
+                      {copied === "license" ? (
                         <>
                           <Check className="h-3 w-3" /> Copied
                         </>
@@ -530,6 +536,9 @@ export default function KeysPage() {
                       )}
                     </button>
                   </div>
+                  <p className="mt-1.5 text-xs text-[var(--ink-muted)]">
+                    The installer will automatically set up your tunnel and configure everything else.
+                  </p>
                 </div>
               )}
             </div>
