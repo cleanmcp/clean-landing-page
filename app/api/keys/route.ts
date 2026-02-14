@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { generateApiKey } from "@/lib/api-keys";
 import { audit } from "@/lib/audit";
+import { syncKeyToEngine } from "@/lib/engine-sync";
 import { eq, isNull, and, desc } from "drizzle-orm";
 
 // GET /api/keys - List all API keys for the user
@@ -105,6 +106,16 @@ export async function POST(request: NextRequest) {
       resourceType: "api_key",
       resourceId: apiKey.id,
       metadata: { name, scopes },
+    });
+
+    // Sync key hash to the self-hosted engine (fire-and-forget)
+    syncKeyToEngine(ctx.orgId, "create", {
+      id: apiKey.id,
+      orgId: ctx.orgId,
+      keyPrefix,
+      keyHash,
+      scopes,
+      name,
     });
 
     // Return the plain key (only time it's shown)

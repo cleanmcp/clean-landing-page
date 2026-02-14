@@ -3,6 +3,7 @@ import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { audit } from "@/lib/audit";
+import { syncKeyToEngine } from "@/lib/engine-sync";
 import { eq, and, isNull } from "drizzle-orm";
 
 // DELETE /api/keys/[id] - Revoke an API key
@@ -54,6 +55,11 @@ export async function DELETE(
       resourceId: id,
       metadata: { name: key.name },
     });
+
+    // Sync revocation to the self-hosted engine (fire-and-forget)
+    if (key.orgId) {
+      syncKeyToEngine(key.orgId, "revoke", { id });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
