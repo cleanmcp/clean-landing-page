@@ -11,20 +11,30 @@ import { eq } from "drizzle-orm";
  *
  * Falls back to CLEAN_SERVER_URL env var if no tunnel is found.
  */
-export async function getEngineUrl(orgId: string): Promise<string | null> {
+interface EngineInfo {
+  url: string;
+  apiKey: string;
+}
+
+export async function getEngineInfo(orgId: string): Promise<EngineInfo | null> {
   // Try tunnel first
   const tunnel = await db
-    .select({ hostname: tunnels.hostname })
+    .select({ hostname: tunnels.hostname, engineApiKey: tunnels.engineApiKey })
     .from(tunnels)
     .where(eq(tunnels.orgId, orgId))
     .limit(1);
 
   if (tunnel.length > 0 && tunnel[0].hostname) {
-    return `https://${tunnel[0].hostname}`;
+    return {
+      url: `https://${tunnel[0].hostname}`,
+      apiKey: tunnel[0].engineApiKey || process.env.CLEAN_API_KEY || "",
+    };
   }
 
   // Fallback to env var
-  return process.env.CLEAN_SERVER_URL || null;
+  const fallbackUrl = process.env.CLEAN_SERVER_URL || null;
+  if (!fallbackUrl) return null;
+  return { url: fallbackUrl, apiKey: process.env.CLEAN_API_KEY || "" };
 }
 
 /**
@@ -35,18 +45,17 @@ export async function engineFetch(
   path: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const baseUrl = await getEngineUrl(orgId);
-  if (!baseUrl) {
+  const engine = await getEngineInfo(orgId);
+  if (!engine) {
     throw new Error("No engine URL configured for this organization");
   }
 
-  const apiKey = process.env.CLEAN_API_KEY || "";
-  const url = `${baseUrl}${path}`;
+  const url = `${engine.url}${path}`;
 
   return fetch(url, {
     ...options,
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${engine.apiKey}`,
       "X-Org-Id": orgId,
       ...options.headers,
     },

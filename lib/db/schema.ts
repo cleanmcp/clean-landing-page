@@ -180,6 +180,7 @@ export const tunnels = pgTable(
     hostname: text("hostname").notNull().unique(),
     dnsRecordId: text("dns_record_id").notNull(),
     token: text("token").notNull(),
+    engineApiKey: text("engine_api_key"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { verifyLicenseKey } from "@/lib/license";
 import { db } from "@/lib/db";
 import { organizations, tunnels } from "@/lib/db/schema";
@@ -89,10 +90,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Return tunnel info + license claims
+    // 6. Generate engine API key and store it
+    const engineApiKey = `clean_sk_prod_${crypto.randomBytes(32).toString("hex")}`;
+    await db
+      .update(tunnels)
+      .set({ engineApiKey })
+      .where(eq(tunnels.id, tunnel.id));
+
+    // 7. Return tunnel info + license claims + API key
     return NextResponse.json({
       tunnelToken: tunnel.token,
       tunnelUrl: `https://${tunnel.hostname}`,
+      apiKey: engineApiKey,
       orgSlug: org.slug,
       tier: claims.tier,
       maxRepos: claims.max_repos,

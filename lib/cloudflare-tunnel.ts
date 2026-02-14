@@ -174,7 +174,7 @@ async function configureTunnelIngress(
           ingress: [
             {
               hostname,
-              service: "http://localhost:8000",
+              service: "http://clean:8000",
             },
             {
               // Catch-all required by CF
