@@ -118,6 +118,7 @@ export default function KeysPage() {
   const [tunnel, setTunnel] = useState<TunnelInfo | null>(null);
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
   const [rotating, setRotating] = useState(false);
+  const [generatingLicense, setGeneratingLicense] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -216,6 +217,28 @@ export default function KeysPage() {
       setError(err instanceof Error ? err.message : "Network error");
     } finally {
       setRotating(false);
+    }
+  }
+
+  async function handleGenerateLicense() {
+    setGeneratingLicense(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/license", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: "pro", months: 12 }),
+      });
+      if (res.ok) {
+        await Promise.all([fetchOrg(), fetchTunnel()]);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to generate license");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error");
+    } finally {
+      setGeneratingLicense(false);
     }
   }
 
@@ -394,9 +417,26 @@ export default function KeysPage() {
             <p className="mt-3 text-sm font-medium text-[var(--ink)]">
               No license key
             </p>
-            <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
-              Get a license to enable self-hosted deployment
+            <p className="mb-4 mt-0.5 text-xs text-[var(--ink-muted)]">
+              Generate a license to enable self-hosted deployment
             </p>
+            <button
+              onClick={handleGenerateLicense}
+              disabled={generatingLicense}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+            >
+              {generatingLicense ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-3.5 w-3.5" />
+                  Generate License
+                </>
+              )}
+            </button>
           </div>
         ) : !tunnel ? (
           /* License exists but no tunnel (edge case) */
