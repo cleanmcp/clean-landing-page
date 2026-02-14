@@ -174,12 +174,7 @@ async function configureTunnelIngress(
           ingress: [
             {
               hostname,
-              path: "/mcp/.*",
-              service: "http://clean:8000",
-            },
-            {
-              hostname,
-              service: "http://dashboard:3000",
+              service: "http://localhost:8000",
             },
             {
               // Catch-all required by CF

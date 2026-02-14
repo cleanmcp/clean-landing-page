@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Copy, Check, Plus, Key, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Copy,
+  Check,
+  Plus,
+  Key,
+  Trash2,
+  AlertTriangle,
+  RefreshCw,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +30,21 @@ interface ApiKey {
   createdAt: string;
 }
 
+interface TunnelInfo {
+  hostname: string;
+  url: string;
+  token: string;
+  tunnelId: string;
+  dnsRecordId: string;
+  connected: boolean;
+  createdAt: string;
+}
+
+interface OrgInfo {
+  slug: string;
+  licenseKey: string | null;
+}
+
 function formatDate(date: string | null) {
   if (!date) return "Never";
   return new Date(date).toLocaleDateString("en-US", {
@@ -29,15 +52,6 @@ function formatDate(date: string | null) {
     day: "numeric",
     year: "numeric",
   });
-}
-
-// Tunnel state types
-interface TunnelResult {
-  hostname: string;
-  url: string;
-  token: string;
-  tunnelId: string;
-  dnsRecordId: string;
 }
 
 function TunnelField({
@@ -100,17 +114,46 @@ export default function KeysPage() {
   const [revoking, setRevoking] = useState(false);
 
   // Tunnel state
-  const [slug, setSlug] = useState("");
-  const [tunnelLoading, setTunnelLoading] = useState(false);
-  const [tunnelResult, setTunnelResult] = useState<TunnelResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [tunnelLoading, setTunnelLoading] = useState(true);
+  const [tunnel, setTunnel] = useState<TunnelInfo | null>(null);
+  const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
+  const [rotating, setRotating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [deleted, setDeleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTunnel = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tunnel");
+      if (res.ok) {
+        const data = await res.json();
+        setTunnel(data.tunnel ?? null);
+      }
+    } catch {
+      // silently fail
+    }
+  }, []);
+
+  const fetchOrg = useCallback(async () => {
+    try {
+      const res = await fetch("/api/org");
+      if (res.ok) {
+        const data = await res.json();
+        setOrgInfo({
+          slug: data.org.slug,
+          licenseKey: data.org.licenseKey ?? null,
+        });
+      }
+    } catch {
+      // silently fail
+    }
+  }, []);
 
   useEffect(() => {
     fetchKeys();
-  }, []);
+    Promise.all([fetchTunnel(), fetchOrg()]).finally(() =>
+      setTunnelLoading(false)
+    );
+  }, [fetchTunnel, fetchOrg]);
 
   async function fetchKeys() {
     try {
@@ -149,55 +192,30 @@ export default function KeysPage() {
     }
   }
 
-  async function handleGenerateTunnel() {
-    if (!slug.trim()) return;
-    setTunnelLoading(true);
+  async function handleRotateTunnel() {
+    if (!tunnel || !orgInfo) return;
+    setRotating(true);
     setError(null);
-    setTunnelResult(null);
-    setDeleted(false);
-
     try {
       const res = await fetch("/api/tunnel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orgSlug: slug.trim().toLowerCase() }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || `Failed (${res.status})`);
-      } else {
-        setTunnelResult(data.tunnel);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
-    } finally {
-      setTunnelLoading(false);
-    }
-  }
-
-  async function handleDeleteTunnel() {
-    if (!tunnelResult) return;
-    setDeleting(true);
-    try {
-      const res = await fetch("/api/tunnel", {
-        method: "DELETE",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tunnelId: tunnelResult.tunnelId,
-          dnsRecordId: tunnelResult.dnsRecordId,
+          orgSlug: orgInfo.slug,
+          tunnelId: tunnel.tunnelId,
+          dnsRecordId: tunnel.dnsRecordId,
         }),
       });
       if (res.ok) {
-        setDeleted(true);
-        setTunnelResult(null);
+        await fetchTunnel();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || "Failed to delete");
+        setError(data.error || "Failed to rotate tunnel");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");
     } finally {
-      setDeleting(false);
+      setRotating(false);
     }
   }
 
@@ -351,117 +369,129 @@ export default function KeysPage() {
       {/* Cloudflare Tunnel Section */}
       <div>
         <h2 className="mb-1 text-2xl font-medium text-[var(--ink)]">
-          Cloudflare Tunnel
+          Self-Hosted Tunnel
         </h2>
         <p className="mb-6 text-sm text-[var(--ink-muted)]">
-          Generate a Cloudflare Tunnel for an org. Creates{" "}
-          <code className="rounded bg-[var(--cream-dark)] px-1.5 py-0.5 font-mono text-xs">
-            name.tryclean.ai
-          </code>
+          Tunnel status for your self-hosted Clean deployment
         </p>
 
-        {/* Input + Button */}
-        <div className="mb-4 flex gap-2">
-          <input
-            type="text"
-            placeholder="org-slug"
-            value={slug}
-            onChange={(e) => {
-              setSlug(e.target.value.replace(/[^a-z0-9-]/g, ""));
-              setError(null);
-            }}
-            onKeyDown={(e) => e.key === "Enter" && handleGenerateTunnel()}
-            className="max-w-xs flex-1 rounded-lg border border-[var(--cream-dark)] bg-white px-3.5 py-2.5 font-mono text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
-          <button
-            onClick={handleGenerateTunnel}
-            disabled={tunnelLoading || !slug.trim()}
-            className="whitespace-nowrap rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {tunnelLoading ? "Creating..." : "Generate"}
-          </button>
-        </div>
-
-        {/* Preview */}
-        {slug.trim() && !tunnelResult && (
-          <p className="mb-4 text-sm text-[var(--ink-muted)]">
-            Will create:{" "}
-            <strong className="text-[var(--ink)]">
-              https://{slug.trim().toLowerCase()}.tryclean.ai
-            </strong>
-          </p>
-        )}
-
-        {/* Error */}
         {error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {error}
           </div>
         )}
 
-        {/* Deleted success */}
-        {deleted && (
-          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            Tunnel deleted successfully.
+        {tunnelLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
           </div>
-        )}
-
-        {/* Tunnel Result */}
-        {tunnelResult && (
+        ) : !orgInfo?.licenseKey ? (
+          /* No license */
+          <div className="rounded-lg border border-[var(--cream-dark)] bg-white py-14 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--cream-dark)]">
+              <Key className="h-6 w-6 text-[var(--ink-muted)]" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-[var(--ink)]">
+              No license key
+            </p>
+            <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+              Get a license to enable self-hosted deployment
+            </p>
+          </div>
+        ) : !tunnel ? (
+          /* License exists but no tunnel (edge case) */
+          <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+            Tunnel provisioning... If this persists, contact support.
+          </div>
+        ) : (
+          /* Tunnel exists — read-only status display */
           <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)] bg-white">
             <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-4 py-3">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" />
+                <div
+                  className={`h-2 w-2 rounded-full ${
+                    tunnel.connected
+                      ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]"
+                      : "bg-gray-300"
+                  }`}
+                />
                 <span className="text-sm font-semibold text-[var(--ink)]">
-                  Tunnel Created
+                  {tunnel.connected ? "Connected" : "Disconnected"}
+                </span>
+                <span className="text-xs text-[var(--ink-muted)]">
+                  Created {formatDate(tunnel.createdAt)}
                 </span>
               </div>
               <button
-                onClick={handleDeleteTunnel}
-                disabled={deleting}
-                className="rounded-md border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={handleRotateTunnel}
+                disabled={rotating}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {deleting ? "Deleting..." : "Delete"}
+                <RefreshCw
+                  className={`h-3 w-3 ${rotating ? "animate-spin" : ""}`}
+                />
+                {rotating ? "Rotating..." : "Rotate Token"}
               </button>
             </div>
 
             <div className="space-y-4 p-4">
               <TunnelField
                 label="URL"
-                value={tunnelResult.url}
-                onCopy={() => copyToClipboard(tunnelResult.url, "url")}
+                value={tunnel.url}
+                onCopy={() => copyToClipboard(tunnel.url, "url")}
                 isCopied={copied === "url"}
               />
               <TunnelField
                 label="MCP Endpoint"
-                value={`${tunnelResult.url}/mcp/sse`}
+                value={`${tunnel.url}/mcp/sse`}
                 onCopy={() =>
-                  copyToClipboard(`${tunnelResult.url}/mcp/sse`, "mcp")
+                  copyToClipboard(`${tunnel.url}/mcp/sse`, "mcp")
                 }
                 isCopied={copied === "mcp"}
               />
               <TunnelField
                 label="Tunnel Token"
-                value={tunnelResult.token}
-                onCopy={() => copyToClipboard(tunnelResult.token, "token")}
+                value={tunnel.token}
+                onCopy={() => copyToClipboard(tunnel.token, "token")}
                 isCopied={copied === "token"}
               />
-              <TunnelField
-                label="Tunnel ID"
-                value={tunnelResult.tunnelId}
-                onCopy={() => copyToClipboard(tunnelResult.tunnelId, "tid")}
-                isCopied={copied === "tid"}
-                small
-              />
-              <TunnelField
-                label="DNS Record ID"
-                value={tunnelResult.dnsRecordId}
-                onCopy={() =>
-                  copyToClipboard(tunnelResult.dnsRecordId, "dnsid")
-                }
-                isCopied={copied === "dnsid"}
-                small
-              />
+
+              {/* Quick start command */}
+              {orgInfo?.licenseKey && (
+                <div>
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+                    Quick Start
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 break-all rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-xs leading-relaxed text-[var(--ink)]">
+                      npx create-clean --license {orgInfo.licenseKey.slice(0, 20)}...
+                    </code>
+                    <button
+                      onClick={() =>
+                        copyToClipboard(
+                          `npx create-clean --license ${orgInfo.licenseKey}`,
+                          "cmd"
+                        )
+                      }
+                      className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        copied === "cmd"
+                          ? "border-green-200 bg-green-50 text-green-700"
+                          : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
+                      }`}
+                    >
+                      {copied === "cmd" ? (
+                        <>
+                          <Check className="h-3 w-3" /> Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" /> Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

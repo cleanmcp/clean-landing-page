@@ -34,7 +34,7 @@ export default function TeamPage() {
   useEffect(() => {
     fetch("/api/org")
       .then((r) => r.json())
-      .then(setOrgData)
+      .then((d) => setOrgData(d?.org ? { ...d.org, ...d } : d))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

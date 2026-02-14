@@ -5,35 +5,8 @@ const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/onboarding(.*)"
 const isWebhookRoute = createRouteMatcher(["/api/webhooks(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const hostname = req.headers.get("host") ?? "";
-  const pathname = req.nextUrl.pathname;
-
-  // app.tryclean.ai root → redirect to /dashboard
-  if (hostname.startsWith("app.") && pathname === "/") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
-
-  // tryclean.ai/dashboard → redirect to app.tryclean.ai/dashboard
-  if (
-    !hostname.startsWith("app.") &&
-    !hostname.startsWith("localhost") &&
-    pathname.startsWith("/dashboard")
-  ) {
-    const appUrl = new URL(pathname, `https://app.${hostname}`);
-    appUrl.search = req.nextUrl.search;
-    return NextResponse.redirect(appUrl);
-  }
-
-  // Allow webhooks through without auth
-  if (isWebhookRoute(req)) {
-    return NextResponse.next();
-  }
-
-  // Protect dashboard routes
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-
+  if (isWebhookRoute(req)) return NextResponse.next();
+  if (isProtectedRoute(req)) await auth.protect();
   return NextResponse.next();
 });
 

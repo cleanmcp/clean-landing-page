@@ -47,10 +47,14 @@ export async function GET() {
       .where(eq(apiKeys.orgId, ctx.orgId));
 
     return NextResponse.json({
-      id: org.id,
-      name: org.name,
-      slug: org.slug,
-      createdAt: org.createdAt.toISOString(),
+      org: {
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+        licenseKey: org.licenseKey,
+        tier: org.tier,
+        createdAt: org.createdAt.toISOString(),
+      },
       memberCount: members.length,
       apiKeyCount: keyCount?.count ?? 0,
       members: members.map((m) => ({

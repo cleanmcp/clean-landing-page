@@ -42,6 +42,8 @@ export const organizations = pgTable(
     slug: text("slug").notNull().unique(),
     metadata: jsonb("metadata").$type<OrgMetadata>(),
     licenseKey: text("license_key"),
+    tier: text("tier").$type<"free" | "pro" | "enterprise">().default("free"),
+    licenseExpiresAt: timestamp("license_expires_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [index("organizations_slug_idx").on(table.slug)]

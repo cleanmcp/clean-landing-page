@@ -58,3 +58,19 @@ export function generateLicenseKey(params: {
     expiresIn: `${months * 30}d`,
   });
 }
+
+/**
+ * Verify a license JWT and return its claims.
+ *
+ * Uses the ES256 private key (which contains the public key) for verification.
+ * Throws if the signature is invalid or the token is expired.
+ */
+export function verifyLicenseKey(token: string): LicenseClaims {
+  const raw = process.env.CLEAN_LICENSE_PRIVATE_KEY;
+  if (!raw) throw new Error("CLEAN_LICENSE_PRIVATE_KEY is not set");
+  const privateKey = raw.replace(/\\n/g, "\n");
+
+  return jwt.verify(token, privateKey, {
+    algorithms: ["ES256"],
+  }) as LicenseClaims;
+}

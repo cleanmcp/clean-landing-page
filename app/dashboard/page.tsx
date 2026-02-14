@@ -82,7 +82,7 @@ export default function DashboardPage() {
         .then((d) => { if (d && d.totalSearches !== undefined) setStats(d); }),
       fetch("/api/org")
         .then((r) => (r.ok ? r.json() : null))
-        .then((d) => { if (d && d.id) setOrgData(d); }),
+        .then((d) => { if (d?.org) setOrgData({ ...d.org, ...d }); }),
       fetch("/api/repos")
         .then((r) => {
           if (!r.ok) {
