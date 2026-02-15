@@ -169,27 +169,25 @@ export const searchLogs = pgTable(
 );
 
 // ============================================================================
-// TUNNELS
+// ORG TOKENS
 // ============================================================================
 
-export const tunnels = pgTable(
-  "tunnels",
+export const orgTokens = pgTable(
+  "org_tokens",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     orgId: uuid("org_id")
       .notNull()
-      .unique()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    cloudflareTunnelId: text("cloudflare_tunnel_id").notNull(),
-    hostname: text("hostname").notNull().unique(),
-    dnsRecordId: text("dns_record_id").notNull(),
-    token: text("token").notNull(),
-    engineApiKey: text("engine_api_key"),
+    name: text("name").notNull().default("default"),
+    tokenHash: text("token_hash").notNull().unique(),
+    lastSeenAt: timestamp("last_seen_at"),
+    revokedAt: timestamp("revoked_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    index("tunnels_cloudflare_tunnel_id_idx").on(table.cloudflareTunnelId),
+    index("org_tokens_org_id_idx").on(table.orgId),
+    index("org_tokens_token_hash_idx").on(table.tokenHash),
   ]
 );
 

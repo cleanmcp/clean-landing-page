@@ -1,61 +1,97 @@
 import { db } from "@/lib/db";
-import { tunnels } from "@/lib/db/schema";
+import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+const GATEWAY_URL = process.env.GATEWAY_URL || "https://api.tryclean.ai";
+const GATEWAY_SECRET = process.env.GATEWAY_INTERNAL_SECRET || "";
+
 /**
- * Get the Clean Engine base URL for an organization.
- *
- * Looks up the org's Cloudflare tunnel hostname from the tunnels table,
- * then constructs the engine URL. This is a temporary solution until
- * the gateway is built.
- *
- * Falls back to CLEAN_SERVER_URL env var if no tunnel is found.
+ * Engine status from the gateway.
  */
-interface EngineInfo {
-  url: string;
-  apiKey: string;
+interface EngineStatus {
+  connected: boolean;
+  orgSlug?: string;
+  connectedAt?: string;
+  lastHeartbeat?: {
+    uptime: number;
+    repos: number;
+    searches_total: number;
+  } | null;
 }
 
-export async function getEngineInfo(orgId: string): Promise<EngineInfo | null> {
-  // Try tunnel first
-  const tunnel = await db
-    .select({ hostname: tunnels.hostname, engineApiKey: tunnels.engineApiKey })
-    .from(tunnels)
-    .where(eq(tunnels.orgId, orgId))
-    .limit(1);
+/**
+ * Get engine connection info via the gateway.
+ * Returns the org slug (used as subdomain) for URL construction,
+ * or null if no engine is connected.
+ */
+export async function getEngineInfo(
+  orgId: string
+): Promise<{ url: string } | null> {
+  if (!GATEWAY_SECRET) return null;
 
-  if (tunnel.length > 0 && tunnel[0].hostname) {
-    return {
-      url: `https://${tunnel[0].hostname}`,
-      apiKey: tunnel[0].engineApiKey || process.env.CLEAN_API_KEY || "",
-    };
+  try {
+    const status = await getEngineStatus(orgId);
+    if (!status.connected || !status.orgSlug) return null;
+
+    return { url: `https://${status.orgSlug}.tryclean.ai` };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get detailed engine status from the gateway.
+ */
+export async function getEngineStatus(orgId: string): Promise<EngineStatus> {
+  if (!GATEWAY_SECRET) {
+    return { connected: false };
   }
 
-  // Fallback to env var
-  const fallbackUrl = process.env.CLEAN_SERVER_URL || null;
-  if (!fallbackUrl) return null;
-  return { url: fallbackUrl, apiKey: process.env.CLEAN_API_KEY || "" };
+  try {
+    const res = await fetch(`${GATEWAY_URL}/internal/status/${orgId}`, {
+      headers: {
+        Authorization: `Bearer ${GATEWAY_SECRET}`,
+      },
+    });
+
+    if (!res.ok) {
+      return { connected: false };
+    }
+
+    return await res.json();
+  } catch {
+    return { connected: false };
+  }
 }
 
 /**
  * Make a request to the Clean Engine for an organization.
+ * Routes through the gateway using X-Clean-Slug header.
+ * This works in both local dev (GATEWAY_URL=http://localhost:4000)
+ * and production (GATEWAY_URL=https://api.tryclean.ai).
  */
 export async function engineFetch(
   orgId: string,
   path: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const engine = await getEngineInfo(orgId);
-  if (!engine) {
-    throw new Error("No engine URL configured for this organization");
+  // Look up org slug for routing
+  const [org] = await db
+    .select({ slug: organizations.slug })
+    .from(organizations)
+    .where(eq(organizations.id, orgId))
+    .limit(1);
+
+  if (!org) {
+    throw new Error("Organization not found");
   }
 
-  const url = `${engine.url}${path}`;
+  const url = `${GATEWAY_URL}${path}`;
 
   return fetch(url, {
     ...options,
     headers: {
-      Authorization: `Bearer ${engine.apiKey}`,
+      "X-Clean-Slug": org.slug,
       "X-Org-Id": orgId,
       ...options.headers,
     },

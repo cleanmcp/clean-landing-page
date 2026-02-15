@@ -10,6 +10,10 @@ import {
   Trash2,
   AlertTriangle,
   RefreshCw,
+  WifiOff,
+  Clock,
+  FolderGit2,
+  Search,
 } from "lucide-react";
 import {
   Dialog,
@@ -30,14 +34,23 @@ interface ApiKey {
   createdAt: string;
 }
 
-interface TunnelInfo {
-  hostname: string;
-  url: string;
-  token: string;
-  tunnelId: string;
-  dnsRecordId: string;
-  connected: boolean;
+interface OrgToken {
+  id: string;
+  name: string;
+  lastSeenAt: string | null;
+  revokedAt: string | null;
   createdAt: string;
+}
+
+interface EngineStatus {
+  connected: boolean;
+  orgSlug?: string;
+  connectedAt?: string;
+  lastHeartbeat?: {
+    uptime: number;
+    repos: number;
+    searches_total: number;
+  } | null;
 }
 
 interface OrgInfo {
@@ -54,53 +67,25 @@ function formatDate(date: string | null) {
   });
 }
 
-function TunnelField({
-  label,
-  value,
-  onCopy,
-  isCopied,
-  small,
-}: {
-  label: string;
-  value: string;
-  onCopy: () => void;
-  isCopied: boolean;
-  small?: boolean;
-}) {
-  return (
-    <div>
-      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
-        {label}
-      </p>
-      <div className="flex items-center gap-2">
-        <div
-          className={`flex-1 break-all rounded-md bg-[var(--cream)] px-3 py-2 font-mono leading-relaxed text-[var(--ink)] ${
-            small ? "text-xs" : "text-[13px]"
-          }`}
-        >
-          {value}
-        </div>
-        <button
-          onClick={onCopy}
-          className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-            isCopied
-              ? "border-green-200 bg-green-50 text-green-700"
-              : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
-          }`}
-        >
-          {isCopied ? (
-            <>
-              <Check className="h-3 w-3" /> Copied
-            </>
-          ) : (
-            <>
-              <Copy className="h-3 w-3" /> Copy
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  );
+function formatUptime(seconds: number) {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
+function formatRelative(date: string | null) {
+  if (!date) return "Never";
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 export default function KeysPage() {
@@ -113,24 +98,56 @@ export default function KeysPage() {
   }>({ open: false, key: null });
   const [revoking, setRevoking] = useState(false);
 
-  // Tunnel state
-  const [tunnelLoading, setTunnelLoading] = useState(true);
-  const [tunnel, setTunnel] = useState<TunnelInfo | null>(null);
+  // Engine status state
+  const [engineStatus, setEngineStatus] = useState<EngineStatus | null>(null);
+  const [engineLoading, setEngineLoading] = useState(true);
+
+  // Org tokens state
+  const [orgTokens, setOrgTokens] = useState<OrgToken[]>([]);
+  const [tokensLoading, setTokensLoading] = useState(true);
+  const [generatingToken, setGeneratingToken] = useState(false);
+  const [newToken, setNewToken] = useState<string | null>(null);
+  const [tokenName, setTokenName] = useState("");
+  const [generateDialog, setGenerateDialog] = useState(false);
+  const [revokeTokenDialog, setRevokeTokenDialog] = useState<{
+    open: boolean;
+    token: OrgToken | null;
+  }>({ open: false, token: null });
+  const [revokingToken, setRevokingToken] = useState(false);
+
+  // Org info state
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
-  const [rotating, setRotating] = useState(false);
   const [generatingLicense, setGeneratingLicense] = useState(false);
+
+  // Shared state
   const [copied, setCopied] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTunnel = useCallback(async () => {
+  const fetchEngineStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/tunnel");
+      const res = await fetch("/api/engine-status");
       if (res.ok) {
         const data = await res.json();
-        setTunnel(data.tunnel ?? null);
+        setEngineStatus(data);
       }
     } catch {
       // silently fail
+    } finally {
+      setEngineLoading(false);
+    }
+  }, []);
+
+  const fetchOrgTokens = useCallback(async () => {
+    try {
+      const res = await fetch("/api/org-tokens");
+      if (res.ok) {
+        const data = await res.json();
+        setOrgTokens(data.tokens);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setTokensLoading(false);
     }
   }, []);
 
@@ -151,10 +168,16 @@ export default function KeysPage() {
 
   useEffect(() => {
     fetchKeys();
-    Promise.all([fetchTunnel(), fetchOrg()]).finally(() =>
-      setTunnelLoading(false)
-    );
-  }, [fetchTunnel, fetchOrg]);
+    fetchEngineStatus();
+    fetchOrgTokens();
+    fetchOrg();
+  }, [fetchEngineStatus, fetchOrgTokens, fetchOrg]);
+
+  // Refresh engine status every 30s
+  useEffect(() => {
+    const interval = setInterval(fetchEngineStatus, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchEngineStatus]);
 
   async function fetchKeys() {
     try {
@@ -193,30 +216,45 @@ export default function KeysPage() {
     }
   }
 
-  async function handleRotateTunnel() {
-    if (!tunnel || !orgInfo) return;
-    setRotating(true);
+  async function handleGenerateToken() {
+    setGeneratingToken(true);
     setError(null);
     try {
-      const res = await fetch("/api/tunnel", {
-        method: "PATCH",
+      const res = await fetch("/api/org-tokens", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orgSlug: orgInfo.slug,
-          tunnelId: tunnel.tunnelId,
-          dnsRecordId: tunnel.dnsRecordId,
-        }),
+        body: JSON.stringify({ name: tokenName || "default" }),
       });
       if (res.ok) {
-        await fetchTunnel();
+        const data = await res.json();
+        setNewToken(data.token);
+        setTokenName("");
+        setGenerateDialog(false);
+        await fetchOrgTokens();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || "Failed to rotate tunnel");
+        setError(data.error || "Failed to generate token");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");
     } finally {
-      setRotating(false);
+      setGeneratingToken(false);
+    }
+  }
+
+  async function handleRevokeToken(id: string) {
+    setRevokingToken(true);
+    try {
+      const res = await fetch(`/api/org-tokens/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        await fetchOrgTokens();
+        fetchEngineStatus();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setRevokingToken(false);
+      setRevokeTokenDialog({ open: false, token: null });
     }
   }
 
@@ -230,7 +268,7 @@ export default function KeysPage() {
         body: JSON.stringify({ tier: "pro", months: 12 }),
       });
       if (res.ok) {
-        await Promise.all([fetchOrg(), fetchTunnel()]);
+        await Promise.all([fetchOrg(), fetchOrgTokens()]);
       } else {
         const data = await res.json().catch(() => ({}));
         setError(data.error || "Failed to generate license");
@@ -241,6 +279,8 @@ export default function KeysPage() {
       setGeneratingLicense(false);
     }
   }
+
+  const activeTokens = orgTokens.filter((t) => !t.revokedAt);
 
   return (
     <div className="space-y-10 max-w-6xl">
@@ -389,27 +429,255 @@ export default function KeysPage() {
       {/* Divider */}
       <div className="border-t border-[var(--cream-dark)]" />
 
-      {/* Cloudflare Tunnel Section */}
+      {/* Engine Connection Status */}
       <div>
         <h2 className="mb-1 text-2xl font-medium text-[var(--ink)]">
-          Self-Hosted Tunnel
+          Engine Connection
         </h2>
         <p className="mb-6 text-sm text-[var(--ink-muted)]">
-          Tunnel status for your self-hosted Clean deployment
+          Status of your self-hosted Clean engine
         </p>
 
+        {engineLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+          </div>
+        ) : engineStatus?.connected ? (
+          <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)] bg-white">
+            <div className="flex items-center gap-2 border-b border-[var(--cream-dark)] px-4 py-3">
+              <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" />
+              <span className="text-sm font-semibold text-[var(--ink)]">
+                Connected
+              </span>
+              {engineStatus.orgSlug && (
+                <span className="text-xs text-[var(--ink-muted)]">
+                  via {engineStatus.orgSlug}.tryclean.ai
+                </span>
+              )}
+            </div>
+            {engineStatus.lastHeartbeat && (
+              <div className="grid grid-cols-3 divide-x divide-[var(--cream-dark)] px-1">
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <Clock className="h-4 w-4 text-[var(--ink-muted)]" />
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+                      Uptime
+                    </p>
+                    <p className="text-sm font-medium text-[var(--ink)]">
+                      {formatUptime(engineStatus.lastHeartbeat.uptime)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <FolderGit2 className="h-4 w-4 text-[var(--ink-muted)]" />
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+                      Repos
+                    </p>
+                    <p className="text-sm font-medium text-[var(--ink)]">
+                      {engineStatus.lastHeartbeat.repos}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <Search className="h-4 w-4 text-[var(--ink-muted)]" />
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+                      Searches
+                    </p>
+                    <p className="text-sm font-medium text-[var(--ink)]">
+                      {engineStatus.lastHeartbeat.searches_total}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)] bg-white">
+            <div className="flex items-center gap-2 px-4 py-3">
+              <WifiOff className="h-4 w-4 text-gray-400" />
+              <span className="text-sm font-semibold text-[var(--ink-muted)]">
+                Not connected
+              </span>
+            </div>
+            <div className="border-t border-[var(--cream-dark)] px-4 py-3">
+              <p className="text-xs text-[var(--ink-muted)]">
+                Run the installer below to set up and connect your self-hosted engine.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-[var(--cream-dark)]" />
+
+      {/* Org Tokens Section */}
+      <div>
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-medium text-[var(--ink)]">
+              Org Tokens
+            </h2>
+            <p className="mt-1 text-sm text-[var(--ink-muted)]">
+              Tokens that authenticate your engine to the gateway
+            </p>
+          </div>
+          <button
+            onClick={() => setGenerateDialog(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+          >
+            <Plus className="h-4 w-4" />
+            Generate Token
+          </button>
+        </div>
+
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {error}
           </div>
         )}
 
-        {tunnelLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+        {/* Newly generated token (shown once) */}
+        {newToken && (
+          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+            <p className="mb-2 text-sm font-medium text-green-800">
+              Token generated successfully. Copy it now — it won&apos;t be shown again.
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 break-all rounded-md bg-white px-3 py-2 font-mono text-xs text-green-900">
+                {newToken}
+              </code>
+              <button
+                onClick={() => copyToClipboard(newToken, "new-token")}
+                className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  copied === "new-token"
+                    ? "border-green-300 bg-green-100 text-green-700"
+                    : "border-green-200 bg-white text-green-800 hover:bg-green-100"
+                }`}
+              >
+                {copied === "new-token" ? (
+                  <>
+                    <Check className="h-3 w-3" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" /> Copy
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setNewToken(null)}
+                className="rounded-md border border-green-200 bg-white px-3 py-1.5 text-xs font-medium text-green-800 hover:bg-green-100"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
-        ) : !orgInfo?.licenseKey ? (
-          /* No license */
+        )}
+
+        <div className="mt-6 rounded-lg border border-[var(--cream-dark)] bg-white">
+          {tokensLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+            </div>
+          ) : activeTokens.length === 0 ? (
+            <div className="py-14 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--cream-dark)]">
+                <Key className="h-6 w-6 text-[var(--ink-muted)]" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-[var(--ink)]">
+                No org tokens
+              </p>
+              <p className="mb-4 mt-0.5 text-xs text-[var(--ink-muted)]">
+                Generate a token to connect your self-hosted engine
+              </p>
+              <button
+                onClick={() => setGenerateDialog(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Generate your first token
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[var(--cream-dark)]">
+                    <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-[var(--ink-muted)]">
+                      Name
+                    </th>
+                    <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-[var(--ink-muted)]">
+                      Last Seen
+                    </th>
+                    <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-[var(--ink-muted)]">
+                      Created
+                    </th>
+                    <th className="w-[60px]" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeTokens.map((token) => (
+                    <tr
+                      key={token.id}
+                      className="border-b border-[var(--cream-dark)] transition-colors hover:bg-[var(--cream)]"
+                    >
+                      <td className="px-5 py-3 text-sm font-medium text-[var(--ink)]">
+                        {token.name}
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="flex items-center gap-1.5">
+                          {token.lastSeenAt ? (
+                            <>
+                              <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                              <span className="text-sm text-[var(--ink-muted)]">
+                                {formatRelative(token.lastSeenAt)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-[var(--ink-muted)]">
+                              Never
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-2 py-3 text-sm text-[var(--ink-muted)]">
+                        {formatDate(token.createdAt)}
+                      </td>
+                      <td className="px-2 py-3">
+                        <button
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--ink-muted)] transition-colors hover:bg-red-50 hover:text-red-600"
+                          onClick={() =>
+                            setRevokeTokenDialog({ open: true, token })
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-[var(--cream-dark)]" />
+
+      {/* Setup Instructions */}
+      <div>
+        <h2 className="mb-1 text-2xl font-medium text-[var(--ink)]">
+          Setup
+        </h2>
+        <p className="mb-6 text-sm text-[var(--ink-muted)]">
+          Install and connect your self-hosted Clean engine
+        </p>
+
+        {!orgInfo?.licenseKey ? (
           <div className="rounded-lg border border-[var(--cream-dark)] bg-white py-14 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--cream-dark)]">
               <Key className="h-6 w-6 text-[var(--ink-muted)]" />
@@ -438,42 +706,8 @@ export default function KeysPage() {
               )}
             </button>
           </div>
-        ) : !tunnel ? (
-          /* License exists but no tunnel (edge case) */
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-            Tunnel provisioning... If this persists, contact support.
-          </div>
         ) : (
-          /* License + tunnel exist — setup instructions */
           <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)] bg-white">
-            <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`h-2 w-2 rounded-full ${
-                    tunnel.connected
-                      ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]"
-                      : "bg-gray-300"
-                  }`}
-                />
-                <span className="text-sm font-semibold text-[var(--ink)]">
-                  {tunnel.connected ? "Connected" : "Disconnected"}
-                </span>
-                <span className="text-xs text-[var(--ink-muted)]">
-                  Created {formatDate(tunnel.createdAt)}
-                </span>
-              </div>
-              <button
-                onClick={handleRotateTunnel}
-                disabled={rotating}
-                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`h-3 w-3 ${rotating ? "animate-spin" : ""}`}
-                />
-                {rotating ? "Rotating..." : "Rotate Token"}
-              </button>
-            </div>
-
             <div className="space-y-5 p-4">
               {/* Step 1: Run the command */}
               <div>
@@ -485,7 +719,9 @@ export default function KeysPage() {
                     npx @tryclean/create
                   </code>
                   <button
-                    onClick={() => copyToClipboard("npx @tryclean/create", "cmd")}
+                    onClick={() =>
+                      copyToClipboard("npx @tryclean/create", "cmd")
+                    }
                     className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                       copied === "cmd"
                         ? "border-green-200 bg-green-50 text-green-700"
@@ -506,47 +742,46 @@ export default function KeysPage() {
               </div>
 
               {/* Step 2: Paste license key when prompted */}
-              {orgInfo?.licenseKey && (
-                <div>
-                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
-                    Step 2 — Paste your license key when prompted
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 break-all rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-xs leading-relaxed text-[var(--ink)]">
-                      {orgInfo.licenseKey}
-                    </code>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(orgInfo.licenseKey!, "license")
-                      }
-                      className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                        copied === "license"
-                          ? "border-green-200 bg-green-50 text-green-700"
-                          : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
-                      }`}
-                    >
-                      {copied === "license" ? (
-                        <>
-                          <Check className="h-3 w-3" /> Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3 w-3" /> Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <p className="mt-1.5 text-xs text-[var(--ink-muted)]">
-                    The installer will automatically set up your tunnel and configure everything else.
-                  </p>
+              <div>
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+                  Step 2 — Paste your license key when prompted
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 break-all rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-xs leading-relaxed text-[var(--ink)]">
+                    {orgInfo.licenseKey}
+                  </code>
+                  <button
+                    onClick={() =>
+                      copyToClipboard(orgInfo.licenseKey!, "license")
+                    }
+                    className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      copied === "license"
+                        ? "border-green-200 bg-green-50 text-green-700"
+                        : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
+                    }`}
+                  >
+                    {copied === "license" ? (
+                      <>
+                        <Check className="h-3 w-3" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" /> Copy
+                      </>
+                    )}
+                  </button>
                 </div>
-              )}
+                <p className="mt-1.5 text-xs text-[var(--ink-muted)]">
+                  The installer will automatically provision your org token and
+                  configure the gateway connection.
+                </p>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Revoke Confirmation Dialog */}
+      {/* Revoke API Key Dialog */}
       <Dialog
         open={revokeDialog.open}
         onOpenChange={(open) => setRevokeDialog({ open, key: null })}
@@ -579,6 +814,104 @@ export default function KeysPage() {
               className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
             >
               {revoking ? "Revoking..." : "Revoke Key"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revoke Org Token Dialog */}
+      <Dialog
+        open={revokeTokenDialog.open}
+        onOpenChange={(open) =>
+          setRevokeTokenDialog({ open, token: null })
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              Revoke Org Token
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to revoke{" "}
+              <strong>{revokeTokenDialog.token?.name}</strong>? Any engine using
+              this token will be disconnected.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button
+              onClick={() =>
+                setRevokeTokenDialog({ open: false, token: null })
+              }
+              className="rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() =>
+                revokeTokenDialog.token &&
+                handleRevokeToken(revokeTokenDialog.token.id)
+              }
+              disabled={revokingToken}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+            >
+              {revokingToken ? "Revoking..." : "Revoke Token"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generate Token Dialog */}
+      <Dialog
+        open={generateDialog}
+        onOpenChange={(open) => {
+          setGenerateDialog(open);
+          if (!open) setTokenName("");
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Org Token</DialogTitle>
+            <DialogDescription>
+              Create a new token for your engine to authenticate with the
+              gateway. The token will only be shown once.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="mb-1.5 block text-sm font-medium text-[var(--ink)]">
+              Token Name
+            </label>
+            <input
+              type="text"
+              value={tokenName}
+              onChange={(e) => setTokenName(e.target.value)}
+              placeholder="e.g. production, staging"
+              className="w-full rounded-lg border border-[var(--cream-dark)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+            />
+          </div>
+          <DialogFooter>
+            <button
+              onClick={() => {
+                setGenerateDialog(false);
+                setTokenName("");
+              }}
+              className="rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleGenerateToken}
+              disabled={generatingToken}
+              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+            >
+              {generatingToken ? (
+                <>
+                  <RefreshCw className="mr-1.5 inline h-3.5 w-3.5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                "Generate"
+              )}
             </button>
           </DialogFooter>
         </DialogContent>

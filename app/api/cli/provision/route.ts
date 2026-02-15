@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "node:crypto";
 import { verifyLicenseKey } from "@/lib/license";
 import { db } from "@/lib/db";
-import { organizations, tunnels } from "@/lib/db/schema";
+import { organizations, orgTokens } from "@/lib/db/schema";
+import { generateOrgToken } from "@/lib/org-tokens";
+import { audit } from "@/lib/audit";
 import { eq } from "drizzle-orm";
 
 // ── Simple in-memory rate limiter (5 req/min per license key) ────────
@@ -76,32 +77,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Look up tunnel for this org
-    const [tunnel] = await db
-      .select()
-      .from(tunnels)
-      .where(eq(tunnels.orgId, org.id))
-      .limit(1);
+    // 5. Generate an org token for gateway auth
+    const { plainToken, tokenHash } = generateOrgToken();
 
-    if (!tunnel) {
-      return NextResponse.json(
-        { error: "Tunnel not provisioned — contact support" },
-        { status: 404 }
-      );
-    }
+    const [orgToken] = await db
+      .insert(orgTokens)
+      .values({
+        orgId: org.id,
+        name: "cli-provisioned",
+        tokenHash,
+      })
+      .returning({ id: orgTokens.id });
 
-    // 6. Generate engine API key and store it
-    const engineApiKey = `clean_sk_prod_${crypto.randomBytes(32).toString("hex")}`;
-    await db
-      .update(tunnels)
-      .set({ engineApiKey })
-      .where(eq(tunnels.id, tunnel.id));
+    // Audit
+    audit({
+      orgId: org.id,
+      action: "token.created",
+      resourceType: "org_token",
+      resourceId: orgToken.id,
+      metadata: { source: "cli-provision" },
+    });
 
-    // 7. Return tunnel info + license claims + API key
+    // 6. Return org token + org info
     return NextResponse.json({
-      tunnelToken: tunnel.token,
-      tunnelUrl: `https://${tunnel.hostname}`,
-      apiKey: engineApiKey,
+      orgToken: plainToken,
       orgSlug: org.slug,
       tier: claims.tier,
       maxRepos: claims.max_repos,

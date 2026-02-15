@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { generateLicenseKey } from "@/lib/license";
 import { db } from "@/lib/db";
-import { organizations, orgMembers, tunnels } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { createTunnel } from "@/lib/cloudflare-tunnel";
+import { organizations, orgMembers, orgTokens } from "@/lib/db/schema";
+import { generateOrgToken } from "@/lib/org-tokens";
+import { audit } from "@/lib/audit";
+import { eq, and, isNull } from "drizzle-orm";
 
-// POST /api/license — generate license + auto-create tunnel
+// POST /api/license — generate license + auto-create org token
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth check (Clerk session required)
@@ -84,43 +85,47 @@ export async function POST(request: NextRequest) {
       })
       .where(eq(organizations.id, ctx.orgId));
 
-    // 7. Auto-create tunnel if one doesn't exist
-    let tunnelInfo;
-    const [existingTunnel] = await db
-      .select()
-      .from(tunnels)
-      .where(eq(tunnels.orgId, ctx.orgId))
+    // 7. Auto-create org token if one doesn't exist
+    let tokenInfo;
+    const [existingToken] = await db
+      .select({ id: orgTokens.id })
+      .from(orgTokens)
+      .where(and(eq(orgTokens.orgId, ctx.orgId), isNull(orgTokens.revokedAt)))
       .limit(1);
 
-    if (existingTunnel) {
-      tunnelInfo = {
-        hostname: existingTunnel.hostname,
-        url: `https://${existingTunnel.hostname}`,
-        token: existingTunnel.token,
-        tunnelId: existingTunnel.cloudflareTunnelId,
-      };
+    if (existingToken) {
+      tokenInfo = { exists: true, message: "Org token already exists" };
     } else {
-      const result = await createTunnel(org.slug);
+      const { plainToken, tokenHash } = generateOrgToken();
 
-      await db.insert(tunnels).values({
+      const [newToken] = await db
+        .insert(orgTokens)
+        .values({
+          orgId: ctx.orgId,
+          name: "auto-provisioned",
+          tokenHash,
+        })
+        .returning({ id: orgTokens.id });
+
+      audit({
         orgId: ctx.orgId,
-        cloudflareTunnelId: result.tunnelId,
-        hostname: result.hostname,
-        dnsRecordId: result.dnsRecordId,
-        token: result.token,
+        userId: ctx.userId,
+        action: "token.created",
+        resourceType: "org_token",
+        resourceId: newToken.id,
+        metadata: { source: "license-generation" },
       });
 
-      tunnelInfo = {
-        hostname: result.hostname,
-        url: `https://${result.hostname}`,
-        token: result.token,
-        tunnelId: result.tunnelId,
+      tokenInfo = {
+        exists: false,
+        orgToken: plainToken,
+        message: "New org token created — save it, it won't be shown again",
       };
     }
 
     return NextResponse.json({
       licenseKey,
-      tunnel: tunnelInfo,
+      orgToken: tokenInfo,
     });
   } catch (error) {
     console.error("License generation failed:", error);

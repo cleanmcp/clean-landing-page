@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { generateLicenseKey } from "@/lib/license";
 import { db } from "@/lib/db";
-import { organizations, tunnels } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { createTunnel } from "@/lib/cloudflare-tunnel";
+import { organizations, orgTokens } from "@/lib/db/schema";
+import { generateOrgToken } from "@/lib/org-tokens";
+import { eq, and, isNull } from "drizzle-orm";
 
 // GET /api/dev/test-license?slug=acme-corp&tier=enterprise&months=120
 //
 // Generates a maxed-out license key, stores it on the org, and
-// auto-provisions a tunnel if one doesn't exist.
+// auto-provisions an org token if one doesn't exist.
 // Protected by CLEAN_DEV_MODE env var — returns 404 in production.
 
 export async function GET(request: Request) {
@@ -52,37 +52,27 @@ export async function GET(request: Request) {
       .where(eq(organizations.id, org.id));
   }
 
-  // Auto-provision tunnel if missing
-  let tunnelInfo;
+  // Auto-provision org token if missing
+  let tokenInfo;
   const [existing] = await db
-    .select()
-    .from(tunnels)
-    .where(eq(tunnels.orgId, org.id))
+    .select({ id: orgTokens.id })
+    .from(orgTokens)
+    .where(and(eq(orgTokens.orgId, org.id), isNull(orgTokens.revokedAt)))
     .limit(1);
 
   if (existing) {
-    tunnelInfo = {
-      hostname: existing.hostname,
-      url: `https://${existing.hostname}`,
-      token: existing.token,
-    };
+    tokenInfo = { exists: true, message: "Org token already exists" };
   } else {
     try {
-      const result = await createTunnel(slug);
-      await db.insert(tunnels).values({
+      const { plainToken, tokenHash } = generateOrgToken();
+      await db.insert(orgTokens).values({
         orgId: org.id,
-        cloudflareTunnelId: result.tunnelId,
-        hostname: result.hostname,
-        dnsRecordId: result.dnsRecordId,
-        token: result.token,
+        name: "dev-provisioned",
+        tokenHash,
       });
-      tunnelInfo = {
-        hostname: result.hostname,
-        url: `https://${result.hostname}`,
-        token: result.token,
-      };
+      tokenInfo = { orgToken: plainToken };
     } catch (err) {
-      tunnelInfo = { error: (err as Error).message };
+      tokenInfo = { error: (err as Error).message };
     }
   }
 
@@ -91,7 +81,7 @@ export async function GET(request: Request) {
     tier,
     months,
     slug,
-    tunnel: tunnelInfo,
+    orgToken: tokenInfo,
     usage: `npx create-clean --license ${licenseKey.slice(0, 30)}...`,
   });
 }
