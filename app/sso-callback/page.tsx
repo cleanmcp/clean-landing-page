@@ -10,11 +10,9 @@ export default function SSOCallbackPage() {
     >
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--ink) border-t-transparent" />
       <AuthenticateWithRedirectCallback
-        signInForceRedirectUrl="/onboarding"
-        signUpForceRedirectUrl="/onboarding"
+        signInFallbackRedirectUrl="/onboarding"
+        signUpFallbackRedirectUrl="/onboarding"
       />
-      {/* Clerk needs this for bot-protection during OAuth callback */}
-      <div id="clerk-captcha" />
     </div>
   );
 }

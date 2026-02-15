@@ -43,10 +43,19 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!isLoaded || !user) return;
-    fetch("/api/onboarding")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data && data.step < 2) {
+
+    // Check onboarding status.  If the API says step < 2 we *still* let the
+    // user through when they already belong to an org (i.e. they accepted an
+    // invite and skipped onboarding).
+    Promise.all([
+      fetch("/api/onboarding").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/org").then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([onboarding, org]) => {
+        const step = onboarding?.step ?? 0;
+        const hasOrg = !!org?.org?.id;
+
+        if (step < 2 && !hasOrg) {
           router.push("/onboarding");
         } else {
           setOnboardingChecked(true);

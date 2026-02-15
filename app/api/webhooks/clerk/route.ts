@@ -89,13 +89,17 @@ export async function POST(req: Request) {
 
     const email = email_addresses?.[0]?.email_address ?? null;
 
-    // Insert user
-    await db.insert(users).values({
-      id,
-      name,
-      email,
-      image: image_url ?? null,
-    });
+    // Insert user (onConflictDoNothing handles the race where the invite-
+    // accept endpoint already created the row with onboardingStep = 2).
+    await db
+      .insert(users)
+      .values({
+        id,
+        name,
+        email,
+        image: image_url ?? null,
+      })
+      .onConflictDoNothing();
 
     // Auto-create personal organization
     try {

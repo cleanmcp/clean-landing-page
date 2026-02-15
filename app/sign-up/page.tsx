@@ -2,15 +2,18 @@
 
 import { useSignUp } from "@clerk/nextjs";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OAuthStrategy } from "@clerk/types";
 
 export default function SignUpPage() {
   const { signUp, isLoaded, setActive } = useSignUp();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect_url");
 
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"details" | "verify">("details");
   const [error, setError] = useState("");
@@ -30,7 +33,7 @@ export default function SignUpPage() {
       await signUp.authenticateWithRedirect({
         strategy,
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/onboarding",
+        redirectUrlComplete: redirectUrl || "/onboarding",
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "OAuth sign-up failed";
@@ -44,11 +47,15 @@ export default function SignUpPage() {
     setError("");
     setLoading(true);
     try {
-      await signUp.create({ emailAddress: email });
+      await signUp.create({ emailAddress: email, password });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setStep("verify");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
+      const clerkErr = err as { errors?: { message: string; longMessage?: string }[] };
+      const message =
+        clerkErr?.errors?.[0]?.longMessage ||
+        clerkErr?.errors?.[0]?.message ||
+        (err instanceof Error ? err.message : "Something went wrong");
       setError(message);
     } finally {
       setLoading(false);
@@ -65,12 +72,16 @@ export default function SignUpPage() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/onboarding");
+        router.push(redirectUrl || "/onboarding");
       } else {
         setError("Verification incomplete. Please try again.");
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Invalid code";
+      const clerkErr = err as { errors?: { message: string; longMessage?: string }[] };
+      const message =
+        clerkErr?.errors?.[0]?.longMessage ||
+        clerkErr?.errors?.[0]?.message ||
+        (err instanceof Error ? err.message : "Invalid code");
       setError(message);
     } finally {
       setLoading(false);
@@ -164,6 +175,29 @@ export default function SignUpPage() {
                     "--tw-ring-color": "var(--accent)",
                   }}
                 />
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-sm font-medium"
+                  style={{ color: "var(--ink-light)" }}
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create a password"
+                  className="mb-4 w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-2"
+                  style={{
+                    background: "var(--cream)",
+                    borderColor: "var(--cream-dark)",
+                    color: "var(--ink)",
+                    // @ts-expect-error CSS custom property
+                    "--tw-ring-color": "var(--accent)",
+                  }}
+                />
                 <button
                   type="submit"
                   disabled={loading}
@@ -230,9 +264,6 @@ export default function SignUpPage() {
               </button>
             </form>
           )}
-
-          {/* Always render captcha mount point so Clerk can find it */}
-          <div id="clerk-captcha" className="mt-3" />
         </div>
 
         <p className="mt-6 text-center text-sm" style={{ color: "var(--ink-muted)" }}>

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(xargs:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx drizzle-kit:*)"
+    ]
+  }
+}

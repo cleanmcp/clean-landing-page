@@ -8,6 +8,13 @@
       "when": 1771038006283,
       "tag": "0000_right_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771184687968,
+      "tag": "0001_tearful_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

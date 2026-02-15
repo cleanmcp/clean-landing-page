@@ -40,13 +40,17 @@ export const organizations = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     name: text("name").notNull(),
     slug: text("slug").notNull().unique(),
+    clerkOrgId: text("clerk_org_id"),
     metadata: jsonb("metadata").$type<OrgMetadata>(),
     licenseKey: text("license_key"),
     tier: text("tier").$type<"free" | "pro" | "enterprise">().default("free"),
     licenseExpiresAt: timestamp("license_expires_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("organizations_slug_idx").on(table.slug)]
+  (table) => [
+    index("organizations_slug_idx").on(table.slug),
+    index("organizations_clerk_org_id_idx").on(table.clerkOrgId),
+  ]
 );
 
 // ============================================================================
@@ -186,5 +190,34 @@ export const tunnels = pgTable(
   },
   (table) => [
     index("tunnels_cloudflare_tunnel_id_idx").on(table.cloudflareTunnelId),
+  ]
+);
+
+// ============================================================================
+// INVITES
+// ============================================================================
+
+export const invites = pgTable(
+  "invites",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").notNull().unique(),
+    role: text("role").$type<OrgRole>().notNull().default("MEMBER"),
+    email: text("email"),
+    maxUses: integer("max_uses"),
+    useCount: integer("use_count").notNull().default(0),
+    expiresAt: timestamp("expires_at"),
+    revokedAt: timestamp("revoked_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("invites_org_id_idx").on(table.orgId),
+    index("invites_token_idx").on(table.token),
   ]
 );

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { users, organizations, orgMembers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
+import { ensureClerkOrg } from "@/lib/clerk-org";
 
 /**
  * Ensure a user has a personal organization.
  * Creates one if missing. Returns the org ID.
+ * Prefers the most recently joined org so invite-accepted orgs take priority.
  */
 async function ensurePersonalOrg(
   userId: string,
@@ -16,6 +18,7 @@ async function ensurePersonalOrg(
     .select({ orgId: orgMembers.orgId })
     .from(orgMembers)
     .where(eq(orgMembers.userId, userId))
+    .orderBy(desc(orgMembers.joinedAt))
     .limit(1);
 
   if (existing.length > 0) return existing[0].orgId;
@@ -44,6 +47,15 @@ async function resolveAuth() {
   const { userId } = await auth();
   if (!userId) return null;
 
+  // Fetch Clerk profile so we always have name/email/image
+  const clerkUser = await currentUser();
+  const name =
+    [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ") ||
+    clerkUser?.emailAddresses?.[0]?.emailAddress ||
+    null;
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress ?? null;
+  const image = clerkUser?.imageUrl ?? null;
+
   const [existingUser] = await db
     .select()
     .from(users)
@@ -53,14 +65,17 @@ async function resolveAuth() {
   if (!existingUser) {
     await db
       .insert(users)
-      .values({ id: userId })
+      .values({ id: userId, name, email, image })
       .onConflictDoNothing();
+  } else if (!existingUser.name && name) {
+    // Backfill profile data if missing
+    await db
+      .update(users)
+      .set({ name, email, image })
+      .where(eq(users.id, userId));
   }
 
-  const orgId = await ensurePersonalOrg(
-    userId,
-    existingUser?.name ?? null
-  );
+  const orgId = await ensurePersonalOrg(userId, name);
 
   return { userId, orgId };
 }
@@ -89,8 +104,11 @@ export async function GET() {
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);
 
+    const step = user?.onboardingStep ?? 0;
+    console.log(`GET /api/onboarding — userId=${ctx.userId}, step=${step}`);
+
     return NextResponse.json({
-      step: user?.onboardingStep ?? 0,
+      step,
       orgName: org?.name ?? "",
       orgSlug: org?.slug ?? "",
       metadata: org?.metadata ?? {},
@@ -199,6 +217,14 @@ export async function PATCH(request: NextRequest) {
           },
         })
         .where(eq(organizations.id, ctx.orgId));
+
+      // Create corresponding Clerk Organization (best-effort, log errors loudly)
+      try {
+        const clerkOrgId = await ensureClerkOrg(ctx.orgId, ctx.userId);
+        console.log("[onboarding] Clerk org created/found:", clerkOrgId);
+      } catch (err) {
+        console.error("[onboarding] FAILED to create Clerk org:", err);
+      }
     }
 
     // Step 1→2: Save primary tool → onboarding complete
