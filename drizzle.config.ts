@@ -1,3 +1,4 @@
+// @ts-expect-error — dotenv types don't resolve under "exports"
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
