@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "https://api.tryclean.ai";
 const GATEWAY_SECRET = process.env.GATEWAY_INTERNAL_SECRET || "";
+const CLEAN_API_KEY = process.env.CLEAN_API_KEY || "";
 
 /**
  * Engine status from the gateway.
@@ -93,6 +94,7 @@ export async function engineFetch(
     headers: {
       "X-Clean-Slug": org.slug,
       "X-Org-Id": orgId,
+      ...(CLEAN_API_KEY ? { Authorization: `Bearer ${CLEAN_API_KEY}` } : {}),
       ...options.headers,
     },
   });
