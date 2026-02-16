@@ -108,8 +108,8 @@ export async function POST(request: NextRequest) {
       metadata: { name, scopes },
     });
 
-    // Sync key hash to the self-hosted engine (fire-and-forget)
-    syncKeyToEngine(ctx.orgId, "create", {
+    // Sync key hash to the self-hosted engine
+    await syncKeyToEngine(ctx.orgId, "create", {
       id: apiKey.id,
       orgId: ctx.orgId,
       keyPrefix,

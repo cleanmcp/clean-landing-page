@@ -56,9 +56,9 @@ export async function DELETE(
       metadata: { name: key.name },
     });
 
-    // Sync revocation to the self-hosted engine (fire-and-forget)
+    // Sync revocation to the self-hosted engine
     if (key.orgId) {
-      syncKeyToEngine(key.orgId, "revoke", { id });
+      await syncKeyToEngine(key.orgId, "revoke", { id });
     }
 
     return NextResponse.json({ success: true });
