@@ -21,7 +21,7 @@ interface EngineStatus {
 
 /**
  * Get engine connection info via the gateway.
- * Returns the org slug (used as subdomain) for URL construction,
+ * Returns the engine URL via api.tryclean.ai,
  * or null if no engine is connected.
  */
 export async function getEngineInfo(
@@ -33,7 +33,7 @@ export async function getEngineInfo(
     const status = await getEngineStatus(orgId);
     if (!status.connected || !status.orgSlug) return null;
 
-    return { url: `https://${status.orgSlug}.tryclean.ai` };
+    return { url: `https://api.tryclean.ai` };
   } catch {
     return null;
   }

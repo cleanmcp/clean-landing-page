@@ -451,7 +451,7 @@ export default function KeysPage() {
               </span>
               {engineStatus.orgSlug && (
                 <span className="text-xs text-[var(--ink-muted)]">
-                  via {engineStatus.orgSlug}.tryclean.ai
+                  via api.tryclean.ai
                 </span>
               )}
             </div>

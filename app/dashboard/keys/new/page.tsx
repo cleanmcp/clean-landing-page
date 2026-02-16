@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -38,7 +38,24 @@ export default function NewApiKeyPage() {
   const [creating, setCreating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedConfig, setCopiedConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [orgSlug, setOrgSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchOrg() {
+      try {
+        const res = await fetch("/api/org");
+        if (res.ok) {
+          const data = await res.json();
+          setOrgSlug(data.org.slug);
+        }
+      } catch {
+        // silently fail
+      }
+    }
+    fetchOrg();
+  }, []);
 
   function toggleScope(scope: string) {
     if (selectedScopes.includes(scope)) {
@@ -199,7 +216,7 @@ export default function NewApiKeyPage() {
       </div>
 
       {/* Generated Key Dialog */}
-      <Dialog open={!!generatedKey} onOpenChange={() => {}}>
+      <Dialog open={!!generatedKey} onOpenChange={(open) => { if (!open) handleDone(); }}>
         <DialogContent
           className="sm:max-w-md"
           onPointerDownOutside={(e) => e.preventDefault()}
@@ -248,19 +265,54 @@ export default function NewApiKeyPage() {
               <summary className="cursor-pointer p-3 text-xs font-medium text-[var(--ink)]">
                 MCP config for Claude Code
               </summary>
-              <pre className="overflow-x-auto border-t border-[var(--cream-dark)] bg-white p-2.5 text-[11px] leading-relaxed text-[var(--ink)]">
-                {`{
-  "mcpServers": {
-    "clean": {
-      "type": "sse",
-      "url": "YOUR_SERVER_URL/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer <your-key>"
-      }
-    }
-  }
-}`}
-              </pre>
+              <div className="border-t border-[var(--cream-dark)]">
+                <pre className="overflow-x-auto bg-white p-2.5 text-[11px] leading-relaxed text-[var(--ink)]">
+                  {JSON.stringify({
+                    mcpServers: {
+                      clean: {
+                        type: "sse",
+                        url: "https://api.tryclean.ai/mcp/sse",
+                        headers: {
+                          Authorization: `Bearer ${generatedKey}`,
+                          "X-Clean-Slug": orgSlug ?? "your-org",
+                        },
+                      },
+                    },
+                  }, null, 2)}
+                </pre>
+                <div className="border-t border-[var(--cream-dark)] p-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(JSON.stringify({
+                          mcpServers: {
+                            clean: {
+                              type: "sse",
+                              url: "https://api.tryclean.ai/mcp/sse",
+                              headers: {
+                                Authorization: `Bearer ${generatedKey}`,
+                                "X-Clean-Slug": orgSlug ?? "your-org",
+                              },
+                            },
+                          },
+                        }, null, 2));
+                        setCopiedConfig(true);
+                        setTimeout(() => setCopiedConfig(false), 2000);
+                      } catch {
+                        // clipboard API might not be available
+                      }
+                    }}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+                  >
+                    {copiedConfig ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                    {copiedConfig ? "Copied!" : "Copy config"}
+                  </button>
+                </div>
+              </div>
             </details>
           </div>
 
