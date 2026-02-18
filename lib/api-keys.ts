@@ -1,8 +1,14 @@
 import { randomBytes, createHash } from "crypto";
 import bcrypt from "bcryptjs";
 
-// API Key format: clean_sk_{env}_{random32}
-// Example: clean_sk_prod_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+// API Key format: clean_sk_{env}_{random32hex} = 78 characters total.
+// bcrypt truncates input at 72 bytes, so the last 6 chars were silently ignored.
+// Fix: SHA-256 pre-hash the key (producing 64 hex chars) before bcrypt.
+//
+// Migration: keys created before this change store bcrypt(plainKey) hashes.
+// Keys created after store bcrypt(sha256(plainKey)) hashes. The verifyApiKey()
+// function tries the new scheme first, then falls back to legacy raw bcrypt
+// so both old and new keys verify correctly.
 
 const KEY_PREFIX = "clean_sk";
 const SALT_ROUNDS = 12;
@@ -32,8 +38,9 @@ export async function generateApiKey(
   // Prefix for display: clean_sk_prod_a1b2c3d4 (first 8 chars of random)
   const keyPrefix = `${KEY_PREFIX}_${env}_${randomPart.slice(0, 8)}`;
 
-  // Hash the full key for storage
-  const keyHash = await bcrypt.hash(plainKey, SALT_ROUNDS);
+  // SHA-256 pre-hash to avoid bcrypt 72-byte truncation, then bcrypt the digest
+  const sha256 = createHash("sha256").update(plainKey).digest("hex");
+  const keyHash = await bcrypt.hash(sha256, SALT_ROUNDS);
 
   return {
     plainKey,
@@ -43,12 +50,19 @@ export async function generateApiKey(
 }
 
 /**
- * Verify an API key against a stored hash
+ * Verify an API key against a stored hash.
+ * Tries SHA-256 pre-hash scheme first (new keys), then falls back to
+ * legacy raw bcrypt for keys created before the pre-hash fix.
  */
 export async function verifyApiKey(
   plainKey: string,
   keyHash: string
 ): Promise<boolean> {
+  // New scheme: SHA-256 pre-hash + bcrypt
+  const sha256 = createHash("sha256").update(plainKey).digest("hex");
+  if (await bcrypt.compare(sha256, keyHash)) return true;
+
+  // Legacy fallback: raw bcrypt (truncated at 72 bytes)
   return bcrypt.compare(plainKey, keyHash);
 }
 
@@ -68,10 +82,3 @@ export function isValidKeyFormat(key: string): boolean {
   return /^clean_sk_(prod|dev)_[a-f0-9]{64}$/.test(key);
 }
 
-/**
- * Hash a key for quick lookup (not for security, just for indexing)
- * Use SHA256 for fast lookup, bcrypt for verification
- */
-export function quickHash(plainKey: string): string {
-  return createHash("sha256").update(plainKey).digest("hex");
-}
