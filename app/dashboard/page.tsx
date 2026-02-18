@@ -355,7 +355,11 @@ export default function DashboardPage() {
           return r.json();
         })
         .then((d) => setRepoCount(d.repos?.length ?? 0)),
-      fetchActivity(),
+      fetch("/api/dashboard/activity")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (Array.isArray(d?.activity)) setActivity(d.activity);
+        }),
     ]);
 
     // Poll activity every 30 seconds
