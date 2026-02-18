@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { users, organizations, orgMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { ensureClerkOrg } from "@/lib/clerk-org";
+import { generateSlug, validateSlug } from "@/lib/slug";
 
 /**
  * Ensure a user has a personal organization.
@@ -180,12 +181,12 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      let slug = orgName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
+      let slug = generateSlug(orgName);
 
-      if (!slug) slug = "org";
+      const slugError = validateSlug(slug);
+      if (slugError) {
+        return NextResponse.json({ error: slugError }, { status: 400 });
+      }
 
       const [existing] = await db
         .select({ id: organizations.id })
