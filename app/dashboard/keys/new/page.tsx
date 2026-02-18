@@ -31,6 +31,13 @@ const AVAILABLE_SCOPES = [
   },
 ];
 
+const EXPIRATION_OPTIONS = [
+  { id: "never", label: "Never" },
+  { id: "30d", label: "30 days" },
+  { id: "90d", label: "90 days" },
+  { id: "1y", label: "1 year" },
+];
+
 export default function NewApiKeyPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -39,6 +46,7 @@ export default function NewApiKeyPage() {
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedConfig, setCopiedConfig] = useState(false);
+  const [expiration, setExpiration] = useState<string>("never");
   const [error, setError] = useState<string | null>(null);
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
 
@@ -70,10 +78,21 @@ export default function NewApiKeyPage() {
     setCreating(true);
     setError(null);
     try {
+      const expiresAt = expiration === "never" ? null
+        : new Date(Date.now() + ({
+            "30d": 30 * 86400000,
+            "90d": 90 * 86400000,
+            "1y": 365 * 86400000,
+          }[expiration] ?? 0)).toISOString();
+
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), scopes: selectedScopes }),
+        body: JSON.stringify({
+          name: name.trim(),
+          scopes: selectedScopes,
+          expiresAt,
+        }),
       });
 
       if (res.ok) {
@@ -189,6 +208,28 @@ export default function NewApiKeyPage() {
                     )}
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-[var(--ink)]">
+              Expiration
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {EXPIRATION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    expiration === opt.id
+                      ? "border-[var(--accent)] bg-[var(--accent)]/5 text-[var(--accent)]"
+                      : "border-[var(--cream-dark)] text-[var(--ink-muted)] hover:bg-[var(--cream)]"
+                  }`}
+                  onClick={() => setExpiration(opt.id)}
+                >
+                  {opt.label}
+                </button>
               ))}
             </div>
           </div>
