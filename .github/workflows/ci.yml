@@ -10,8 +10,8 @@ jobs:
   lint-and-build:
     runs-on: ubuntu-latest
     env:
-      # Omit NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY so layout.tsx skips ClerkProvider
-      # during static generation (Clerk validates key format at build time)
+      # Clerk validates key format at build time — must be pk_test_ + base64(instance$)
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktcGxhY2Vob2xkZXItMDAuY2xlcmsuYWNjb3VudHMuZGV2JA
       CLERK_SECRET_KEY: sk_test_placeholder
       DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
     steps:
