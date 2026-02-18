@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,28 +34,12 @@ const AVAILABLE_SCOPES = [
 export default function NewApiKeyPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [selectedScopes, setSelectedScopes] = useState<string[]>(["search"]);
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(["search", "index"]);
   const [creating, setCreating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedConfig, setCopiedConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [orgSlug, setOrgSlug] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchOrg() {
-      try {
-        const res = await fetch("/api/org");
-        if (res.ok) {
-          const data = await res.json();
-          setOrgSlug(data.org.slug);
-        }
-      } catch {
-        // silently fail
-      }
-    }
-    fetchOrg();
-  }, []);
 
   function toggleScope(scope: string) {
     if (selectedScopes.includes(scope)) {
@@ -274,7 +258,6 @@ export default function NewApiKeyPage() {
                         url: "https://api.tryclean.ai/mcp/sse",
                         headers: {
                           Authorization: `Bearer ${generatedKey}`,
-                          "X-Clean-Slug": orgSlug ?? "your-org",
                         },
                       },
                     },
@@ -291,7 +274,6 @@ export default function NewApiKeyPage() {
                               url: "https://api.tryclean.ai/mcp/sse",
                               headers: {
                                 Authorization: `Bearer ${generatedKey}`,
-                                "X-Clean-Slug": orgSlug ?? "your-org",
                               },
                             },
                           },
