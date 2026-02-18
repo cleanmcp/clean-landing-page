@@ -5,7 +5,9 @@ import { apiKeys } from "@/lib/db/schema";
 import { generateApiKey } from "@/lib/api-keys";
 import { audit } from "@/lib/audit";
 import { syncKeyToEngine } from "@/lib/engine-sync";
-import { eq, isNull, and, desc } from "drizzle-orm";
+import { eq, isNull, and, desc, sql } from "drizzle-orm";
+import { organizations } from "@/lib/db/schema";
+import { getTierLimits } from "@/lib/tier-limits";
 
 // GET /api/keys - List all API keys for the user
 export async function GET() {
@@ -79,6 +81,29 @@ export async function POST(request: NextRequest) {
     const validScopes = ["search", "index", "admin"];
     if (!scopes.every((s: string) => validScopes.includes(s))) {
       return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
+    }
+
+    // Enforce tier limit on API keys
+    const [org] = await db
+      .select({ tier: organizations.tier })
+      .from(organizations)
+      .where(eq(organizations.id, ctx.orgId))
+      .limit(1);
+
+    const limits = getTierLimits(org?.tier ?? "free");
+
+    const [{ count: keyCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(apiKeys)
+      .where(and(eq(apiKeys.orgId, ctx.orgId), isNull(apiKeys.revokedAt)));
+
+    if (Number(keyCount) >= limits.apiKeys) {
+      return NextResponse.json(
+        {
+          error: `API key limit reached for your plan (${keyCount}/${limits.apiKeys}). Upgrade to create more keys.`,
+        },
+        { status: 403 }
+      );
     }
 
     // Parse optional expiration
