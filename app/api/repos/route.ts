@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { engineFetch } from "@/lib/engine";
 import { audit } from "@/lib/audit";
+import { db } from "@/lib/db";
+import { organizations } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { getTierLimits } from "@/lib/tier-limits";
 
 // GET /api/repos - List all indexed repositories
 export async function GET() {
@@ -98,6 +102,30 @@ export async function POST(request: NextRequest) {
               ? "No indexing job is currently running."
               : "No active job found.",
       });
+    }
+
+    // Enforce tier limit on repos
+    const reposRes = await engineFetch(ctx.orgId, "/repos");
+    if (reposRes.ok) {
+      const reposData = await reposRes.json();
+      const repoList = reposData.repos ?? reposData;
+      const repoCount = Array.isArray(repoList) ? repoList.length : 0;
+
+      const [org] = await db
+        .select({ tier: organizations.tier })
+        .from(organizations)
+        .where(eq(organizations.id, ctx.orgId))
+        .limit(1);
+
+      const limits = getTierLimits(org?.tier ?? "free");
+      if (repoCount >= limits.repos) {
+        return NextResponse.json(
+          {
+            error: `Repository limit reached for your plan (${repoCount}/${limits.repos}). Upgrade to index more repositories.`,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Default: start indexing
