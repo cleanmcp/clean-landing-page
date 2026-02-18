@@ -52,6 +52,7 @@ export async function getEngineStatus(orgId: string): Promise<EngineStatus> {
       headers: {
         Authorization: `Bearer ${GATEWAY_SECRET}`,
       },
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!res.ok) {
@@ -95,5 +96,6 @@ export async function engineFetch(
       "X-Org-Id": orgId,
       ...options.headers,
     },
+    signal: options.signal ?? AbortSignal.timeout(10_000),
   });
 }
