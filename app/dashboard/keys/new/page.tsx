@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -40,6 +40,14 @@ export default function NewApiKeyPage() {
   const [copied, setCopied] = useState(false);
   const [copiedConfig, setCopiedConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [orgSlug, setOrgSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/org")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.org?.slug) setOrgSlug(data.org.slug); })
+      .catch(() => {});
+  }, []);
 
   function toggleScope(scope: string) {
     if (selectedScopes.includes(scope)) {
@@ -258,6 +266,7 @@ export default function NewApiKeyPage() {
                         url: "https://api.tryclean.ai/mcp/sse",
                         headers: {
                           Authorization: `Bearer ${generatedKey}`,
+                          ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
                         },
                       },
                     },
@@ -274,6 +283,7 @@ export default function NewApiKeyPage() {
                               url: "https://api.tryclean.ai/mcp/sse",
                               headers: {
                                 Authorization: `Bearer ${generatedKey}`,
+                                ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
                               },
                             },
                           },
