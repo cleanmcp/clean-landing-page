@@ -92,11 +92,10 @@ export default function DashboardPage() {
           return r.json();
         })
         .then((d) => setRepoCount(d.repos?.length ?? 0)),
+      fetch("/api/activity")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d?.activity) setActivity(d.activity); }),
     ]);
-
-    // Fetch recent activity from audit logs via stats endpoint
-    // The activity is available through the org endpoint indirectly,
-    // but for now we'll derive it from the stats we have
   }, []);
 
   const statValues = {

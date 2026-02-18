@@ -81,6 +81,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid scope" }, { status: 400 });
     }
 
+    // Parse optional expiration
+    let expiresAt: Date | null = null;
+    if (body.expiresAt) {
+      expiresAt = new Date(body.expiresAt);
+      if (isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+        return NextResponse.json(
+          { error: "expiresAt must be a valid future date" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Generate the API key
     const { plainKey, keyPrefix, keyHash } = await generateApiKey("prod");
 
@@ -94,6 +106,7 @@ export async function POST(request: NextRequest) {
         keyPrefix,
         keyHash,
         scopes,
+        expiresAt,
       })
       .returning({ id: apiKeys.id });
 
@@ -116,6 +129,7 @@ export async function POST(request: NextRequest) {
       keyHash,
       scopes,
       name,
+      expiresAt: expiresAt?.toISOString() ?? null,
     });
 
     // Return the plain key (only time it's shown)
