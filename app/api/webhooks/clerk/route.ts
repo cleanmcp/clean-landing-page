@@ -2,43 +2,9 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { users, organizations, orgMembers } from "@/lib/db/schema";
+import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-
-/**
- * Ensure a user has a personal organization.
- * Creates one if missing. Returns the org ID.
- */
-async function ensurePersonalOrg(
-  userId: string,
-  userName: string | null
-): Promise<string> {
-  // Check for existing membership
-  const existing = await db
-    .select({ orgId: orgMembers.orgId })
-    .from(orgMembers)
-    .where(eq(orgMembers.userId, userId))
-    .limit(1);
-
-  if (existing.length > 0) return existing[0].orgId;
-
-  // Create personal org
-  const slug = `personal-${userId.slice(0, 8)}`;
-  const orgName = userName ? `${userName}'s Org` : "Personal";
-
-  const [org] = await db
-    .insert(organizations)
-    .values({ name: orgName, slug })
-    .returning({ id: organizations.id });
-
-  await db.insert(orgMembers).values({
-    orgId: org.id,
-    userId,
-    role: "OWNER",
-  });
-
-  return org.id;
-}
+import { ensurePersonalOrg } from "@/lib/personal-org";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;

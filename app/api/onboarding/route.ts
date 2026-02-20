@@ -1,45 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { users, organizations, orgMembers } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { users, organizations } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { ensureClerkOrg } from "@/lib/clerk-org";
 import { generateSlug, validateSlug } from "@/lib/slug";
-
-/**
- * Ensure a user has a personal organization.
- * Creates one if missing. Returns the org ID.
- * Prefers the most recently joined org so invite-accepted orgs take priority.
- */
-async function ensurePersonalOrg(
-  userId: string,
-  userName: string | null
-): Promise<string> {
-  const existing = await db
-    .select({ orgId: orgMembers.orgId })
-    .from(orgMembers)
-    .where(eq(orgMembers.userId, userId))
-    .orderBy(desc(orgMembers.joinedAt))
-    .limit(1);
-
-  if (existing.length > 0) return existing[0].orgId;
-
-  const slug = `personal-${userId.slice(0, 8)}`;
-  const orgName = userName ? `${userName}'s Org` : "Personal";
-
-  const [org] = await db
-    .insert(organizations)
-    .values({ name: orgName, slug })
-    .returning({ id: organizations.id });
-
-  await db.insert(orgMembers).values({
-    orgId: org.id,
-    userId,
-    role: "OWNER",
-  });
-
-  return org.id;
-}
+import { ensurePersonalOrg } from "@/lib/personal-org";
 
 /**
  * Resolve the current user's auth context, creating a personal org if needed.
