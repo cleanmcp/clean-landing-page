@@ -1,8 +1,10 @@
-// Reserved slugs that conflict with infrastructure subdomains
+// Reserved slugs that conflict with infrastructure subdomains.
+// IMPORTANT: Keep in sync with clean-gateway/src/http-proxy.ts RESERVED_SLUGS.
 const RESERVED_SLUGS = new Set([
-  "www", "api", "app", "admin", "dashboard", "mail", "status",
-  "docs", "blog", "cdn", "staging", "dev", "test", "support",
-  "help", "billing", "auth", "login", "signup", "clean",
+  "admin", "api", "app", "assets", "auth", "billing", "blog", "cdn",
+  "clean", "dashboard", "dev", "docs", "ftp", "help", "login", "mail",
+  "ns1", "ns2", "signup", "smtp", "staging", "static", "status",
+  "support", "test", "www",
 ]);
 
 /**
