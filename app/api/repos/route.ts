@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const body = JSON.parse(rawBody);
-    const { repo, action } = body;
+    const { repo, action, branch } = body;
 
     if (!repo || typeof repo !== "string") {
       return NextResponse.json(
@@ -74,11 +74,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const branchSuffix =
+      branch && typeof branch === "string"
+        ? `?branch=${encodeURIComponent(branch)}`
+        : "";
+
     // Handle cancel action
     if (action === "cancel") {
       const res = await engineFetch(
         ctx.orgId,
-        `/repos/${parts[0]}/${parts[1]}/cancel`,
+        `/repos/${parts[0]}/${parts[1]}/cancel${branchSuffix}`,
         { method: "POST" }
       );
 
@@ -129,11 +134,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Default: start indexing
-    const res = await engineFetch(
-      ctx.orgId,
-      `/repos/index?repo=${encodeURIComponent(repo)}`,
-      { method: "POST" }
-    );
+    const indexUrl =
+      `/repos/index?repo=${encodeURIComponent(repo)}` +
+      (branch && typeof branch === "string"
+        ? `&branch=${encodeURIComponent(branch)}`
+        : "");
+    const res = await engineFetch(ctx.orgId, indexUrl, { method: "POST" });
 
     const data = await res.json();
 
@@ -188,6 +194,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const repo = searchParams.get("repo");
+    const branch = searchParams.get("branch") ?? undefined;
 
     if (!repo || typeof repo !== "string") {
       return NextResponse.json(
@@ -208,9 +215,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const deleteBranchSuffix = branch
+      ? `?branch=${encodeURIComponent(branch)}`
+      : "";
     const res = await engineFetch(
       ctx.orgId,
-      `/repos/${parts[0]}/${parts[1]}`,
+      `/repos/${parts[0]}/${parts[1]}${deleteBranchSuffix}`,
       { method: "DELETE" }
     );
 
@@ -232,7 +242,7 @@ export async function DELETE(request: NextRequest) {
       action: "repo.deleted",
       resourceType: "repository",
       resourceId: repo,
-      metadata: { repo },
+      metadata: { repo, ...(branch ? { branch } : {}) },
     });
 
     return NextResponse.json({

@@ -37,6 +37,7 @@ interface JobInfo {
 
 interface Repo {
   repo: string;
+  branch: string | null;
   status: "cloning" | "indexing" | "ready" | "error";
   entity_count: number | null;
   last_indexed_at: string | null;
@@ -93,6 +94,7 @@ export default function ReposPage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [repoInput, setRepoInput] = useState("");
+  const [branchInput, setBranchInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -218,7 +220,10 @@ export default function ReposPage() {
       const res = await fetch("/api/repos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo: repoInput.trim() }),
+        body: JSON.stringify({
+          repo: repoInput.trim(),
+          ...(branchInput.trim() ? { branch: branchInput.trim() } : {}),
+        }),
       });
 
       const data = await res.json();
@@ -229,6 +234,7 @@ export default function ReposPage() {
           text: data.message || "Repository queued for indexing",
         });
         setRepoInput("");
+        setBranchInput("");
         fetchRepos();
       } else {
         setMessage({
@@ -243,13 +249,17 @@ export default function ReposPage() {
     }
   };
 
-  const handleCancel = async (repoName: string) => {
+  const handleCancel = async (repoName: string, branch: string | null) => {
     setActionInProgress(repoName);
     try {
       const res = await fetch("/api/repos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo: repoName, action: "cancel" }),
+        body: JSON.stringify({
+          repo: repoName,
+          action: "cancel",
+          ...(branch ? { branch } : {}),
+        }),
       });
 
       const data = await res.json();
@@ -272,11 +282,14 @@ export default function ReposPage() {
     }
   };
 
-  const handleDelete = async (repoName: string) => {
+  const handleDelete = async (repoName: string, branch: string | null) => {
     setActionInProgress(repoName);
     try {
+      const branchParam = branch
+        ? `&branch=${encodeURIComponent(branch)}`
+        : "";
       const res = await fetch(
-        `/api/repos?repo=${encodeURIComponent(repoName)}`,
+        `/api/repos?repo=${encodeURIComponent(repoName)}${branchParam}`,
         { method: "DELETE" }
       );
 
@@ -432,13 +445,21 @@ export default function ReposPage() {
           </p>
         </div>
         <div className="mt-4 px-6">
-          <form onSubmit={handleSubmit} className="flex gap-4">
+          <form onSubmit={handleSubmit} className="flex gap-3">
             <input
               type="text"
               placeholder="owner/repo"
               value={repoInput}
               onChange={(e) => setRepoInput(e.target.value)}
-              className="max-w-md flex-1 rounded-lg border border-[var(--cream-dark)] bg-white px-3.5 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="max-w-sm flex-1 rounded-lg border border-[var(--cream-dark)] bg-white px-3.5 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              disabled={submitting}
+            />
+            <input
+              type="text"
+              placeholder="branch (optional)"
+              value={branchInput}
+              onChange={(e) => setBranchInput(e.target.value)}
+              className="w-44 rounded-lg border border-[var(--cream-dark)] bg-white px-3.5 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               disabled={submitting}
             />
             <button
@@ -505,16 +526,23 @@ export default function ReposPage() {
             <div className="space-y-4">
               {repos.map((repo) => (
                 <div
-                  key={repo.repo}
+                  key={`${repo.repo}@${repo.branch ?? ""}`}
                   className="rounded-lg border border-[var(--cream-dark)] p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {getStatusIcon(repo.status)}
                       <div>
-                        <p className="font-medium text-[var(--ink)]">
-                          {repo.repo}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-[var(--ink)]">
+                            {repo.repo}
+                          </p>
+                          {repo.branch && (
+                            <span className="rounded-full bg-[var(--cream-dark)] px-2 py-0.5 font-mono text-xs text-[var(--ink-muted)]">
+                              {repo.branch}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-[var(--ink-muted)]">
                           {repo.status === "ready" &&
                           repo.entity_count !== null
@@ -530,7 +558,7 @@ export default function ReposPage() {
                       {(repo.status === "cloning" ||
                         repo.status === "indexing") && (
                         <button
-                          onClick={() => handleCancel(repo.repo)}
+                          onClick={() => handleCancel(repo.repo, repo.branch)}
                           disabled={actionInProgress === repo.repo}
                           className="inline-flex items-center gap-1 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)] disabled:opacity-50"
                         >
@@ -561,15 +589,19 @@ export default function ReposPage() {
                               Delete Repository?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will remove <strong>{repo.repo}</strong> from
-                              the index and delete all associated data. This
-                              action cannot be undone.
+                              This will remove{" "}
+                              <strong>
+                                {repo.repo}
+                                {repo.branch ? ` (${repo.branch})` : ""}
+                              </strong>{" "}
+                              from the index and delete all associated data.
+                              This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDelete(repo.repo)}
+                              onClick={() => handleDelete(repo.repo, repo.branch)}
                               className="bg-red-600 text-white hover:bg-red-700"
                             >
                               Delete
