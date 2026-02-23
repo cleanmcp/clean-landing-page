@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { randomUUID } from "node:crypto";
 
 /**
  * Tier limits — mirrors the plan table.
@@ -15,6 +16,7 @@ export interface LicenseClaims {
   tier: string;
   max_repos: number;
   max_users: number;
+  jti?: string;
   iat: number;
   exp: number;
 }
@@ -51,6 +53,7 @@ export function generateLicenseKey(params: {
     tier,
     max_repos: limits.max_repos,
     max_users: limits.max_users,
+    jti: randomUUID(),
   };
 
   return jwt.sign(payload, privateKey, {

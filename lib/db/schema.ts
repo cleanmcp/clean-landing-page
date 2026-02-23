@@ -7,6 +7,7 @@ import {
   jsonb,
   primaryKey,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -45,6 +46,8 @@ export const organizations = pgTable(
     licenseKey: text("license_key"),
     tier: text("tier").$type<"free" | "pro" | "enterprise">().default("free"),
     licenseExpiresAt: timestamp("license_expires_at"),
+    licenseJti: text("license_jti"),
+    licenseRevoked: boolean("license_revoked").default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [

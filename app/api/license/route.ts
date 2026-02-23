@@ -6,6 +6,7 @@ import { organizations, orgMembers, orgTokens } from "@/lib/db/schema";
 import { generateOrgToken } from "@/lib/org-tokens";
 import { audit } from "@/lib/audit";
 import { eq, and, isNull } from "drizzle-orm";
+import jwt from "jsonwebtoken";
 
 // POST /api/license — generate license + auto-create org token
 export async function POST(request: NextRequest) {
@@ -76,10 +77,15 @@ export async function POST(request: NextRequest) {
     const licenseExpiresAt = new Date();
     licenseExpiresAt.setDate(licenseExpiresAt.getDate() + months * 30);
 
+    const decoded = jwt.decode(licenseKey) as { jti?: string } | null;
+    const licenseJti = decoded?.jti ?? null;
+
     await db
       .update(organizations)
       .set({
         licenseKey,
+        licenseJti,
+        licenseRevoked: false,
         tier: tier as "free" | "pro" | "enterprise",
         licenseExpiresAt,
       })
