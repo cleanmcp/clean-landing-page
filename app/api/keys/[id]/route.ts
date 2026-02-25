@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { apiKeys } from "@/lib/db/schema";
+import { apiKeys, orgMembers } from "@/lib/db/schema";
 import { audit } from "@/lib/audit";
 import { syncKeyToEngine } from "@/lib/engine-sync";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, or } from "drizzle-orm";
 
 // DELETE /api/keys/[id] - Revoke an API key
 export async function DELETE(
@@ -19,14 +19,13 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Check if key exists and belongs to the current user
+    // Look up the key by ID only (not by creator) so admins can revoke any key
     const [key] = await db
       .select()
       .from(apiKeys)
       .where(
         and(
           eq(apiKeys.id, id),
-          eq(apiKeys.createdById, ctx.userId),
           isNull(apiKeys.revokedAt)
         )
       )
@@ -36,6 +35,29 @@ export async function DELETE(
       return NextResponse.json(
         { error: "API key not found" },
         { status: 404 }
+      );
+    }
+
+    // Verify the requesting user is an OWNER or ADMIN of the key's org
+    const [membership] = await db
+      .select({ role: orgMembers.role })
+      .from(orgMembers)
+      .where(
+        and(
+          eq(orgMembers.orgId, key.orgId!),
+          eq(orgMembers.userId, ctx.userId),
+          or(
+            eq(orgMembers.role, "OWNER"),
+            eq(orgMembers.role, "ADMIN")
+          )
+        )
+      )
+      .limit(1);
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "Forbidden: must be OWNER or ADMIN to revoke keys" },
+        { status: 403 }
       );
     }
 
