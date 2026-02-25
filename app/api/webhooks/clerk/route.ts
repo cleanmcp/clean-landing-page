@@ -2,9 +2,10 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { users, apiKeys, orgMembers, orgTokens } from "@/lib/db/schema";
+import { eq, and, isNull, ne } from "drizzle-orm";
 import { ensurePersonalOrg } from "@/lib/personal-org";
+import { audit } from "@/lib/audit";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -96,9 +97,60 @@ export async function POST(req: Request) {
 
   if (eventType === "user.deleted") {
     const { id } = evt.data;
-    if (id) {
-      await db.delete(users).where(eq(users.id, id));
+    if (!id) {
+      return new Response("User deleted", { status: 200 });
     }
+
+    // 1. Nullify API key ownership so keys are preserved instead of
+    //    cascade-deleted when the users row is removed.
+    await db
+      .update(apiKeys)
+      .set({ createdById: null })
+      .where(eq(apiKeys.createdById, id));
+
+    // 2. Find all orgs this user belongs to and handle sole-member orgs.
+    const memberships = await db
+      .select({ orgId: orgMembers.orgId })
+      .from(orgMembers)
+      .where(eq(orgMembers.userId, id));
+
+    for (const { orgId } of memberships) {
+      // Count members in this org OTHER than the departing user
+      const remainingMembers = await db
+        .select({ userId: orgMembers.userId })
+        .from(orgMembers)
+        .where(
+          and(
+            eq(orgMembers.orgId, orgId),
+            ne(orgMembers.userId, id)
+          )
+        );
+
+      if (remainingMembers.length === 0) {
+        // Sole member: revoke all active org tokens so the engine disconnects
+        // on its next heartbeat validation.
+        await db
+          .update(orgTokens)
+          .set({ revokedAt: new Date() })
+          .where(
+            and(eq(orgTokens.orgId, orgId), isNull(orgTokens.revokedAt))
+          );
+
+        audit({
+          orgId,
+          userId: null,
+          action: "org.tokens_revoked_on_user_delete",
+          resourceType: "org",
+          resourceId: orgId,
+          metadata: { deletedUserId: id, reason: "sole_member_deleted" },
+        });
+      }
+    }
+
+    // 3. Delete the user. The cascade on orgMembers removes membership rows;
+    //    apiKeys are safe because createdById is now null (set null FK).
+    await db.delete(users).where(eq(users.id, id));
+
     return new Response("User deleted", { status: 200 });
   }
 

@@ -36,6 +36,13 @@
       "when": 1771400000000,
       "tag": "0003_license_jti_revocation",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771500000000,
+      "tag": "0004_api_keys_created_by_set_null",
+      "breakpoints": true
     }
   ]
 }
