@@ -2,9 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const navItems = [
-
-];
+const navItems: { label: string; href: string }[] = [];
 
 export default function Navbar() {
   return (
