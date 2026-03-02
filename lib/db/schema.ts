@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   primaryKey,
+  boolean,
   index,
 } from "drizzle-orm/pg-core";
 
@@ -41,15 +42,18 @@ export const organizations = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull().unique(),
     clerkOrgId: text("clerk_org_id"),
+    stripeCustomerId: text("stripe_customer_id"),
     metadata: jsonb("metadata").$type<OrgMetadata>(),
     licenseKey: text("license_key"),
-    tier: text("tier").$type<"free" | "pro" | "enterprise">().default("free"),
+    tier: text("tier").$type<"free" | "starter" | "pro" | "enterprise">().default("free"),
+    seatLimit: integer("seat_limit"), // null = unlimited
     licenseExpiresAt: timestamp("license_expires_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     index("organizations_slug_idx").on(table.slug),
     index("organizations_clerk_org_id_idx").on(table.clerkOrgId),
+    index("organizations_stripe_customer_id_idx").on(table.stripeCustomerId),
   ]
 );
 
@@ -219,3 +223,95 @@ export const invites = pgTable(
     index("invites_token_idx").on(table.token),
   ]
 );
+
+// ============================================================================
+// SUBSCRIPTIONS
+// ============================================================================
+
+export type SubscriptionStatus =
+  | "active"
+  | "canceled"
+  | "past_due"
+  | "trialing"
+  | "incomplete"
+  | "unpaid"
+  | "paused";
+
+export type Plan = "starter" | "pro" | "enterprise";
+
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    stripeSubscriptionId: text("stripe_subscription_id").notNull().unique(),
+    stripeCustomerId: text("stripe_customer_id").notNull(),
+    orgId: uuid("org_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    status: text("status").$type<SubscriptionStatus>().notNull(),
+    plan: text("plan").$type<Plan>().notNull(),
+    stripePriceId: text("stripe_price_id").notNull(),
+    currentPeriodStart: timestamp("current_period_start").notNull(),
+    currentPeriodEnd: timestamp("current_period_end").notNull(),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+    canceledAt: timestamp("canceled_at"),
+    trialEnd: timestamp("trial_end"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("subscriptions_org_id_idx").on(table.orgId),
+    index("subscriptions_user_id_idx").on(table.userId),
+    index("subscriptions_stripe_customer_id_idx").on(table.stripeCustomerId),
+    index("subscriptions_status_idx").on(table.status),
+  ]
+);
+
+// ============================================================================
+// PAYMENT TRANSACTIONS
+// ============================================================================
+
+export const paymentTransactions = pgTable(
+  "payment_transactions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subscriptionId: uuid("subscription_id").references(
+      () => subscriptions.id,
+      { onDelete: "set null" }
+    ),
+    stripeInvoiceId: text("stripe_invoice_id").notNull().unique(),
+    stripePaymentIntentId: text("stripe_payment_intent_id"),
+    orgId: uuid("org_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    userId: text("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    amountPaid: integer("amount_paid").notNull(),
+    currency: text("currency").notNull().default("usd"),
+    status: text("status").notNull(),
+    billingReason: text("billing_reason"),
+    periodStart: timestamp("period_start"),
+    periodEnd: timestamp("period_end"),
+    paidAt: timestamp("paid_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("payment_transactions_subscription_id_idx").on(table.subscriptionId),
+    index("payment_transactions_org_id_idx").on(table.orgId),
+    index("payment_transactions_user_id_idx").on(table.userId),
+  ]
+);
+
+// ============================================================================
+// STRIPE WEBHOOK EVENTS (idempotency guard)
+// ============================================================================
+
+export const stripeWebhookEvents = pgTable("stripe_webhook_events", {
+  id: text("id").primaryKey(), // Stripe event ID (evt_xxx)
+  type: text("type").notNull(),
+  processedAt: timestamp("processed_at").defaultNow().notNull(),
+});

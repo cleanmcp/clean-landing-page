@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 
 const navItems = [
-  { label: "Pricing", href: "#pricing" },
+  { label: "Pricing", href: "pricing-plan" },
   { label: "Docs", href: "#docs" },
   { label: "Resources", href: "#resources" },
 ];
