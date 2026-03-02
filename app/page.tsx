@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import AgentMarquee from "@/components/AgentMarquee";
@@ -17,6 +17,45 @@ import {
 } from "@/components/Icons";
 
 export default function Home() {
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
+
+  const openWaitlistModal = () => {
+    setWaitlistEmail("");
+    setIsWaitlistSubmitted(false);
+    setIsWaitlistOpen(true);
+  };
+
+  const closeWaitlistModal = () => {
+    setIsWaitlistOpen(false);
+  };
+
+  const handleWaitlistSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsWaitlistSubmitted(true);
+  };
+
+  useEffect(() => {
+    if (!isWaitlistOpen) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeWaitlistModal();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isWaitlistOpen]);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--cream)]">
       {/* Simple, natural background */}
@@ -79,6 +118,21 @@ export default function Home() {
               >
                 Every agent synced. 50% less spend. 3x faster.
               </motion.p>
+              <motion.div
+                className="mt-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+              >
+                <button
+                  type="button"
+                  onClick={openWaitlistModal}
+                  className="btn-primary flex items-center gap-2 rounded-full px-7 py-3 text-base font-medium"
+                >
+                  Join the waitlist
+                  <ArrowRightIcon className="h-4 w-4" />
+                </button>
+              </motion.div>
             </motion.div>
 
             {/* Right — terminal comparison */}
@@ -172,7 +226,7 @@ export default function Home() {
                     { label: "Claude Code", tokens: 250 },
                     { label: "Cursor", tokens: 200 },
                     { label: "Codex", tokens: 180 },
-                    { label: "Windsurf", tokens: 170 },
+                    { label: "Antigravity", tokens: 170 },
                   ].map((item) => (
                     <div key={item.label}>
                       <div className="mb-1.5 flex justify-between text-sm">
@@ -296,7 +350,7 @@ export default function Home() {
                         "Claude",
                         "Cursor",
                         "Codex",
-                        "Windsurf",
+                        "Antigravity",
                       ].map((name) => (
                         <div
                           key={name}
@@ -527,13 +581,14 @@ export default function Home() {
               Join teams saving thousands on AI agent costs every month.
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href="#get-started"
+              <button
+                type="button"
+                onClick={openWaitlistModal}
                 className="btn-primary flex items-center gap-2 rounded-full px-8 py-3 text-base font-medium"
               >
-                Get Started Free
+                Join the waitlist
                 <ArrowRightIcon className="h-4 w-4" />
-              </a>
+              </button>
               <a
                 href="#demo"
                 className="btn-secondary rounded-full px-8 py-3 text-base font-medium"
@@ -547,6 +602,85 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {isWaitlistOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <button
+            type="button"
+            aria-label="Close waitlist popup"
+            className="absolute inset-0 bg-[var(--ink)]/50 backdrop-blur-sm"
+            onClick={closeWaitlistModal}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative z-10 w-full max-w-md rounded-2xl border border-[var(--cream-dark)] bg-[var(--cream)] p-6 shadow-2xl"
+          >
+            <button
+              type="button"
+              onClick={closeWaitlistModal}
+              aria-label="Close"
+              className="absolute top-3 right-3 h-8 w-8 rounded-full border border-[var(--cream-dark)] text-[var(--ink-light)] transition-colors hover:text-[var(--ink)]"
+            >
+              ×
+            </button>
+
+            {!isWaitlistSubmitted ? (
+              <>
+                <p className="mb-2 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
+                  [ WAITLIST ]
+                </p>
+                <h3
+                  className="mb-3 text-2xl font-semibold leading-tight text-[var(--ink)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  Join the waitlist
+                </h3>
+                <p className="mb-5 text-sm text-[var(--ink-light)]">
+                  Drop your email and we will reach out as soon as early access
+                  opens.
+                </p>
+
+                <form onSubmit={handleWaitlistSubmit} className="space-y-3">
+                  <label htmlFor="waitlist-email" className="sr-only">
+                    Email address
+                  </label>
+                  <input
+                    id="waitlist-email"
+                    type="email"
+                    required
+                    value={waitlistEmail}
+                    onChange={(event) => setWaitlistEmail(event.target.value)}
+                    placeholder="you@company.com"
+                    className="w-full rounded-xl border border-[var(--cream-dark)] bg-white px-4 py-3 text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
+                  />
+                  <button
+                    type="submit"
+                    className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-medium"
+                  >
+                    Join the waitlist
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="py-3 text-center">
+                <h3
+                  className="mb-2 text-2xl font-semibold text-[var(--ink)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  You&apos;re on the list
+                </h3>
+                <p className="text-sm text-[var(--ink-light)]">
+                  Thanks. We&apos;ll email you at {waitlistEmail} when access is
+                  ready.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer
@@ -562,17 +696,14 @@ export default function Home() {
           </span>
           <div className="flex gap-6 text-sm text-[var(--ink-light)]">
             <a href="#" className="hover:text-[var(--ink)]">
-              Documentation
+              LinkedIn
             </a>
-            <a href="#" className="hover:text-[var(--ink)]">
-              GitHub
-            </a>
-            <a href="#" className="hover:text-[var(--ink)]">
-              Contact
+            <a href="#mailto:hello@tryclean.ai" className="hover:text-[var(--ink)]">
+              Email
             </a>
           </div>
           <span className="text-sm text-[var(--ink-muted)]">
-            2026 Clean. All rights reserved.
+            2026 Clean Labs Inc. All rights reserved.
           </span>
         </div>
       </footer>

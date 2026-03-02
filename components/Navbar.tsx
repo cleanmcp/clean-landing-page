@@ -3,9 +3,7 @@
 import { motion } from "framer-motion";
 
 const navItems = [
-  { label: "Pricing", href: "pricing-plan" },
-  { label: "Docs", href: "#docs" },
-  { label: "Resources", href: "#resources" },
+
 ];
 
 export default function Navbar() {
@@ -73,7 +71,7 @@ export default function Navbar() {
           Book a Demo
         </motion.a>
         <motion.a
-          href="#get-started"
+          href="mailto:hello@tryclean.ai"
           className="btn-primary rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -83,7 +81,7 @@ export default function Navbar() {
             ease: [0.16, 1, 0.3, 1],
           }}
         >
-          Get Started
+          Contact us
         </motion.a>
       </div>
     </motion.nav>

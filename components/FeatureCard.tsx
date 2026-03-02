@@ -85,8 +85,8 @@ function FeaturePreview({ variant }: { variant: FeaturePreviewVariant }) {
               </div>
               <div className="feature-preview__agent feature-preview__agent--4">
                 <Image
-                  src="/agents/windsurf.svg"
-                  alt="Windsurf"
+                  src="/agents/antigravity.png"
+                  alt="Antigravity"
                   width={24}
                   height={24}
                   className="h-6 w-6 object-contain"

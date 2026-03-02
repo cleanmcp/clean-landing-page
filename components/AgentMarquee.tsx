@@ -10,7 +10,6 @@ const agents: Agent[] = [
   { name: "Claude", logo: "/agents/claude.svg" },
   { name: "Cursor", logo: "/agents/cursor.png" },
   { name: "Codex", logo: "/agents/codex.png" },
-  { name: "Windsurf", logo: "/agents/windsurf.svg" },
   { name: "Antigravity", logo: "/agents/antigravity.png" },
 ];
 
