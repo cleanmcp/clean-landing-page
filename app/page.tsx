@@ -15,14 +15,25 @@ import {
   NetworkIcon,
   ArrowRightIcon,
 } from "@/components/Icons";
+import { addToList } from "@/lib/firebase";
 
 export default function Home() {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistNotes, setWaitlistNotes] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
+
+  const validateEmail = (email: string) => {
+    // Basic regex for email validation
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
 
   const openWaitlistModal = () => {
     setWaitlistEmail("");
+    setWaitlistNotes("");
+    setEmailError("");
     setIsWaitlistSubmitted(false);
     setIsWaitlistOpen(true);
   };
@@ -33,6 +44,14 @@ export default function Home() {
 
   const handleWaitlistSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!validateEmail(waitlistEmail)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
+    setEmailError("");
+    addToList(waitlistEmail, waitlistNotes);
     setIsWaitlistSubmitted(true);
   };
 
@@ -653,7 +672,21 @@ export default function Home() {
                     value={waitlistEmail}
                     onChange={(event) => setWaitlistEmail(event.target.value)}
                     placeholder="you@company.com"
-                    className="w-full rounded-xl border border-[var(--cream-dark)] bg-white px-4 py-3 text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
+                    className={`w-full rounded-xl border ${emailError ? 'border-red-500' : 'border-[var(--cream-dark)]'} bg-white px-4 py-3 text-[var(--ink)] outline-none transition focus:border-[var(--accent)]`}
+                  />
+                  {emailError && (
+                    <p className="mt-1 text-xs text-red-500">{emailError}</p>
+                  )}
+                  <label htmlFor="waitlist-notes" className="sr-only">
+                    Anything you're particularly excited about? Any feature you want to have? (Optional but would be awesome if you filled!)
+                  </label>
+                  <textarea
+                    id="waitlist-notes"
+                    rows={3}
+                    value={waitlistNotes}
+                    onChange={(event) => setWaitlistNotes(event.target.value)}
+                    placeholder="Anything you're particularly excited about? Any feature you want to have? (Optional but would be awesome if you filled!)"
+                    className="w-full resize-none rounded-xl border border-[var(--cream-dark)] bg-white px-4 py-3 text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
                   />
                   <button
                     type="submit"
