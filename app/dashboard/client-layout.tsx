@@ -118,7 +118,7 @@ export default function ClientLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-[var(--cream)] p-8">
+        <main className="flex-1 min-w-0 overflow-auto bg-[var(--cream)] p-8">
           {children}
         </main>
       </div>

@@ -45,7 +45,7 @@ export default function NewApiKeyPage() {
   const [creating, setCreating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [copiedConfig, setCopiedConfig] = useState(false);
+  const [copiedConfig, setCopiedConfig] = useState<string | null>(null);
   const [expiration, setExpiration] = useState<string>("never");
   const [error, setError] = useState<string | null>(null);
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
@@ -251,7 +251,7 @@ export default function NewApiKeyPage() {
       {/* Generated Key Dialog */}
       <Dialog open={!!generatedKey} onOpenChange={(open) => { if (!open) handleDone(); }}>
         <DialogContent
-          className="sm:max-w-md"
+          className="sm:max-w-lg"
           onPointerDownOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
@@ -294,59 +294,115 @@ export default function NewApiKeyPage() {
               </p>
             </div>
 
-            <details className="rounded-md border border-[var(--cream-dark)] bg-[var(--cream)]">
-              <summary className="cursor-pointer p-3 text-xs font-medium text-[var(--ink)]">
-                MCP config for Claude Code
-              </summary>
-              <div className="border-t border-[var(--cream-dark)]">
-                <pre className="overflow-x-auto bg-white p-2.5 text-[11px] leading-relaxed text-[var(--ink)]">
-                  {JSON.stringify({
-                    mcpServers: {
-                      clean: {
-                        type: "sse",
-                        url: "https://api.tryclean.ai/mcp/sse",
-                        headers: {
-                          Authorization: `Bearer ${generatedKey}`,
-                          ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
+            <div className="space-y-2">
+              {/* Claude Code config */}
+              <details className="rounded-md border border-[var(--cream-dark)] bg-[var(--cream)]">
+                <summary className="cursor-pointer p-3 text-xs font-medium text-[var(--ink)]">
+                  MCP config for Claude Code
+                </summary>
+                <div className="border-t border-[var(--cream-dark)]">
+                  <pre className="overflow-x-auto bg-white p-2.5 text-[11px] leading-relaxed text-[var(--ink)]">
+                    {JSON.stringify({
+                      mcpServers: {
+                        clean: {
+                          type: "sse",
+                          url: "https://api.tryclean.ai/mcp/sse",
+                          headers: {
+                            Authorization: `Bearer ${generatedKey}`,
+                            ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
+                          },
                         },
                       },
-                    },
-                  }, null, 2)}
-                </pre>
-                <div className="border-t border-[var(--cream-dark)] p-2">
-                  <button
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(JSON.stringify({
-                          mcpServers: {
-                            clean: {
-                              type: "sse",
-                              url: "https://api.tryclean.ai/mcp/sse",
-                              headers: {
-                                Authorization: `Bearer ${generatedKey}`,
-                                ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
+                    }, null, 2)}
+                  </pre>
+                  <div className="border-t border-[var(--cream-dark)] p-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(JSON.stringify({
+                            mcpServers: {
+                              clean: {
+                                type: "sse",
+                                url: "https://api.tryclean.ai/mcp/sse",
+                                headers: {
+                                  Authorization: `Bearer ${generatedKey}`,
+                                  ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
+                                },
                               },
                             },
-                          },
-                        }, null, 2));
-                        setCopiedConfig(true);
-                        setTimeout(() => setCopiedConfig(false), 2000);
-                      } catch {
-                        // clipboard API might not be available
-                      }
-                    }}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
-                  >
-                    {copiedConfig ? (
-                      <Check className="h-3 w-3" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                    {copiedConfig ? "Copied!" : "Copy config"}
-                  </button>
+                          }, null, 2));
+                          setCopiedConfig("claude");
+                          setTimeout(() => setCopiedConfig(null), 2000);
+                        } catch {
+                          // clipboard API might not be available
+                        }
+                      }}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+                    >
+                      {copiedConfig === "claude" ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                      {copiedConfig === "claude" ? "Copied!" : "Copy config"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </details>
+              </details>
+
+              {/* Cursor config */}
+              <details className="rounded-md border border-[var(--cream-dark)] bg-[var(--cream)]">
+                <summary className="cursor-pointer p-3 text-xs font-medium text-[var(--ink)]">
+                  MCP config for Cursor
+                </summary>
+                <div className="border-t border-[var(--cream-dark)]">
+                  <pre className="overflow-x-auto bg-white p-2.5 text-[11px] leading-relaxed text-[var(--ink)]">
+                    {JSON.stringify({
+                      mcpServers: {
+                        clean: {
+                          url: "https://api.tryclean.ai/mcp/sse",
+                          headers: {
+                            Authorization: `Bearer ${generatedKey}`,
+                            ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
+                          },
+                        },
+                      },
+                    }, null, 2)}
+                  </pre>
+                  <div className="border-t border-[var(--cream-dark)] p-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(JSON.stringify({
+                            mcpServers: {
+                              clean: {
+                                url: "https://api.tryclean.ai/mcp/sse",
+                                headers: {
+                                  Authorization: `Bearer ${generatedKey}`,
+                                  ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
+                                },
+                              },
+                            },
+                          }, null, 2));
+                          setCopiedConfig("cursor");
+                          setTimeout(() => setCopiedConfig(null), 2000);
+                        } catch {
+                          // clipboard API might not be available
+                        }
+                      }}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+                    >
+                      {copiedConfig === "cursor" ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                      {copiedConfig === "cursor" ? "Copied!" : "Copy config"}
+                    </button>
+                  </div>
+                </div>
+              </details>
+            </div>
           </div>
 
           <DialogFooter>
