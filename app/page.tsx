@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import AgentMarquee from "@/components/AgentMarquee";
 import TerminalComparison from "@/components/TerminalComparison";
 import FeatureCard from "@/components/FeatureCard";
+import FeatureCarousel from "@/components/FeatureCarousel";
 import RotatingText from "@/components/RotatingText";
 import ScrollVelocity from "@/components/ScrollVelocity";
 import {
@@ -76,7 +77,7 @@ export default function Home() {
   }, [isWaitlistOpen]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--cream)]">
+    <div className="relative min-h-screen bg-[var(--cream)]">
       {/* Simple, natural background */}
       <div className="fixed inset-0 -z-10">
         {/* Subtle dot grid */}
@@ -85,7 +86,7 @@ export default function Home() {
         <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(9,70,63,0.03) 0%, transparent 50%)' }} />
       </div>
 
-      <Navbar />
+      <Navbar onWaitlistClick={openWaitlistModal} />
 
       {/* Hero Section */}
       <section className="flex min-h-screen items-center px-5 pt-24 pb-8 sm:px-6 lg:px-12">
@@ -167,7 +168,7 @@ export default function Home() {
 
           {/* Agent tagline + marquee */}
           <motion.div
-            className="mt-20 text-center"
+            className="mt-14 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -198,7 +199,7 @@ export default function Home() {
       </div>
 
       {/* Problem Section */}
-      <section className="px-6 py-24 md:py-32">
+      <section className="px-6 py-20 md:px-12 md:py-28">
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col gap-12 lg:flex-row lg:gap-16">
             {/* Left — text */}
@@ -302,7 +303,7 @@ export default function Home() {
       </section>
 
       {/* Solution Section — mirrors Problem layout (visual left, text right) */}
-      <section id="solution" className="px-6 py-24 md:py-32">
+      <section id="solution" className="px-6 py-20 md:px-12 md:py-28">
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col gap-12 lg:flex-row lg:gap-16">
             {/* Left — flow diagram */}
@@ -412,7 +413,7 @@ export default function Home() {
               >
                 How Clean <em>works.</em>
               </h2>
-              <p className="mb-10 text-lg leading-relaxed text-[var(--ink-light)]">
+              <p className="mb-8 text-lg leading-relaxed text-[var(--ink-light)]">
                 One MCP server that pre-indexes your codebase and syncs context
                 across every agent your team uses.
               </p>
@@ -462,71 +463,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="relative px-6 py-24 md:py-32">
-        {/* Background text pattern */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.03]">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-[12rem] font-black tracking-tighter text-[var(--ink)] whitespace-nowrap" style={{ fontFamily: "var(--font-geist-sans)" }}>
-              FEATURES FEATURES FEATURES FEATURES FEATURES
-            </div>
-          </div>
-        </div>
-
-        <div className="relative mx-auto max-w-5xl">
-          <motion.div
-            className="mb-16 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <p className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
-              [ FEATURES ]
-            </p>
-            <h2
-              className="text-3xl font-normal leading-tight md:text-4xl lg:text-5xl"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              We have <em>everything</em> you need.
-            </h2>
-          </motion.div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <FeatureCard
-              icon={<SyncIcon className="h-5 w-5" />}
-              title="Synced Context"
-              description="Every agent works from the same understanding. No more repeated codebase exploration."
-              index={0}
-              previewVariant="sync"
-            />
-            <FeatureCard
-              icon={<NetworkIcon className="h-5 w-5" />}
-              title="Team Alignment"
-              description="Share context across your entire team. Everyone's agents speak the same language."
-              index={1}
-              previewVariant="graph"
-            />
-            <FeatureCard
-              icon={<PlugIcon className="h-5 w-5" />}
-              title="Universal Compatibility"
-              description="Works with Claude, Cursor, Codex, Windsurf, and any MCP-compatible agent."
-              index={2}
-              previewVariant="plugins"
-            />
-            <FeatureCard
-              icon={<BoltIcon className="h-5 w-5" />}
-              title="One-time Setup"
-              description="Configure once, benefit forever. Clean keeps your index fresh automatically."
-              index={3}
-              previewVariant="setup"
-            />
-          </div>
-        </div>
-      </section>
+      {/* Features — Stacking Card Scroll */}
+      <FeatureCarousel
+        titles={["Synced Context", "Team Alignment", "Universal Compatibility", "One-time Setup"]}
+      >
+        <FeatureCard
+          icon={<SyncIcon className="h-5 w-5" />}
+          title="Synced Context"
+          description="Every agent works from the same understanding. No more repeated codebase exploration."
+          index={0}
+          previewVariant="sync"
+        />
+        <FeatureCard
+          icon={<NetworkIcon className="h-5 w-5" />}
+          title="Team Alignment"
+          description="Share context across your entire team. Everyone's agents speak the same language."
+          index={1}
+          previewVariant="graph"
+        />
+        <FeatureCard
+          icon={<PlugIcon className="h-5 w-5" />}
+          title="Universal Compatibility"
+          description="Works with Claude, Cursor, Codex, Windsurf, and any MCP-compatible agent."
+          index={2}
+          previewVariant="plugins"
+        />
+        <FeatureCard
+          icon={<BoltIcon className="h-5 w-5" />}
+          title="One-time Setup"
+          description="Configure once, benefit forever. Clean keeps your index fresh automatically."
+          index={3}
+          previewVariant="setup"
+        />
+      </FeatureCarousel>
 
       {/* Stats Section with Scroll Velocity */}
-      <section className="relative overflow-hidden border-y border-[var(--cream-dark)] bg-[var(--cream-dark)]/30 py-24 md:py-32">
+      <section className="relative overflow-hidden border-y border-[var(--cream-dark)] bg-[var(--cream-dark)]/30 py-20 md:py-28">
         {/* Background scroll text */}
         <div className="pointer-events-none absolute inset-0 flex items-center opacity-[0.03]">
           <ScrollVelocity
@@ -579,7 +551,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-6 py-24 md:py-32">
+      <section className="px-6 py-20 md:px-12 md:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -599,7 +571,7 @@ export default function Home() {
             <p className="mb-8 text-lg text-[var(--ink-light)]">
               Join teams saving thousands on AI agent costs every month.
             </p>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <div className="flex items-center justify-center">
               <button
                 type="button"
                 onClick={openWaitlistModal}
@@ -608,12 +580,6 @@ export default function Home() {
                 Join the waitlist
                 <ArrowRightIcon className="h-4 w-4" />
               </button>
-              <a
-                href="#demo"
-                className="btn-secondary rounded-full px-8 py-3 text-base font-medium"
-              >
-                Book a Demo
-              </a>
             </div>
             <p className="glow-text mt-8 text-sm font-medium text-[var(--accent)]">
               Powered by one MCP

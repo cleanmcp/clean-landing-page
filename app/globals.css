@@ -37,6 +37,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Hide scrollbar for terminal panels */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Agent Marquee Animation */
 @keyframes marquee {
   0% {
@@ -163,9 +172,6 @@ html {
   100% { transform: translateX(140%) skewX(-20deg); opacity: 0; }
 }
 
-.feature-preview {
-  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-}
 
 .feature-preview__node {
   position: absolute;

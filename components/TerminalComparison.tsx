@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ── line definitions ─────────────────────────────────── */
 
 interface Line {
   text: string;
-  cls: string; // tailwind classes for color
-  delay: number; // ms from cycle start
+  cls: string;
+  delay: number;
 }
 
 const WITHOUT: Line[] = [
@@ -72,13 +72,10 @@ const RIGHT_END = 3300;
 const TOKEN_START = 1700;
 const LEFT_TOKENS = 200;
 const RIGHT_TOKENS = 70;
-const CYCLE = 9500;
+const CYCLE = 7500; // tighter cycle — less dead time
+const FADE_DURATION = 600;
 
-function tokens(
-  elapsed: number,
-  end: number,
-  max: number
-): number {
+function tokens(elapsed: number, end: number, max: number): number {
   if (elapsed < TOKEN_START) return 0;
   if (elapsed >= end) return max;
   return Math.round(((elapsed - TOKEN_START) / (end - TOKEN_START)) * max);
@@ -123,10 +120,12 @@ function Panel({
   const tok = tokens(elapsed, endTime, maxTokens);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // auto-scroll content to bottom as lines appear
   useEffect(() => {
     if (contentRef.current) {
-      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      contentRef.current.scrollTo({
+        top: contentRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [visible.length]);
 
@@ -139,10 +138,12 @@ function Panel({
           <span className="text-[10px] font-bold text-gray-300 tracking-tight sm:text-[11px]">
             Claude Code
           </span>
-          <span className="text-[9px] text-gray-600 sm:text-[10px]">v2.1.39</span>
+          <span className="text-[9px] text-gray-600 sm:text-[10px]">
+            v2.1.39
+          </span>
         </div>
         <div className="text-[9px] text-gray-500 leading-relaxed sm:text-[10px]">
-          Sonnet 4.5 &middot; Claude Pro
+          Sonnet 4.6 &middot; Claude Pro
         </div>
         <div className="text-[9px] text-gray-600 leading-relaxed truncate sm:text-[10px]">
           ~/Documents/Code/clean/landing...
@@ -158,7 +159,7 @@ function Panel({
       {/* ── content ── */}
       <div
         ref={contentRef}
-        className="px-3 py-2 font-mono text-[9px] leading-[1.7] h-[200px] overflow-hidden sm:text-[11px] sm:h-[260px]"
+        className="hide-scrollbar flex-1 px-3 py-2 font-mono text-[9px] leading-[1.7] min-h-[180px] overflow-y-auto sm:text-[11px] sm:min-h-[220px]"
       >
         {visible.map((line, i) => (
           <div key={i} className={line.cls}>
@@ -190,35 +191,49 @@ function Panel({
 
 export default function TerminalComparison() {
   const [elapsed, setElapsed] = useState(0);
-  const [cycle, setCycle] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const cycleRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const startRef = useRef(Date.now());
 
   useEffect(() => {
-    const start = Date.now();
+    let mounted = true;
 
-    const id = setInterval(() => {
-      const dt = Date.now() - start;
+    function tick() {
+      if (!mounted) return;
+      const dt = Date.now() - startRef.current;
+
       if (dt >= CYCLE) {
-        clearInterval(id);
-        // brief pause then restart
+        // Fade out, reset, fade in
+        setVisible(false);
         setTimeout(() => {
+          if (!mounted) return;
+          startRef.current = Date.now();
           setElapsed(0);
-          setCycle((c) => c + 1);
-        }, 400);
-        return;
+          setVisible(true);
+        }, FADE_DURATION);
+      } else {
+        setElapsed(dt);
       }
-      setElapsed(dt);
-    }, 80);
 
-    return () => clearInterval(id);
-  }, [cycle]);
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      mounted = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   return (
-    <motion.div
-      key={cycle}
+    <div
       className="flex gap-2 sm:gap-3"
-      initial={{ opacity: 0.4 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
+      style={{
+        opacity: visible ? 1 : 0,
+        transition: `opacity ${FADE_DURATION}ms ease-in-out`,
+      }}
     >
       {/* left */}
       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
@@ -245,6 +260,6 @@ export default function TerminalComparison() {
           endTime={RIGHT_END}
         />
       </div>
-    </motion.div>
+    </div>
   );
 }
