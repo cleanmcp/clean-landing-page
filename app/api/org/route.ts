@@ -46,12 +46,14 @@ export async function GET() {
       .from(apiKeys)
       .where(eq(apiKeys.orgId, ctx.orgId));
 
+    const currentMember = members.find((m) => m.userId === ctx.userId);
+
     return NextResponse.json({
       org: {
         id: org.id,
         name: org.name,
         slug: org.slug,
-        licenseKey: org.licenseKey,
+        ...(currentMember?.role === "OWNER" ? { licenseKey: org.licenseKey } : {}),
         tier: org.tier,
         createdAt: org.createdAt.toISOString(),
       },
