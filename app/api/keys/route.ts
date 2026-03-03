@@ -21,7 +21,7 @@ export async function GET() {
       .select()
       .from(apiKeys)
       .where(
-        and(eq(apiKeys.createdById, ctx.userId), isNull(apiKeys.revokedAt))
+        and(eq(apiKeys.orgId, ctx.orgId), isNull(apiKeys.revokedAt))
       )
       .orderBy(desc(apiKeys.createdAt));
 
