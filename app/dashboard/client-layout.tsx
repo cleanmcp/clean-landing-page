@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
+import { Toaster } from "sonner";
 import {
   LayoutDashboard,
   FolderGit2,
@@ -48,7 +49,8 @@ export default function ClientLayout({
 
   return (
     <div className="flex h-screen flex-col bg-[var(--cream)]">
-      {/* Header */}
+        <Toaster position="top-right" />
+        {/* Header */}
       <header className="flex items-center justify-between bg-[var(--accent)] px-6 py-4">
         <h1
           className="text-2xl font-normal text-white"
