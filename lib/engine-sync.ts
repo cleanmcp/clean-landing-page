@@ -14,17 +14,17 @@ const GATEWAY_SECRET = process.env.GATEWAY_INTERNAL_SECRET || "";
 /**
  * Push an API key create or revoke event to the engine via the gateway.
  *
- * Fire-and-forget: logs errors but never throws, so the dashboard
- * request succeeds even if the engine is offline.
+ * Returns a warning string on failure instead of swallowing silently,
+ * so callers can surface the issue to the user.
  */
 export async function syncKeyToEngine(
   orgId: string,
   action: "create" | "revoke",
   keyData: KeySyncData
-): Promise<void> {
+): Promise<{ warning?: string }> {
   if (!GATEWAY_SECRET) {
     console.warn("GATEWAY_INTERNAL_SECRET not set — skipping key sync");
-    return;
+    return { warning: "Key sync skipped — gateway secret not configured" };
   }
 
   try {
@@ -43,8 +43,11 @@ export async function syncKeyToEngine(
 
     if (!res.ok) {
       console.error(`Key sync failed: HTTP ${res.status}`);
+      return { warning: "Key created but engine sync failed — key may take up to 5 minutes to activate" };
     }
+    return {};
   } catch (error) {
     console.error(`Failed to sync key ${action} to engine:`, error);
+    return { warning: "Key created but engine sync failed — key may take up to 5 minutes to activate" };
   }
 }
