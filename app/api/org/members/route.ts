@@ -121,6 +121,27 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Block non-OWNER from removing an OWNER
+    if (!isSelf) {
+      const [targetMember] = await db
+        .select({ role: orgMembers.role })
+        .from(orgMembers)
+        .where(
+          and(
+            eq(orgMembers.orgId, ctx.orgId),
+            eq(orgMembers.userId, targetUserId)
+          )
+        )
+        .limit(1);
+
+      if (targetMember?.role === "OWNER" && ctx.role !== "OWNER") {
+        return NextResponse.json(
+          { error: "Only owners can remove other owners" },
+          { status: 403 }
+        );
+      }
+    }
+
     // Cannot remove the last OWNER
     if (isSelf && ctx.role === "OWNER") {
       const [ownerCount] = await db
