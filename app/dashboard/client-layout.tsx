@@ -11,7 +11,6 @@ import {
   Users,
   FileText,
   Key,
-  DollarSign,
   LogOut,
 } from "lucide-react";
 
@@ -20,7 +19,6 @@ const navItems = [
   { href: "/dashboard/repositories", icon: FolderGit2, label: "Repositories" },
   { href: "/dashboard/team", icon: Users, label: "Team" },
   { href: "/dashboard/keys", icon: Key, label: "Keys" },
-  { href: "/dashboard/billing", icon: DollarSign, label: "Billing & Usage" },
 ];
 
 export default function ClientLayout({
