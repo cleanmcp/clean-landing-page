@@ -3,15 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ArrowLeft, Copy, Check, AlertTriangle, Key } from "lucide-react";
+import { ArrowLeft, Copy, Check, AlertTriangle, Key, Shield } from "lucide-react";
 
 const AVAILABLE_SCOPES = [
   {
@@ -38,6 +30,35 @@ const EXPIRATION_OPTIONS = [
   { id: "1y", label: "1 year" },
 ];
 
+type ConfigTab = "claude" | "cursor";
+
+function getMcpConfig(tab: ConfigTab, key: string, slug: string | null) {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${key}`,
+  };
+  if (slug) headers["X-Clean-Slug"] = slug;
+
+  if (tab === "claude") {
+    return {
+      mcpServers: {
+        clean: {
+          type: "sse",
+          url: "https://api.tryclean.ai/mcp/sse",
+          headers,
+        },
+      },
+    };
+  }
+  return {
+    mcpServers: {
+      clean: {
+        url: "https://api.tryclean.ai/mcp/sse",
+        headers,
+      },
+    },
+  };
+}
+
 export default function NewApiKeyPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -45,7 +66,8 @@ export default function NewApiKeyPage() {
   const [creating, setCreating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [copiedConfig, setCopiedConfig] = useState<string | null>(null);
+  const [copiedConfig, setCopiedConfig] = useState(false);
+  const [configTab, setConfigTab] = useState<ConfigTab>("claude");
   const [expiration, setExpiration] = useState<string>("never");
   const [error, setError] = useState<string | null>(null);
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
@@ -121,10 +143,137 @@ export default function NewApiKeyPage() {
     }
   }
 
+  async function copyConfig() {
+    if (!generatedKey) return;
+    try {
+      const config = getMcpConfig(configTab, generatedKey, orgSlug);
+      await navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+      setCopiedConfig(true);
+      setTimeout(() => setCopiedConfig(false), 2000);
+    } catch {
+      // clipboard API might not be available
+    }
+  }
+
   function handleDone() {
     router.push("/dashboard/keys");
   }
 
+  // ── Success screen (replaces the form after key is created) ──
+  if (generatedKey) {
+    const config = getMcpConfig(configTab, generatedKey, orgSlug);
+
+    return (
+      <div className="max-w-2xl space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+            <Check className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-medium text-[var(--ink)]">
+              API Key Created
+            </h1>
+            <p className="text-sm text-[var(--ink-muted)]">
+              Copy your key and config below
+            </p>
+          </div>
+        </div>
+
+        {/* Key card */}
+        <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+          <div className="flex items-center gap-2 border-b border-[var(--cream-dark)] px-5 py-3">
+            <Key className="h-4 w-4 text-[var(--ink-muted)]" />
+            <span className="text-sm font-semibold text-[var(--ink)]">Your API Key</span>
+          </div>
+          <div className="p-5">
+            <div className="rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] px-4 py-3">
+              <code className="block break-all font-mono text-[13px] leading-relaxed text-[var(--ink)]">
+                {generatedKey}
+              </code>
+            </div>
+            <button
+              onClick={copyKey}
+              className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                copied
+                  ? "border border-green-200 bg-green-50 text-green-700"
+                  : "border border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream)]"
+              }`}
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? "Copied!" : "Copy key"}
+            </button>
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+              <p className="text-xs leading-relaxed text-amber-800">
+                Store this key securely. It will only be shown once.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* MCP config card */}
+        <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+          <div className="flex items-center gap-2 border-b border-[var(--cream-dark)] px-5 py-3">
+            <Shield className="h-4 w-4 text-[var(--ink-muted)]" />
+            <span className="text-sm font-semibold text-[var(--ink)]">MCP Configuration</span>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-[var(--cream-dark)]">
+            {(["claude", "cursor"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => { setConfigTab(tab); setCopiedConfig(false); }}
+                className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  configTab === tab
+                    ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
+                    : "text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                }`}
+              >
+                {tab === "claude" ? "Claude Code" : "Cursor"}
+              </button>
+            ))}
+          </div>
+
+          {/* Config content */}
+          <div className="p-5">
+            <p className="mb-3 text-xs text-[var(--ink-muted)]">
+              {configTab === "claude"
+                ? "Add this to your Claude Code MCP settings:"
+                : "Add this to ~/.cursor/mcp.json:"}
+            </p>
+            <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)]">
+              <pre className="overflow-x-auto bg-[var(--cream)] p-4 font-mono text-[12px] leading-relaxed text-[var(--ink)]">
+                {JSON.stringify(config, null, 2)}
+              </pre>
+            </div>
+            <button
+              onClick={copyConfig}
+              className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                copiedConfig
+                  ? "border border-green-200 bg-green-50 text-green-700"
+                  : "border border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream)]"
+              }`}
+            >
+              {copiedConfig ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copiedConfig ? "Copied!" : "Copy config"}
+            </button>
+          </div>
+        </div>
+
+        {/* Done */}
+        <button
+          onClick={handleDone}
+          className="w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+        >
+          Done
+        </button>
+      </div>
+    );
+  }
+
+  // ── Create key form ──
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-4">
@@ -247,174 +396,6 @@ export default function NewApiKeyPage() {
           </button>
         </div>
       </div>
-
-      {/* Generated Key Dialog */}
-      <Dialog open={!!generatedKey} onOpenChange={(open) => { if (!open) handleDone(); }}>
-        <DialogContent
-          className="sm:max-w-lg"
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5 text-[var(--accent)]" />
-              API Key Created
-            </DialogTitle>
-            <DialogDescription>
-              Copy your API key now. You won&apos;t be able to see it again!
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <div>
-              <div className="rounded-md border border-[var(--cream-dark)] bg-[var(--cream)] p-3">
-                <code className="block break-all font-mono text-xs leading-relaxed text-[var(--ink)]">
-                  {generatedKey}
-                </code>
-              </div>
-              <button
-                onClick={copyKey}
-                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {copied ? "Copied!" : "Copy key"}
-              </button>
-            </div>
-
-            <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-500/10 p-3">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-              <p className="text-xs text-[var(--ink-muted)]">
-                <span className="font-medium text-amber-600">
-                  Store this key securely.
-                </span>{" "}
-                It will only be shown once.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              {/* Claude Code config */}
-              <details className="rounded-md border border-[var(--cream-dark)] bg-[var(--cream)]">
-                <summary className="cursor-pointer p-3 text-xs font-medium text-[var(--ink)]">
-                  MCP config for Claude Code
-                </summary>
-                <div className="border-t border-[var(--cream-dark)]">
-                  <pre className="overflow-x-auto bg-white p-2.5 text-[11px] leading-relaxed text-[var(--ink)]">
-                    {JSON.stringify({
-                      mcpServers: {
-                        clean: {
-                          type: "sse",
-                          url: "https://api.tryclean.ai/mcp/sse",
-                          headers: {
-                            Authorization: `Bearer ${generatedKey}`,
-                            ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
-                          },
-                        },
-                      },
-                    }, null, 2)}
-                  </pre>
-                  <div className="border-t border-[var(--cream-dark)] p-2">
-                    <button
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(JSON.stringify({
-                            mcpServers: {
-                              clean: {
-                                type: "sse",
-                                url: "https://api.tryclean.ai/mcp/sse",
-                                headers: {
-                                  Authorization: `Bearer ${generatedKey}`,
-                                  ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
-                                },
-                              },
-                            },
-                          }, null, 2));
-                          setCopiedConfig("claude");
-                          setTimeout(() => setCopiedConfig(null), 2000);
-                        } catch {
-                          // clipboard API might not be available
-                        }
-                      }}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
-                    >
-                      {copiedConfig === "claude" ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                      {copiedConfig === "claude" ? "Copied!" : "Copy config"}
-                    </button>
-                  </div>
-                </div>
-              </details>
-
-              {/* Cursor config */}
-              <details className="rounded-md border border-[var(--cream-dark)] bg-[var(--cream)]">
-                <summary className="cursor-pointer p-3 text-xs font-medium text-[var(--ink)]">
-                  MCP config for Cursor
-                </summary>
-                <div className="border-t border-[var(--cream-dark)]">
-                  <pre className="overflow-x-auto bg-white p-2.5 text-[11px] leading-relaxed text-[var(--ink)]">
-                    {JSON.stringify({
-                      mcpServers: {
-                        clean: {
-                          url: "https://api.tryclean.ai/mcp/sse",
-                          headers: {
-                            Authorization: `Bearer ${generatedKey}`,
-                            ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
-                          },
-                        },
-                      },
-                    }, null, 2)}
-                  </pre>
-                  <div className="border-t border-[var(--cream-dark)] p-2">
-                    <button
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(JSON.stringify({
-                            mcpServers: {
-                              clean: {
-                                url: "https://api.tryclean.ai/mcp/sse",
-                                headers: {
-                                  Authorization: `Bearer ${generatedKey}`,
-                                  ...(orgSlug ? { "X-Clean-Slug": orgSlug } : {}),
-                                },
-                              },
-                            },
-                          }, null, 2));
-                          setCopiedConfig("cursor");
-                          setTimeout(() => setCopiedConfig(null), 2000);
-                        } catch {
-                          // clipboard API might not be available
-                        }
-                      }}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
-                    >
-                      {copiedConfig === "cursor" ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                      {copiedConfig === "cursor" ? "Copied!" : "Copy config"}
-                    </button>
-                  </div>
-                </div>
-              </details>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <button
-              onClick={handleDone}
-              className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
-            >
-              Done
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
