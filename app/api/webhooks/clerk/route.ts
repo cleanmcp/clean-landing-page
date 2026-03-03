@@ -56,8 +56,7 @@ export async function POST(req: Request) {
 
     const email = email_addresses?.[0]?.email_address ?? null;
 
-    // Insert user (onConflictDoNothing handles the race where the invite-
-    // accept endpoint already created the row with onboardingStep = 2).
+    // Insert user with onboardingStep=2 so users go straight to dashboard.
     await db
       .insert(users)
       .values({
@@ -65,6 +64,7 @@ export async function POST(req: Request) {
         name,
         email,
         image: image_url ?? null,
+        onboardingStep: 2,
       })
       .onConflictDoNothing();
 
