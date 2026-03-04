@@ -195,13 +195,17 @@ export default function KeysPage() {
 
   async function revokeKey(id: string) {
     setRevoking(true);
+    setError(null);
     try {
       const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
       if (res.ok) {
         setKeys(keys.filter((k) => k.id !== id));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to revoke key");
       }
     } catch {
-      // silently fail
+      setError("Network error — could not revoke key");
     } finally {
       setRevoking(false);
       setRevokeDialog({ open: false, key: null });
@@ -283,7 +287,7 @@ export default function KeysPage() {
   const activeTokens = orgTokens.filter((t) => !t.revokedAt);
 
   return (
-    <div className="space-y-10 max-w-6xl">
+    <div className="space-y-10 max-w-6xl min-w-0">
       {/* API Keys Section */}
       <div>
         <div className="flex items-start justify-between">
@@ -303,6 +307,12 @@ export default function KeysPage() {
             Create Key
           </Link>
         </div>
+
+        {error && (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {error}
+          </div>
+        )}
 
         <div className="mt-6 rounded-lg border border-[var(--cream-dark)] bg-white">
           <div className="border-b border-[var(--cream-dark)] p-5 pb-3">

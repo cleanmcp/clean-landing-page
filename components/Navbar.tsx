@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 const navItems = [
   { label: "Pricing", href: "#pricing" },
@@ -9,84 +10,132 @@ const navItems = [
 ];
 
 export default function Navbar() {
+  const [condensed, setCondensed] = useState(false);
+  const { scrollY } = useScroll();
+  const lastDirectionChangeY = useRef(0);
+  const lastDirection = useRef<"up" | "down">("up");
+  const prevScrollY = useRef(0);
+
+  useEffect(() => {
+    prevScrollY.current = window.scrollY;
+    lastDirectionChangeY.current = window.scrollY;
+    if (window.scrollY > 80) setCondensed(true);
+  }, []);
+
+  useMotionValueEvent(scrollY, "change", (current) => {
+    const prev = prevScrollY.current;
+    const direction = current > prev ? "down" : "up";
+
+    if (direction !== lastDirection.current) {
+      lastDirectionChangeY.current = prev;
+      lastDirection.current = direction;
+    }
+
+    const distanceSinceDirectionChange = Math.abs(
+      current - lastDirectionChangeY.current
+    );
+
+    if (current <= 20) {
+      setCondensed(false);
+    } else if (direction === "down" && distanceSinceDirectionChange > 40) {
+      setCondensed(true);
+    } else if (direction === "up" && distanceSinceDirectionChange > 30) {
+      setCondensed(false);
+    }
+
+    prevScrollY.current = current;
+  });
+
+  const spring = {
+    type: "spring" as const,
+    stiffness: 260,
+    damping: 28,
+    mass: 0.9,
+  };
+
   return (
-    <motion.nav
-      className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-4 md:px-12"
-      style={{
-        background: "var(--cream)",
-        borderBottom: "1px solid transparent",
-      }}
-      initial={{ opacity: 0, y: -30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+    <motion.div
+      className="fixed left-0 right-0 top-0 z-50 flex justify-center pointer-events-none"
+      initial={false}
+      animate={{ padding: condensed ? "10px 16px 0" : "0px 0px 0" }}
+      transition={spring}
     >
-      {/* Logo */}
-      <motion.a
-        href="/"
-        className="group flex items-center gap-2"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+      <motion.nav
+        className="pointer-events-auto relative flex items-center justify-between w-full"
+        initial={false}
+        animate={{
+          maxWidth: condensed ? 540 : 2000,
+          borderRadius: condensed ? 40 : 0,
+          paddingTop: condensed ? 10 : 16,
+          paddingBottom: condensed ? 10 : 16,
+          paddingLeft: condensed ? 22 : 48,
+          paddingRight: condensed ? 22 : 48,
+          boxShadow: condensed
+            ? "0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)"
+            : "0 0px 0px rgba(0,0,0,0)",
+        }}
+        transition={spring}
+        style={{ background: "var(--cream)" }}
       >
-        <span
-          className="text-2xl font-normal tracking-tight transition-colors duration-300 group-hover:text-[var(--accent)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Clean
-        </span>
-      </motion.a>
-
-      {/* Nav Links */}
-      <div className="hidden md:flex items-center gap-8">
-        {navItems.map((item, i) => (
-          <motion.a
-            key={item.href}
-            href={item.href}
-            className="group relative text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)]"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.6,
-              delay: 0.2 + i * 0.08,
-              ease: [0.16, 1, 0.3, 1],
-            }}
+        {/* Logo */}
+        <a href="/" className="group flex items-center gap-2">
+          <motion.span
+            className="font-normal tracking-tight transition-colors duration-300 group-hover:text-[var(--accent)]"
+            style={{ fontFamily: "var(--font-display)" }}
+            initial={false}
+            animate={{ fontSize: condensed ? "1.15rem" : "1.5rem" }}
+            transition={spring}
           >
-            {item.label}
-            <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--accent)] transition-all duration-300 group-hover:w-full" />
-          </motion.a>
-        ))}
-      </div>
+            Clean
+          </motion.span>
+        </a>
 
-      {/* CTA */}
-      <div className="flex items-center gap-4">
-        <motion.a
-          href="#demo"
-          className="hidden text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)] sm:block"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            delay: 0.45,
-            ease: [0.16, 1, 0.3, 1],
+        {/* Nav Links — absolutely centered */}
+        <motion.div
+          className="pointer-events-auto absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex items-center gap-8"
+          initial={false}
+          animate={{
+            opacity: condensed ? 0 : 1,
           }}
+          transition={{ opacity: { duration: 0.2 } }}
+          style={{ pointerEvents: condensed ? "none" : "auto" }}
         >
-          Book a Demo
-        </motion.a>
-        <motion.a
-          href="#get-started"
-          className="btn-primary rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{
-            duration: 0.6,
-            delay: 0.5,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-        >
-          Get Started
-        </motion.a>
-      </div>
-    </motion.nav>
+          {navItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="group relative text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)]"
+            >
+              {item.label}
+              <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--accent)] transition-all duration-300 group-hover:w-full" />
+            </a>
+          ))}
+        </motion.div>
+
+        {/* CTA */}
+        <div className="flex items-center gap-4">
+          <motion.a
+            href="#demo"
+            className="hidden text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)] sm:block"
+            initial={false}
+            animate={{
+              opacity: condensed ? 0 : 1,
+              width: condensed ? 0 : "auto",
+              marginRight: condensed ? -8 : 0,
+            }}
+            transition={{ ...spring, opacity: { duration: 0.2 } }}
+            style={{ overflow: "hidden", whiteSpace: "nowrap" }}
+          >
+            Book a Demo
+          </motion.a>
+          <a
+            href="#get-started"
+            className="btn-primary rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
+          >
+            Get Started
+          </a>
+        </div>
+      </motion.nav>
+    </motion.div>
   );
 }
-

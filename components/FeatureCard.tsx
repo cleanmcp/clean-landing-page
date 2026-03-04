@@ -233,10 +233,10 @@ export default function FeatureCard({
   return (
     <motion.div
       className="group rounded-xl border border-[var(--cream-dark)] bg-[var(--cream)] p-6 transition-all hover:border-[var(--accent)]"
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.7, delay: index * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
     >
  
       <h3 className="mb-2 text-lg font-semibold text-[var(--ink)]">{title}</h3>

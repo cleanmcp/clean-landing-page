@@ -1,6 +1,6 @@
 export const TIER_LIMITS = {
-  free: { repos: 3, apiKeys: 2, members: 1 },
-  pro: { repos: 25, apiKeys: 20, members: 10 },
+  free: { repos: Infinity, apiKeys: Infinity, members: Infinity },
+  pro: { repos: Infinity, apiKeys: Infinity, members: Infinity },
   enterprise: { repos: Infinity, apiKeys: Infinity, members: Infinity },
 } as const;
 

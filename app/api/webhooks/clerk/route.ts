@@ -11,9 +11,8 @@ export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error(
-      "Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env.local"
-    );
+    console.error("CLERK_WEBHOOK_SECRET is not set — webhook requests will be rejected");
+    return new Response("Webhook secret not configured", { status: 500 });
   }
 
   // Get the headers
@@ -56,8 +55,7 @@ export async function POST(req: Request) {
 
     const email = email_addresses?.[0]?.email_address ?? null;
 
-    // Insert user (onConflictDoNothing handles the race where the invite-
-    // accept endpoint already created the row with onboardingStep = 2).
+    // Insert user with onboardingStep=2 so users go straight to dashboard.
     await db
       .insert(users)
       .values({
@@ -65,6 +63,7 @@ export async function POST(req: Request) {
         name,
         email,
         image: image_url ?? null,
+        onboardingStep: 2,
       })
       .onConflictDoNothing();
 

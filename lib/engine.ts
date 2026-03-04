@@ -94,6 +94,7 @@ export async function engineFetch(
     headers: {
       "X-Clean-Slug": org.slug,
       "X-Org-Id": orgId,
+      ...(GATEWAY_SECRET ? { "X-Gateway-Secret": GATEWAY_SECRET } : {}),
       ...options.headers,
     },
     signal: options.signal ?? AbortSignal.timeout(10_000),

@@ -4,13 +4,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
+import { Toaster } from "sonner";
 import {
   LayoutDashboard,
   FolderGit2,
   Users,
   FileText,
   Key,
-  DollarSign,
   LogOut,
 } from "lucide-react";
 
@@ -19,7 +19,6 @@ const navItems = [
   { href: "/dashboard/repositories", icon: FolderGit2, label: "Repositories" },
   { href: "/dashboard/team", icon: Users, label: "Team" },
   { href: "/dashboard/keys", icon: Key, label: "Keys" },
-  { href: "/dashboard/billing", icon: DollarSign, label: "Billing & Usage" },
 ];
 
 export default function ClientLayout({
@@ -48,7 +47,8 @@ export default function ClientLayout({
 
   return (
     <div className="flex h-screen flex-col bg-[var(--cream)]">
-      {/* Header */}
+        <Toaster position="top-right" />
+        {/* Header */}
       <header className="flex items-center justify-between bg-[var(--accent)] px-6 py-4">
         <h1
           className="text-2xl font-normal text-white"
@@ -118,7 +118,7 @@ export default function ClientLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-[var(--cream)] p-8">
+        <main className="flex-1 min-w-0 overflow-auto bg-[var(--cream)] p-8">
           {children}
         </main>
       </div>
