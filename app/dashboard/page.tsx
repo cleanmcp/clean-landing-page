@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Key, GitBranch, Zap, Search, Activity } from "lucide-react";
+import { Key, GitBranch, Zap, Search, Activity, Rocket, Terminal, Copy, Check, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { GlowCard } from "@/components/dashboard/glow-card";
 import { Progress } from "@/components/ui/progress";
 import type { ActivityItem } from "@/app/api/dashboard/activity/route";
@@ -296,6 +296,313 @@ function TokenSavingsCard() {
 }
 
 // ---------------------------------------------------------------------------
+// Setup Card — first-time experience
+// ---------------------------------------------------------------------------
+
+interface OrgInfo {
+  id: string;
+  name: string;
+  tier: string | null;
+  licenseKey: string | null;
+  licenseRevoked: boolean | null;
+}
+
+type SetupPhase = "loading" | "choose-plan" | "provisioning" | "license-ready" | "done";
+
+const PLANS = [
+  {
+    id: "free",
+    name: "Free",
+    price: "$0",
+    period: "forever",
+    features: ["3 repositories", "1 team member", "Community support"],
+    cta: "Start Free",
+    popular: false,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "$29",
+    period: "/month",
+    features: ["25 repositories", "10 team members", "Priority support", "Advanced analytics"],
+    cta: "Subscribe",
+    popular: true,
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: "Custom",
+    period: "",
+    features: ["Unlimited repositories", "Unlimited members", "Dedicated support", "SSO & audit logs"],
+    cta: "Contact Sales",
+    popular: false,
+  },
+];
+
+function SetupCard({ onComplete }: { onComplete: (licenseKey: string, tier: string) => void }) {
+  const [phase, setPhase] = useState<SetupPhase>("loading");
+  const [orgTier, setOrgTier] = useState<string | null>(null);
+  const [licenseKey, setLicenseKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [copiedLicense, setCopiedLicense] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const setup = params.get("setup");
+
+    // If returning from Stripe checkout, auto-provision
+    if (setup === "complete" && sessionId) {
+      setPhase("provisioning");
+      fetch("/api/stripe/provision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.licenseKey) {
+            setLicenseKey(data.licenseKey);
+            setOrgTier(data.tier || "pro");
+            setPhase("license-ready");
+            // Clean up URL
+            window.history.replaceState({}, "", "/dashboard");
+          } else {
+            setPhase("choose-plan");
+          }
+        })
+        .catch(() => setPhase("choose-plan"));
+      return;
+    }
+
+    // Normal load — check if org has license or paid tier
+    fetch("/api/org")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.org) {
+          setPhase("choose-plan");
+          return;
+        }
+        const org = data.org as OrgInfo;
+        const hasPaidPlan = org.tier === "pro" || org.tier === "enterprise";
+        if (hasPaidPlan || (org.licenseKey && !org.licenseRevoked)) {
+          setPhase("done");
+        } else {
+          setPhase("choose-plan");
+        }
+      })
+      .catch(() => setPhase("choose-plan"));
+  }, []);
+
+  async function handleFreePlan() {
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/stripe/free", { method: "POST" });
+      const data = await res.json();
+      if (data.licenseKey) {
+        setLicenseKey(data.licenseKey);
+        setOrgTier("free");
+        setPhase("license-ready");
+      }
+    } catch {
+      // fallback
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handlePaidPlan(planId: string) {
+    if (planId === "enterprise") {
+      window.open("mailto:hello@tryclean.ai?subject=Clean Enterprise", "_blank");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const priceId = planId === "pro" ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID : "";
+      if (!priceId) {
+        alert("Stripe price ID not configured.");
+        setActionLoading(false);
+        return;
+      }
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      // fallback
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function copyToClipboard(text: string, type: "command" | "license") {
+    navigator.clipboard.writeText(text);
+    if (type === "command") {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      setCopiedLicense(true);
+      setTimeout(() => setCopiedLicense(false), 2000);
+    }
+  }
+
+  // Auto-dismiss setup card 8 seconds after license is ready
+  useEffect(() => {
+    if (phase === "license-ready" && licenseKey) {
+      const timer = setTimeout(() => {
+        onComplete(licenseKey, orgTier || "free");
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, licenseKey, orgTier, onComplete]);
+
+  if (phase === "loading" || phase === "done") return null;
+
+  if (phase === "provisioning") {
+    return (
+      <div className="flex items-center justify-center gap-3 rounded-xl border-2 border-[var(--accent)]/20 bg-white p-8">
+        <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+        <span className="text-sm text-[var(--ink-muted)]">Setting up your account...</span>
+      </div>
+    );
+  }
+
+  if (phase === "choose-plan") {
+    return (
+      <div className="rounded-xl border-2 border-[var(--accent)]/20 bg-white p-6">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10">
+            <Rocket className="h-5 w-5 text-[var(--accent)]" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-[var(--ink)]">Get started with Clean</h3>
+            <p className="text-sm text-[var(--ink-muted)]">Choose a plan to get your license key and start indexing.</p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {PLANS.map((plan) => (
+            <div
+              key={plan.id}
+              className={`relative flex flex-col rounded-xl border p-5 transition-all ${
+                plan.popular
+                  ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/10"
+                  : "border-[var(--cream-dark)]"
+              }`}
+            >
+              {plan.popular && (
+                <span className="absolute -top-2.5 left-4 rounded-full bg-[var(--accent)] px-2.5 py-0.5 text-[10px] font-semibold text-white">
+                  Popular
+                </span>
+              )}
+              <h4 className="text-sm font-semibold text-[var(--ink)]">{plan.name}</h4>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-[var(--ink)]">{plan.price}</span>
+                {plan.period && <span className="text-xs text-[var(--ink-muted)]">{plan.period}</span>}
+              </div>
+              <ul className="mt-4 flex-1 space-y-2">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-xs text-[var(--ink-light)]">
+                    <Check className="h-3 w-3 text-[var(--accent)]" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => plan.id === "free" ? handleFreePlan() : handlePaidPlan(plan.id)}
+                disabled={actionLoading}
+                className={`mt-4 flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  plan.popular
+                    ? "bg-[var(--accent)] text-white hover:bg-[var(--accent-secondary)]"
+                    : "border border-[var(--cream-dark)] text-[var(--ink)] hover:bg-[var(--cream)]"
+                }`}
+              >
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : plan.cta}
+                {!actionLoading && <ArrowRight className="h-3 w-3" />}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // license-ready phase — shown briefly after provisioning, then auto-dismissed
+  const installCommand = "npx @tryclean/create";
+  const tierLabel = orgTier === "free" ? "Free" : orgTier === "pro" ? "Pro" : "Enterprise";
+
+  return (
+    <div className="rounded-xl border-2 border-green-200 bg-white p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+            <Sparkles className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-[var(--ink)]">You&apos;re all set!</h3>
+            <p className="text-sm text-[var(--ink-muted)]">
+              {tierLabel} plan active. Run this command to install Clean.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => { onComplete(licenseKey || "", orgTier || "free"); }}
+          className="text-xs text-[var(--ink-muted)] hover:text-[var(--ink)]"
+        >
+          Dismiss
+        </button>
+      </div>
+
+      {/* Single install command — license is baked in */}
+      <div className="rounded-lg bg-[var(--ink)] p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <Terminal className="h-4 w-4 text-green-400" />
+          <span className="text-xs font-medium text-gray-400">Install Clean</span>
+        </div>
+        <div className="flex items-center justify-between rounded-md bg-black/30 px-3 py-2">
+          <code className="text-sm text-green-400">{installCommand}</code>
+          <button
+            onClick={() => copyToClipboard(installCommand, "command")}
+            className="ml-2 text-gray-500 hover:text-white"
+          >
+            {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* License key — collapsible detail */}
+      <div className="mt-3 rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Key className="h-3.5 w-3.5 text-[var(--accent)]" />
+            <span className="text-xs text-[var(--ink-muted)]">License key</span>
+          </div>
+          <button
+            onClick={() => licenseKey && copyToClipboard(licenseKey, "license")}
+            className="flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
+          >
+            {copiedLicense ? <><Check className="h-3 w-3" /> Copied</> : <><Copy className="h-3 w-3" /> Copy</>}
+          </button>
+        </div>
+        <code className="mt-1 block truncate text-[11px] text-[var(--ink-light)]">
+          {licenseKey || "..."}
+        </code>
+        <p className="mt-1.5 text-[11px] text-[var(--ink-muted)]">
+          The installer will ask for this key. You can also find it in Billing.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Dashboard page
 // ---------------------------------------------------------------------------
 
@@ -317,6 +624,8 @@ export default function DashboardPage() {
   const [repoCount, setRepoCount] = useState<number | null>(null);
   const [repoError, setRepoError] = useState(false);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [showSetup, setShowSetup] = useState(true);
+  const [hasLicense, setHasLicense] = useState<boolean | null>(null);
 
   // Fetch activity (used for initial load and polling)
   const fetchActivity = useCallback(async () => {
@@ -344,7 +653,12 @@ export default function DashboardPage() {
       fetch("/api/org")
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
-          if (d?.org) setOrgData({ apiKeyCount: d.apiKeyCount ?? 0 });
+          if (d?.org) {
+            setOrgData({ apiKeyCount: d.apiKeyCount ?? 0 });
+            // Has license if licenseKey exists OR tier is paid (licenseKey may be hidden for non-owners)
+            const hasPaidPlan = d.org.tier === "pro" || d.org.tier === "enterprise";
+            setHasLicense(hasPaidPlan || (!!d.org.licenseKey && !d.org.licenseRevoked));
+          }
         }),
       fetch("/api/repos")
         .then((r) => {
@@ -403,6 +717,11 @@ export default function DashboardPage() {
           Here&apos;s an overview of your account activity.
         </p>
       </div>
+
+      {/* First-time setup card — only when explicitly no license */}
+      {hasLicense === false && showSetup && (
+        <SetupCard onComplete={() => { setShowSetup(false); setHasLicense(true); }} />
+      )}
 
       {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

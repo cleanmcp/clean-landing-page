@@ -1,7 +1,7 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
-import { Suspense, useState } from "react";
+import { useSignIn, useUser } from "@clerk/nextjs";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OAuthStrategy } from "@clerk/types";
@@ -22,6 +22,7 @@ export default function SignInPage() {
 
 function SignInContent() {
   const { signIn, isLoaded, setActive } = useSignIn();
+  const { user, isLoaded: userLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect_url");
@@ -31,7 +32,22 @@ function SignInContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (!isLoaded) {
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (userLoaded && user) {
+      router.push("/dashboard");
+    }
+  }, [userLoaded, user, router]);
+
+  if (!isLoaded || !userLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--cream)" }}>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--ink) border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--cream)" }}>
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--ink) border-t-transparent" />

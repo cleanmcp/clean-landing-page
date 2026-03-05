@@ -14,6 +14,9 @@ import {
   Clock,
   FolderGit2,
   Search,
+  Eye,
+  EyeOff,
+  Shield,
 } from "lucide-react";
 import {
   Dialog,
@@ -105,10 +108,6 @@ export default function KeysPage() {
   // Org tokens state
   const [orgTokens, setOrgTokens] = useState<OrgToken[]>([]);
   const [tokensLoading, setTokensLoading] = useState(true);
-  const [generatingToken, setGeneratingToken] = useState(false);
-  const [newToken, setNewToken] = useState<string | null>(null);
-  const [tokenName, setTokenName] = useState("");
-  const [generateDialog, setGenerateDialog] = useState(false);
   const [revokeTokenDialog, setRevokeTokenDialog] = useState<{
     open: boolean;
     token: OrgToken | null;
@@ -117,7 +116,9 @@ export default function KeysPage() {
 
   // Org info state
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
-  const [generatingLicense, setGeneratingLicense] = useState(false);
+
+  // License reveal state
+  const [licenseRevealed, setLicenseRevealed] = useState(false);
 
   // Shared state
   const [copied, setCopied] = useState<string | null>(null);
@@ -220,32 +221,6 @@ export default function KeysPage() {
     }
   }
 
-  async function handleGenerateToken() {
-    setGeneratingToken(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/org-tokens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: tokenName || "default" }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNewToken(data.token);
-        setTokenName("");
-        setGenerateDialog(false);
-        await fetchOrgTokens();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || "Failed to generate token");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
-    } finally {
-      setGeneratingToken(false);
-    }
-  }
-
   async function handleRevokeToken(id: string) {
     setRevokingToken(true);
     try {
@@ -259,28 +234,6 @@ export default function KeysPage() {
     } finally {
       setRevokingToken(false);
       setRevokeTokenDialog({ open: false, token: null });
-    }
-  }
-
-  async function handleGenerateLicense() {
-    setGeneratingLicense(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/license", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: "pro", months: 12 }),
-      });
-      if (res.ok) {
-        await Promise.all([fetchOrg(), fetchOrgTokens()]);
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || "Failed to generate license");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
-    } finally {
-      setGeneratingLicense(false);
     }
   }
 
@@ -525,67 +478,14 @@ export default function KeysPage() {
 
       {/* Org Tokens Section */}
       <div>
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-medium text-[var(--ink)]">
-              Org Tokens
-            </h2>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">
-              Tokens that authenticate your engine to the gateway
-            </p>
-          </div>
-          <button
-            onClick={() => setGenerateDialog(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
-          >
-            <Plus className="h-4 w-4" />
-            Generate Token
-          </button>
+        <div>
+          <h2 className="text-2xl font-medium text-[var(--ink)]">
+            Org Tokens
+          </h2>
+          <p className="mt-1 text-sm text-[var(--ink-muted)]">
+            Tokens that authenticate your engine to the gateway. These are auto-generated during setup.
+          </p>
         </div>
-
-        {error && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            {error}
-          </div>
-        )}
-
-        {/* Newly generated token (shown once) */}
-        {newToken && (
-          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
-            <p className="mb-2 text-sm font-medium text-green-800">
-              Token generated successfully. Copy it now — it won&apos;t be shown again.
-            </p>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 break-all rounded-md bg-white px-3 py-2 font-mono text-xs text-green-900">
-                {newToken}
-              </code>
-              <button
-                onClick={() => copyToClipboard(newToken, "new-token")}
-                className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  copied === "new-token"
-                    ? "border-green-300 bg-green-100 text-green-700"
-                    : "border-green-200 bg-white text-green-800 hover:bg-green-100"
-                }`}
-              >
-                {copied === "new-token" ? (
-                  <>
-                    <Check className="h-3 w-3" /> Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3 w-3" /> Copy
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => setNewToken(null)}
-                className="rounded-md border border-green-200 bg-white px-3 py-1.5 text-xs font-medium text-green-800 hover:bg-green-100"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="mt-6 rounded-lg border border-[var(--cream-dark)] bg-white">
           {tokensLoading ? (
@@ -598,18 +498,11 @@ export default function KeysPage() {
                 <Key className="h-6 w-6 text-[var(--ink-muted)]" />
               </div>
               <p className="mt-3 text-sm font-medium text-[var(--ink)]">
-                No org tokens
+                No org tokens yet
               </p>
-              <p className="mb-4 mt-0.5 text-xs text-[var(--ink-muted)]">
-                Generate a token to connect your self-hosted engine
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                Tokens are created automatically when you run the installer.
               </p>
-              <button
-                onClick={() => setGenerateDialog(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Generate your first token
-              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -675,121 +568,54 @@ export default function KeysPage() {
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-[var(--cream-dark)]" />
-
-      {/* Setup Instructions */}
-      <div>
-        <h2 className="mb-1 text-2xl font-medium text-[var(--ink)]">
-          Setup
-        </h2>
-        <p className="mb-6 text-sm text-[var(--ink-muted)]">
-          Install and connect your self-hosted Clean engine
-        </p>
-
-        {!orgInfo?.licenseKey ? (
-          <div className="rounded-lg border border-[var(--cream-dark)] bg-white py-14 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--cream-dark)]">
-              <Key className="h-6 w-6 text-[var(--ink-muted)]" />
-            </div>
-            <p className="mt-3 text-sm font-medium text-[var(--ink)]">
-              No license key
-            </p>
-            <p className="mb-4 mt-0.5 text-xs text-[var(--ink-muted)]">
-              Generate a license to enable self-hosted deployment
-            </p>
-            <button
-              onClick={handleGenerateLicense}
-              disabled={generatingLicense}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
-            >
-              {generatingLicense ? (
-                <>
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-3.5 w-3.5" />
-                  Generate License
-                </>
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)] bg-white">
-            <div className="space-y-5 p-4">
-              {/* Step 1: Run the command */}
+      {/* License Key (owner only) */}
+      {orgInfo?.licenseKey && (
+        <>
+          <div className="border-t border-[var(--cream-dark)]" />
+          <div>
+            <div className="flex items-start justify-between">
               <div>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
-                  Step 1 — Run the installer
+                <h2 className="text-2xl font-medium text-[var(--ink)]">License Key</h2>
+                <p className="mt-1 text-sm text-[var(--ink-muted)]">
+                  Your Clean license key. Use this when running the installer.
                 </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-[13px] leading-relaxed text-[var(--ink)]">
-                    npx @tryclean/create
-                  </code>
-                  <button
-                    onClick={() =>
-                      copyToClipboard("npx @tryclean/create", "cmd")
-                    }
-                    className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      copied === "cmd"
-                        ? "border-green-200 bg-green-50 text-green-700"
-                        : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
-                    }`}
-                  >
-                    {copied === "cmd" ? (
-                      <>
-                        <Check className="h-3 w-3" /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3" /> Copy
-                      </>
-                    )}
-                  </button>
-                </div>
               </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--accent)]">
+                <Shield className="h-3 w-3" />
+                Owner only
+              </span>
+            </div>
 
-              {/* Step 2: Paste license key when prompted */}
-              <div>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
-                  Step 2 — Paste your license key when prompted
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 break-all rounded-md bg-[var(--cream)] px-3 py-2 font-mono text-xs leading-relaxed text-[var(--ink)]">
-                    {orgInfo.licenseKey}
-                  </code>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(orgInfo.licenseKey!, "license")
-                    }
-                    className={`flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      copied === "license"
-                        ? "border-green-200 bg-green-50 text-green-700"
-                        : "border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream-dark)]"
-                    }`}
-                  >
-                    {copied === "license" ? (
-                      <>
-                        <Check className="h-3 w-3" /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3" /> Copy
-                      </>
-                    )}
-                  </button>
-                </div>
-                <p className="mt-1.5 text-xs text-[var(--ink-muted)]">
-                  The installer will automatically provision your org token and
-                  configure the gateway connection.
-                </p>
+            <div className="mt-4 rounded-lg border border-[var(--cream-dark)] bg-white p-4">
+              <div className="flex items-center gap-2">
+                <code className="flex-1 break-all rounded-md bg-[var(--cream)] px-3 py-2.5 font-mono text-xs leading-relaxed text-[var(--ink)]">
+                  {licenseRevealed
+                    ? orgInfo.licenseKey
+                    : orgInfo.licenseKey.slice(0, 20) + "\u2022".repeat(40) + orgInfo.licenseKey.slice(-8)}
+                </code>
+                <button
+                  onClick={() => setLicenseRevealed(!licenseRevealed)}
+                  className="flex h-9 w-9 items-center justify-center rounded-md border border-[var(--cream-dark)] text-[var(--ink-muted)] transition-colors hover:bg-[var(--cream-dark)] hover:text-[var(--ink)]"
+                  title={licenseRevealed ? "Hide" : "Reveal"}
+                >
+                  {licenseRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+                <button
+                  onClick={() => copyToClipboard(orgInfo.licenseKey!, "license")}
+                  className={`flex h-9 w-9 items-center justify-center rounded-md border transition-colors ${
+                    copied === "license"
+                      ? "border-green-200 bg-green-50 text-green-600"
+                      : "border-[var(--cream-dark)] text-[var(--ink-muted)] hover:bg-[var(--cream-dark)] hover:text-[var(--ink)]"
+                  }`}
+                  title="Copy"
+                >
+                  {copied === "license" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Revoke API Key Dialog */}
       <Dialog
@@ -871,61 +697,6 @@ export default function KeysPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Generate Token Dialog */}
-      <Dialog
-        open={generateDialog}
-        onOpenChange={(open) => {
-          setGenerateDialog(open);
-          if (!open) setTokenName("");
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Generate Org Token</DialogTitle>
-            <DialogDescription>
-              Create a new token for your engine to authenticate with the
-              gateway. The token will only be shown once.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <label className="mb-1.5 block text-sm font-medium text-[var(--ink)]">
-              Token Name
-            </label>
-            <input
-              type="text"
-              value={tokenName}
-              onChange={(e) => setTokenName(e.target.value)}
-              placeholder="e.g. production, staging"
-              className="w-full rounded-lg border border-[var(--cream-dark)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-            />
-          </div>
-          <DialogFooter>
-            <button
-              onClick={() => {
-                setGenerateDialog(false);
-                setTokenName("");
-              }}
-              className="rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleGenerateToken}
-              disabled={generatingToken}
-              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
-            >
-              {generatingToken ? (
-                <>
-                  <RefreshCw className="mr-1.5 inline h-3.5 w-3.5 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                "Generate"
-              )}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

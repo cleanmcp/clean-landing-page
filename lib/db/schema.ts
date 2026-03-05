@@ -8,6 +8,7 @@ import {
   primaryKey,
   index,
   boolean,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -23,6 +24,35 @@ export const users = pgTable("users", {
   onboardingStep: integer("onboarding_step").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ============================================================================
+// WAITLIST
+// ============================================================================
+
+export const waitlistStatusEnum = pgEnum("waitlist_status", [
+  "pending",
+  "accepted",
+  "rejected",
+]);
+
+export const waitlist = pgTable(
+  "waitlist",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    status: waitlistStatusEnum("status").notNull().default("pending"),
+    note: text("note"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    acceptedAt: timestamp("accepted_at"),
+    rejectedAt: timestamp("rejected_at"),
+  },
+  (table) => [
+    index("waitlist_email_idx").on(table.email),
+    index("waitlist_status_idx").on(table.status),
+    index("waitlist_created_at_idx").on(table.createdAt),
+  ]
+);
 
 // ============================================================================
 // ORGANIZATIONS
@@ -48,6 +78,10 @@ export const organizations = pgTable(
     licenseExpiresAt: timestamp("license_expires_at"),
     licenseJti: text("license_jti"),
     licenseRevoked: boolean("license_revoked").default(false),
+    // Stripe
+    stripeCustomerId: text("stripe_customer_id"),
+    stripeSubscriptionId: text("stripe_subscription_id"),
+    stripePriceId: text("stripe_price_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [

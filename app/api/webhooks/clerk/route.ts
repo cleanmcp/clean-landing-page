@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
     const email = email_addresses?.[0]?.email_address ?? null;
 
-    // Insert user with onboardingStep=2 so users go straight to dashboard.
+    // Insert user with onboardingStep=0 so they go through onboarding.
     await db
       .insert(users)
       .values({
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         name,
         email,
         image: image_url ?? null,
-        onboardingStep: 2,
+        onboardingStep: 0,
       })
       .onConflictDoNothing();
 
