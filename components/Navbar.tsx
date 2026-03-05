@@ -4,7 +4,7 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 const navItems = [
-  { label: "Pricing", href: "#pricing" },
+  { label: "Pricing", href: "pricing-plan" },
   { label: "Docs", href: "#docs" },
   { label: "Resources", href: "#resources" },
 ];

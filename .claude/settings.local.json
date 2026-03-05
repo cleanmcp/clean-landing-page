@@ -1,10 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)",
-      "Bash(xargs:*)",
-      "Bash(npx tsc:*)",
-      "Bash(npx drizzle-kit:*)"
+      "Bash(npm run:*)",
+      "mcp__Neon__list_projects",
+      "mcp__Neon__get_database_tables",
+      "mcp__Neon__run_sql",
+      "mcp__Neon__list_shared_projects"
     ]
   }
 }
