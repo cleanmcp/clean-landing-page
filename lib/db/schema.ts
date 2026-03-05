@@ -73,7 +73,6 @@ export const organizations = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull().unique(),
     clerkOrgId: text("clerk_org_id"),
-    stripeCustomerId: text("stripe_customer_id"),
     metadata: jsonb("metadata").$type<OrgMetadata>(),
     licenseKey: text("license_key"),
     tier: text("tier").$type<"free" | "starter" | "pro" | "enterprise">().default("free"),
