@@ -1,7 +1,7 @@
 "use client";
 
-import { useSignUp } from "@clerk/nextjs";
-import { Suspense, useState } from "react";
+import { useSignUp, useUser } from "@clerk/nextjs";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { OAuthStrategy } from "@clerk/types";
@@ -22,6 +22,7 @@ export default function SignUpPage() {
 
 function SignUpContent() {
   const { signUp, isLoaded, setActive } = useSignUp();
+  const { user, isLoaded: userLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect_url");
@@ -32,8 +33,25 @@ function SignUpContent() {
   const [step, setStep] = useState<"details" | "verify">("details");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [waitlistChecking, setWaitlistChecking] = useState(false);
 
-  if (!isLoaded) {
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (userLoaded && user) {
+      router.push("/dashboard");
+    }
+  }, [userLoaded, user, router]);
+
+  if (!isLoaded || !userLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--cream)" }}>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--ink) border-t-transparent" />
+      </div>
+    );
+  }
+
+  // If user is logged in, show spinner while redirecting
+  if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--cream)" }}>
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--ink) border-t-transparent" />
@@ -60,6 +78,30 @@ function SignUpContent() {
     if (!signUp) return;
     setError("");
     setLoading(true);
+
+    // Check waitlist before allowing sign-up
+    try {
+      setWaitlistChecking(true);
+      const checkRes = await fetch("/api/waitlist/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase() }),
+      });
+      const checkData = await checkRes.json();
+      setWaitlistChecking(false);
+
+      if (!checkData.accepted) {
+        setError("This email hasn't been approved yet. Please join the waitlist first.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setWaitlistChecking(false);
+      setError("Could not verify waitlist status. Please try again.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await signUp.create({ emailAddress: email, password });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
@@ -214,17 +256,23 @@ function SignUpContent() {
                 />
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || waitlistChecking}
                   className="w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-60"
                   style={{
                     background: "var(--accent)",
                     color: "var(--cream)",
                   }}
                 >
-                  {loading ? "Sending code…" : "Continue with email"}
+                  {waitlistChecking ? "Checking waitlist..." : loading ? "Sending code..." : "Continue with email"}
                 </button>
               </form>
 
+              <p className="mt-4 text-center text-xs" style={{ color: "var(--ink-muted)" }}>
+                You must be on the approved waitlist to sign up.{" "}
+                <Link href="/waitlist" className="underline" style={{ color: "var(--accent)" }}>
+                  Join waitlist
+                </Link>
+              </p>
             </>
           ) : (
             <form onSubmit={handleVerify}>
@@ -262,7 +310,7 @@ function SignUpContent() {
                   color: "var(--cream)",
                 }}
               >
-                {loading ? "Verifying…" : "Verify"}
+                {loading ? "Verifying..." : "Verify"}
               </button>
               <button
                 type="button"
@@ -274,7 +322,7 @@ function SignUpContent() {
                 className="w-full rounded-xl px-4 py-3 text-sm font-medium transition-colors duration-200"
                 style={{ color: "var(--ink-muted)" }}
               >
-                ← Back
+                Back
               </button>
             </form>
           )}

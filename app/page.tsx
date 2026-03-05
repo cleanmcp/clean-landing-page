@@ -528,14 +528,14 @@ export default function Home() {
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
-                href="#get-started"
+                href="/waitlist"
                 className="btn-primary flex items-center gap-2 rounded-full px-8 py-3 text-base font-medium"
               >
                 Get Started Free
                 <ArrowRightIcon className="h-4 w-4" />
               </a>
               <a
-                href="#demo"
+                href="/waitlist"
                 className="btn-secondary rounded-full px-8 py-3 text-base font-medium"
               >
                 Book a Demo

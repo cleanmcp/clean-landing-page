@@ -115,7 +115,7 @@ export default function Navbar() {
         {/* CTA */}
         <div className="flex items-center gap-4">
           <motion.a
-            href="#demo"
+            href="/sign-in"
             className="hidden text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)] sm:block"
             initial={false}
             animate={{
@@ -126,13 +126,13 @@ export default function Navbar() {
             transition={{ ...spring, opacity: { duration: 0.2 } }}
             style={{ overflow: "hidden", whiteSpace: "nowrap" }}
           >
-            Book a Demo
+            Sign In
           </motion.a>
           <a
-            href="#get-started"
+            href="/waitlist"
             className="btn-primary rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
           >
-            Get Started
+            Join Waitlist
           </a>
         </div>
       </motion.nav>

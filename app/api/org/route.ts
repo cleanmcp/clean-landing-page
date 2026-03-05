@@ -54,6 +54,7 @@ export async function GET() {
         name: org.name,
         slug: org.slug,
         ...(currentMember?.role === "OWNER" ? { licenseKey: org.licenseKey } : {}),
+        licenseRevoked: org.licenseRevoked ?? false,
         tier: org.tier,
         createdAt: org.createdAt.toISOString(),
       },
