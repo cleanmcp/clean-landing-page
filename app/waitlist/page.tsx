@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function WaitlistPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[var(--cream)]"><div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" /></div>}>
+      <WaitlistContent />
+    </Suspense>
+  );
+}
+
+function WaitlistContent() {
   const searchParams = useSearchParams();
   const notApproved = searchParams.get("not_approved") === "1";
   const [name, setName] = useState("");
