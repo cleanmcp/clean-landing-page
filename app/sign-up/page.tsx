@@ -30,10 +30,9 @@ function SignUpContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"details" | "verify">("details");
+  const [step, setStep] = useState<"email-gate" | "details" | "verify">("email-gate");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [waitlistChecking, setWaitlistChecking] = useState(false);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -59,6 +58,32 @@ function SignUpContent() {
     );
   }
 
+  const handleWaitlistCheck = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const checkRes = await fetch("/api/waitlist/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+      const checkData = await checkRes.json();
+
+      if (!checkData.accepted) {
+        router.push("/waitlist?not_approved=1");
+        return;
+      }
+
+      setStep("details");
+    } catch {
+      setError("Could not verify waitlist status. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOAuth = async (strategy: OAuthStrategy) => {
     if (!signUp) return;
     try {
@@ -78,29 +103,6 @@ function SignUpContent() {
     if (!signUp) return;
     setError("");
     setLoading(true);
-
-    // Check waitlist before allowing sign-up
-    try {
-      setWaitlistChecking(true);
-      const checkRes = await fetch("/api/waitlist/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase() }),
-      });
-      const checkData = await checkRes.json();
-      setWaitlistChecking(false);
-
-      if (!checkData.accepted) {
-        setError("This email hasn't been approved yet. Please join the waitlist first.");
-        setLoading(false);
-        return;
-      }
-    } catch {
-      setWaitlistChecking(false);
-      setError("Could not verify waitlist status. Please try again.");
-      setLoading(false);
-      return;
-    }
 
     try {
       await signUp.create({ emailAddress: email, password });
@@ -167,12 +169,18 @@ function SignUpContent() {
           }}
         >
           <h1 className="mb-1 text-xl font-semibold" style={{ color: "var(--ink)" }}>
-            Create your account
+            {step === "email-gate"
+              ? "Get started"
+              : step === "details"
+                ? "Create your account"
+                : "Verify your email"}
           </h1>
           <p className="mb-6 text-sm" style={{ color: "var(--ink-muted)" }}>
-            {step === "details"
-              ? "Get started with Clean today."
-              : `We sent a code to ${email}`}
+            {step === "email-gate"
+              ? "Enter your email to check access."
+              : step === "details"
+                ? "You're in! Set up your account."
+                : `We sent a code to ${email}`}
           </p>
 
           {error && (
@@ -181,7 +189,54 @@ function SignUpContent() {
             </div>
           )}
 
-          {step === "details" ? (
+          {step === "email-gate" ? (
+            <>
+              <form onSubmit={handleWaitlistCheck}>
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-sm font-medium"
+                  style={{ color: "var(--ink-light)" }}
+                >
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  autoFocus
+                  className="mb-4 w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-2"
+                  style={{
+                    background: "var(--cream)",
+                    borderColor: "var(--cream-dark)",
+                    color: "var(--ink)",
+                    // @ts-expect-error CSS custom property
+                    "--tw-ring-color": "var(--accent)",
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-60"
+                  style={{
+                    background: "var(--accent)",
+                    color: "var(--cream)",
+                  }}
+                >
+                  {loading ? "Checking..." : "Continue"}
+                </button>
+              </form>
+
+              <p className="mt-4 text-center text-xs" style={{ color: "var(--ink-muted)" }}>
+                Don&apos;t have access yet?{" "}
+                <Link href="/waitlist" className="underline" style={{ color: "var(--accent)" }}>
+                  Join the waitlist
+                </Link>
+              </p>
+            </>
+          ) : step === "details" ? (
             <>
               <button
                 type="button"
@@ -208,29 +263,9 @@ function SignUpContent() {
               </div>
 
               <form onSubmit={handleEmailSubmit}>
-                <label
-                  htmlFor="email"
-                  className="mb-1.5 block text-sm font-medium"
-                  style={{ color: "var(--ink-light)" }}
-                >
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="mb-4 w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-2"
-                  style={{
-                    background: "var(--cream)",
-                    borderColor: "var(--cream-dark)",
-                    color: "var(--ink)",
-                    // @ts-expect-error CSS custom property
-                    "--tw-ring-color": "var(--accent)",
-                  }}
-                />
+                <div className="mb-4 rounded-lg border px-4 py-3 text-sm" style={{ background: "var(--cream)", borderColor: "var(--cream-dark)", color: "var(--ink)" }}>
+                  {email}
+                </div>
                 <label
                   htmlFor="password"
                   className="mb-1.5 block text-sm font-medium"
@@ -245,6 +280,7 @@ function SignUpContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a password"
+                  autoFocus
                   className="mb-4 w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-2"
                   style={{
                     background: "var(--cream)",
@@ -256,23 +292,25 @@ function SignUpContent() {
                 />
                 <button
                   type="submit"
-                  disabled={loading || waitlistChecking}
+                  disabled={loading}
                   className="w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-60"
                   style={{
                     background: "var(--accent)",
                     color: "var(--cream)",
                   }}
                 >
-                  {waitlistChecking ? "Checking waitlist..." : loading ? "Sending code..." : "Continue with email"}
+                  {loading ? "Sending code..." : "Create account"}
                 </button>
               </form>
 
-              <p className="mt-4 text-center text-xs" style={{ color: "var(--ink-muted)" }}>
-                You must be on the approved waitlist to sign up.{" "}
-                <Link href="/waitlist" className="underline" style={{ color: "var(--accent)" }}>
-                  Join waitlist
-                </Link>
-              </p>
+              <button
+                type="button"
+                onClick={() => { setStep("email-gate"); setError(""); setPassword(""); }}
+                className="mt-3 w-full text-center text-xs font-medium transition-colors duration-200"
+                style={{ color: "var(--ink-muted)" }}
+              >
+                Use a different email
+              </button>
             </>
           ) : (
             <form onSubmit={handleVerify}>
