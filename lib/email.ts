@@ -1,12 +1,14 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 const FROM_EMAIL = "Clean <hello@tryclean.ai>";
 
 export async function sendWaitlistNotification(name: string, email: string) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: "hello@tryclean.ai",
       subject: `New waitlist signup: ${name}`,
@@ -26,7 +28,7 @@ export async function sendAcceptanceEmail(name: string, email: string) {
   try {
     const signUpUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://tryclean.ai"}/sign-up`;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: "You're in! Welcome to Clean",
