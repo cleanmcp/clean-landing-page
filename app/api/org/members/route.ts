@@ -5,6 +5,7 @@ import { orgMembers, organizations } from "@/lib/db/schema";
 import type { OrgRole } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { getClerkClientInstance } from "@/lib/clerk-org";
+import { syncSeatCount } from "@/lib/sync-seats";
 
 // PATCH /api/org/members - Change a member's role
 export async function PATCH(request: NextRequest) {
@@ -192,6 +193,11 @@ export async function DELETE(request: NextRequest) {
         err
       );
     }
+
+    // Sync seat count to Stripe (best-effort)
+    syncSeatCount(ctx.orgId).catch((err) =>
+      console.error("Failed to sync seat count after member removal:", err)
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

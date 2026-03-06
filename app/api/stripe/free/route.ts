@@ -1,12 +1,21 @@
+import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { organizations, orgMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { generateLicenseKey } from "@/lib/license";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  let hostingMode: "cloud" | "self-hosted" = "cloud";
+  try {
+    const body = await request.json();
+    if (body.hostingMode === "self-hosted") hostingMode = "self-hosted";
+  } catch {
+    // no body or invalid JSON — default to cloud
+  }
 
   // Get user's org
   const membership = await db
@@ -51,8 +60,9 @@ export async function POST() {
       licenseJti: claims.jti,
       licenseExpiresAt: new Date(claims.exp * 1000),
       licenseRevoked: false,
+      hostingMode,
     })
     .where(eq(organizations.id, orgId));
 
-  return Response.json({ success: true, licenseKey });
+  return Response.json({ success: true, licenseKey, hostingMode });
 }

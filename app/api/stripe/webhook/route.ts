@@ -7,9 +7,12 @@ import {
   paymentTransactions,
   stripeWebhookEvents,
   orgMembers,
+  type SubscriptionStatus,
 } from "@/lib/db/schema";
 import { eq, sql, and } from "drizzle-orm";
 import type Stripe from "stripe";
+import { syncAllKeysForOrg } from "@/lib/engine-sync";
+import { enforceRepoLimits } from "@/lib/enforce-repo-limits";
 
 /** Safely convert a Stripe Unix timestamp (seconds) to a Date, or null. */
 function toDate(ts: number | null | undefined): Date | null {
@@ -18,17 +21,23 @@ function toDate(ts: number | null | undefined): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// Price ID → plan → org tier + seat limit mapping
+// Price ID → plan + org tier + seat limit mapping
 // seatLimit: null = unlimited
-const PRICE_PLAN_MAP: Record<
-  string,
-  { plan: "starter" | "pro" | "enterprise"; tier: "starter" | "pro" | "enterprise"; seatLimit: number | null }
-> = {
-  price_1T6IjXBWaGrUIdMvnsUHzpnY: { plan: "starter", tier: "starter", seatLimit: 4 },
-};
+type PlanTier = "free" | "pro" | "max" | "enterprise";
+type PlanInfo = { plan: PlanTier; tier: PlanTier; seatLimit: number | null };
 
-function getPlanFromPriceId(priceId: string) {
-  return PRICE_PLAN_MAP[priceId] ?? { plan: "starter" as const, tier: "starter" as const, seatLimit: 4 };
+const PRICE_PLAN_MAP: Record<string, PlanInfo> = {};
+
+// Populated at startup from env vars so we don't hardcode Stripe price IDs
+if (process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID) {
+  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID] = { plan: "pro", tier: "pro", seatLimit: 5 };
+}
+if (process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID) {
+  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID] = { plan: "max", tier: "max", seatLimit: 25 };
+}
+
+function getPlanFromPriceId(priceId: string): PlanInfo {
+  return PRICE_PLAN_MAP[priceId] ?? { plan: "pro", tier: "pro", seatLimit: 5 };
 }
 
 /** Returns true if the event was already processed (duplicate delivery). */
@@ -57,11 +66,11 @@ async function handleSubscriptionCreated(sub: Stripe.Subscription) {
     return;
   }
 
-  const priceId = sub.items.data[0]?.price.id ?? "";
+  const firstItem = sub.items.data[0];
+  const priceId = firstItem?.price.id ?? "";
   const { plan, tier, seatLimit } = getPlanFromPriceId(priceId);
-  // Use toDate() to guard against null/undefined timestamps in Stripe payloads
-  const periodStart = toDate(sub.current_period_start) ?? new Date();
-  const periodEnd = toDate(sub.current_period_end) ?? new Date();
+  const periodStart = toDate(firstItem?.current_period_start) ?? new Date();
+  const periodEnd = toDate(firstItem?.current_period_end) ?? new Date();
 
   await Promise.all([
     db
@@ -71,7 +80,7 @@ async function handleSubscriptionCreated(sub: Stripe.Subscription) {
         stripeCustomerId: sub.customer as string,
         orgId,
         userId,
-        status: sub.status,
+        status: sub.status as SubscriptionStatus,
         plan,
         stripePriceId: priceId,
         currentPeriodStart: periodStart,
@@ -91,22 +100,34 @@ async function handleSubscriptionCreated(sub: Stripe.Subscription) {
       })
       .where(eq(organizations.id, orgId)),
   ]);
+
+  // Re-sync all keys so engine picks up new tier limits
+  syncAllKeysForOrg(orgId).catch((err) =>
+    console.error(`[webhook] Failed to re-sync keys for org ${orgId}:`, err)
+  );
+
+  // Pause/unpause repos to match new plan limits
+  enforceRepoLimits(orgId).catch((err) =>
+    console.error(`[webhook] Failed to enforce repo limits for org ${orgId}:`, err)
+  );
 }
 
 // ---------------------------------------------------------------------------
 // customer.subscription.updated
 // ---------------------------------------------------------------------------
 async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
-  const priceId = sub.items.data[0]?.price.id ?? "";
+  const firstItem = sub.items.data[0];
+  const priceId = firstItem?.price.id ?? "";
   const { tier, seatLimit } = getPlanFromPriceId(priceId);
-  const periodEnd = toDate(sub.current_period_end) ?? new Date();
+  const periodStart = toDate(firstItem?.current_period_start) ?? new Date();
+  const periodEnd = toDate(firstItem?.current_period_end) ?? new Date();
 
   await db
     .update(subscriptions)
     .set({
-      status: sub.status,
+      status: sub.status as SubscriptionStatus,
       stripePriceId: priceId,
-      currentPeriodStart: toDate(sub.current_period_start) ?? new Date(),
+      currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,
       cancelAtPeriodEnd: sub.cancel_at_period_end,
       canceledAt: toDate(sub.canceled_at),
@@ -128,6 +149,16 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
       .update(organizations)
       .set({ tier, seatLimit, licenseExpiresAt: periodEnd })
       .where(eq(organizations.id, orgId));
+
+    // Re-sync all keys so engine picks up new tier limits
+    syncAllKeysForOrg(orgId).catch((err) =>
+      console.error(`[webhook] Failed to re-sync keys for org ${orgId}:`, err)
+    );
+
+    // Pause/unpause repos to match new plan limits
+    enforceRepoLimits(orgId).catch((err) =>
+      console.error(`[webhook] Failed to enforce repo limits for org ${orgId}:`, err)
+    );
   }
 }
 
@@ -157,6 +188,16 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
       .update(organizations)
       .set({ tier: "free", seatLimit: 1, licenseExpiresAt: null })
       .where(eq(organizations.id, orgId));
+
+    // Re-sync all keys so engine picks up free-tier limits
+    syncAllKeysForOrg(orgId).catch((err) =>
+      console.error(`[webhook] Failed to re-sync keys for org ${orgId}:`, err)
+    );
+
+    // Pause excess repos that no longer fit the free tier
+    enforceRepoLimits(orgId).catch((err) =>
+      console.error(`[webhook] Failed to enforce repo limits for org ${orgId}:`, err)
+    );
   }
 }
 
@@ -164,10 +205,11 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
 // invoice.payment_succeeded
 // ---------------------------------------------------------------------------
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+  const subField = invoice.parent?.subscription_details?.subscription;
   const stripeSubId =
-    typeof invoice.subscription === "string"
-      ? invoice.subscription
-      : invoice.subscription?.id ?? null;
+    typeof subField === "string"
+      ? subField
+      : subField?.id ?? null;
 
   const customerId =
     typeof invoice.customer === "string"
@@ -222,10 +264,10 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     .values({
       subscriptionId: subRecord?.id ?? null,
       stripeInvoiceId: invoice.id!,
-      stripePaymentIntentId:
-        typeof invoice.payment_intent === "string"
-          ? invoice.payment_intent
-          : invoice.payment_intent?.id ?? null,
+      stripePaymentIntentId: (() => {
+        const pi = invoice.payments?.data?.[0]?.payment?.payment_intent;
+        return typeof pi === "string" ? pi : pi?.id ?? null;
+      })(),
       orgId,
       userId,
       amountPaid: invoice.amount_paid,
@@ -252,10 +294,11 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 // invoice.payment_failed
 // ---------------------------------------------------------------------------
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  const subField = invoice.parent?.subscription_details?.subscription;
   const stripeSubId =
-    typeof invoice.subscription === "string"
-      ? invoice.subscription
-      : invoice.subscription?.id ?? null;
+    typeof subField === "string"
+      ? subField
+      : subField?.id ?? null;
   if (!stripeSubId) return;
 
   await db

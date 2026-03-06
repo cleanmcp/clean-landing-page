@@ -10,6 +10,6 @@ export const config = {
   matcher: [
     // Skip Next.js internals, static files, public API routes, and invite pages.
     // Clerk must never process these or it will consume the Authorization header.
-    "/((?!_next|invite|admin|api/webhooks|api/cli|api/dev|api/waitlist|api/admin|api/stripe/webhook|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!_next|invite|admin|api/webhooks|api/cli|api/dev|api/waitlist|api/admin|api/stripe/webhook|api/github/callback|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
   ],
 };

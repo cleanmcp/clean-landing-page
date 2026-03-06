@@ -7,7 +7,7 @@ import { audit } from "@/lib/audit";
 import { syncKeyToEngine } from "@/lib/engine-sync";
 import { eq, isNull, and, desc, sql } from "drizzle-orm";
 import { organizations } from "@/lib/db/schema";
-import { getTierLimits } from "@/lib/tier-limits";
+import { getTierLimits, getCloudTierLimits, getCloudTierLimitsForSync } from "@/lib/tier-limits";
 
 // GET /api/keys - List all API keys for the user
 export async function GET() {
@@ -85,12 +85,14 @@ export async function POST(request: NextRequest) {
 
     // Enforce tier limit on API keys
     const [org] = await db
-      .select({ tier: organizations.tier })
+      .select({ tier: organizations.tier, hostingMode: organizations.hostingMode })
       .from(organizations)
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);
 
-    const limits = getTierLimits(org?.tier ?? "free");
+    const tier = org?.tier ?? "free";
+    const isCloud = org?.hostingMode === "cloud";
+    const limits = isCloud ? getCloudTierLimits(tier) : getTierLimits(tier);
 
     const [{ count: keyCount }] = await db
       .select({ count: sql<number>`count(*)` })
@@ -146,7 +148,8 @@ export async function POST(request: NextRequest) {
       metadata: { name, scopes },
     });
 
-    // Sync key hash to the self-hosted engine
+    // Sync key hash to the self-hosted engine (include tier limits)
+    const tierLimits = getCloudTierLimitsForSync(tier);
     await syncKeyToEngine(ctx.orgId, "create", {
       id: apiKey.id,
       orgId: ctx.orgId,
@@ -155,6 +158,8 @@ export async function POST(request: NextRequest) {
       scopes,
       name,
       expiresAt: expiresAt?.toISOString() ?? null,
+      tier,
+      ...tierLimits,
     });
 
     // Return the plain key (only time it's shown)

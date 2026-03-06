@@ -117,6 +117,9 @@ export default function KeysPage() {
   // Org info state
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
 
+  // Hosting mode
+  const [hostingMode, setHostingMode] = useState<string>("cloud");
+
   // License reveal state
   const [licenseRevealed, setLicenseRevealed] = useState(false);
 
@@ -161,6 +164,7 @@ export default function KeysPage() {
           slug: data.org.slug,
           licenseKey: data.org.licenseKey ?? null,
         });
+        setHostingMode(data.org.hostingMode ?? "cloud");
       }
     } catch {
       // silently fail
@@ -389,6 +393,9 @@ export default function KeysPage() {
         </div>
       </div>
 
+      {/* Self-hosted only: Engine Connection + Org Tokens + License */}
+      {hostingMode !== "cloud" && (
+      <>
       {/* Divider */}
       <div className="border-t border-[var(--cream-dark)]" />
 
@@ -615,6 +622,8 @@ export default function KeysPage() {
             </div>
           </div>
         </>
+      )}
+      </>
       )}
 
       {/* Revoke API Key Dialog */}

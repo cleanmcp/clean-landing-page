@@ -1,0 +1,955 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Github,
+  Check,
+  Loader2,
+  Lock,
+  Globe,
+  ArrowRight,
+  Copy,
+  RefreshCw,
+  Search,
+  Sparkles,
+} from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface GitHubRepoInfo {
+  id: number;
+  fullName: string;
+  name: string;
+  owner: string;
+  ownerAvatar: string;
+  private: boolean;
+  defaultBranch: string;
+  language: string | null;
+  description: string | null;
+  updatedAt: string;
+  installationId: string | null;
+}
+
+interface CloudRepo {
+  id: string;
+  fullName: string;
+  status: string;
+  entityCount: number | null;
+  lastIndexedAt: string | null;
+  error: string | null;
+}
+
+interface OrgInfo {
+  tier: string | null;
+  hostingMode: string | null;
+  slug: string;
+}
+
+type OnboardingStep = "connect-github" | "select-repos" | "indexing" | "mcp-config";
+
+// ---------------------------------------------------------------------------
+// Language colors
+// ---------------------------------------------------------------------------
+
+const LANG_COLORS: Record<string, string> = {
+  TypeScript: "#3178c6",
+  JavaScript: "#f1e05a",
+  Python: "#3572A5",
+  Go: "#00ADD8",
+  Rust: "#dea584",
+  Java: "#b07219",
+  Ruby: "#701516",
+  C: "#555555",
+  "C++": "#f34b7d",
+  "C#": "#178600",
+  Swift: "#F05138",
+  Kotlin: "#A97BFF",
+  PHP: "#4F5D95",
+};
+
+// ---------------------------------------------------------------------------
+// MCP Config
+// ---------------------------------------------------------------------------
+
+type ConfigTab = "claude-code" | "cursor" | "claude-desktop" | "antigravity" | "codex";
+
+function getMcpConfig(tab: ConfigTab, apiKey: string, slug: string) {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+    "X-Clean-Slug": slug,
+  };
+
+  if (tab === "claude-code") {
+    return {
+      mcpServers: {
+        clean: {
+          type: "http",
+          url: "https://api.tryclean.ai/mcp",
+          headers,
+        },
+      },
+    };
+  }
+  if (tab === "cursor") {
+    return {
+      mcpServers: {
+        clean: {
+          type: "sse",
+          url: "https://api.tryclean.ai/mcp/sse",
+          headers,
+        },
+      },
+    };
+  }
+  if (tab === "antigravity") {
+    return {
+      mcpServers: {
+        clean: {
+          serverUrl: "https://api.tryclean.ai/mcp",
+          headers,
+        },
+      },
+    };
+  }
+  if (tab === "codex") {
+    return `[mcp_servers.clean]\nurl = "https://api.tryclean.ai/mcp"\n\n[mcp_servers.clean.http_headers]\nAuthorization = "Bearer ${apiKey}"\nX-Clean-Slug = "${slug}"\n`;
+  }
+  // claude-desktop
+  return {
+    mcpServers: {
+      clean: {
+        command: "npx",
+        args: ["-y", "@tryclean/mcp-proxy"],
+        env: {
+          CLEAN_API_KEY: apiKey,
+          CLEAN_SLUG: slug,
+        },
+      },
+    },
+  };
+}
+
+function formatMcpConfig(tab: ConfigTab, apiKey: string, slug: string): string {
+  const config = getMcpConfig(tab, apiKey, slug);
+  if (typeof config === "string") return config;
+  return JSON.stringify(config, null, 2);
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
+
+export default function CloudOnboardingPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [step, setStep] = useState<OnboardingStep>("connect-github");
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
+
+  // GitHub repos
+  const [githubRepos, setGithubRepos] = useState<GitHubRepoInfo[]>([]);
+  const [selectedRepos, setSelectedRepos] = useState<Set<string>>(new Set());
+  const [reposLoading, setReposLoading] = useState(false);
+  const [repoSearch, setRepoSearch] = useState("");
+  const [repoLimit, setRepoLimit] = useState(3);
+
+  // Cloud repos (indexing progress)
+  const [cloudRepos, setCloudRepos] = useState<CloudRepo[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  // MCP config
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [configTab, setConfigTab] = useState<ConfigTab>("claude-code");
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const fetchGitHubRepos = useCallback(async () => {
+    setReposLoading(true);
+    try {
+      const res = await fetch("/api/github/repos");
+      if (res.ok) {
+        const data = await res.json();
+        setGithubRepos(data.repos || []);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setReposLoading(false);
+    }
+  }, []);
+
+  // Load org info and determine starting step
+  useEffect(() => {
+    const requestedStep = searchParams.get("step") as OnboardingStep | null;
+
+    fetch("/api/org")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(async (data) => {
+        if (!data?.org) return;
+        const org = data.org as OrgInfo & { tier: string };
+        setOrgInfo(org);
+
+        // Determine repo limit from tier
+        const limits: Record<string, number> = { free: 3, pro: 15, max: Infinity, enterprise: Infinity };
+        setRepoLimit(limits[org.tier ?? "free"] ?? 3);
+
+        // Check for existing GitHub connection
+        const ghRes = await fetch("/api/github/repos");
+        if (ghRes.ok) {
+          const ghData = await ghRes.json();
+          if (ghData.connected || ghData.installations?.length > 0) {
+            setGithubRepos(ghData.repos || []);
+
+            // If caller explicitly requested select-repos, go there
+            if (requestedStep === "select-repos") {
+              setStep("select-repos");
+              return;
+            }
+
+            // Check for existing cloud repos
+            const crRes = await fetch("/api/cloud-repos");
+            if (crRes.ok) {
+              const crData = await crRes.json();
+              if (crData.repos?.length > 0) {
+                setCloudRepos(crData.repos);
+                const allDone = crData.repos.every(
+                  (r: CloudRepo) => r.status === "ready" || r.status === "error"
+                );
+                if (allDone) {
+                  setStep("mcp-config");
+                } else {
+                  setStep("indexing");
+                }
+              } else {
+                setStep("select-repos");
+              }
+            } else {
+              setStep("select-repos");
+            }
+          }
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [searchParams]);
+
+  // Handle GitHub connected redirect
+  useEffect(() => {
+    const github = searchParams.get("github");
+    if (github === "connected" || github === "updated") {
+      setStep("select-repos");
+      fetchGitHubRepos();
+    }
+  }, [searchParams, fetchGitHubRepos]);
+
+  // Poll cloud repos during indexing
+  useEffect(() => {
+    if (step !== "indexing") return;
+
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/cloud-repos");
+        if (res.ok) {
+          const data = await res.json();
+          setCloudRepos(data.repos || []);
+
+          const allDone = data.repos.every(
+            (r: CloudRepo) => r.status === "ready" || r.status === "error"
+          );
+          if (allDone && data.repos.length > 0) {
+            // Auto-advance after a brief delay
+            setTimeout(() => setStep("mcp-config"), 1500);
+          }
+        }
+      } catch {
+        // silently fail
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [step]);
+
+  // Auto-create API key when reaching MCP config step
+  useEffect(() => {
+    if (step !== "mcp-config" || apiKey) return;
+
+    fetch("/api/keys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Cloud Onboarding Key",
+        scopes: ["search", "index"],
+        expiresAt: null,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.key) setApiKey(data.key);
+      })
+      .catch(() => {});
+  }, [step, apiKey]);
+
+  async function handleConnectGitHub() {
+    // Open popup immediately (must be synchronous from click) to avoid popup blocker
+    const w = 700, h = 800;
+    const left = window.screenX + (window.innerWidth - w) / 2;
+    const top = window.screenY + (window.innerHeight - h) / 2;
+    const popup = window.open(
+      "about:blank",
+      "github-install",
+      `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`
+    );
+
+    try {
+      const res = await fetch("/api/github/install");
+      if (!res.ok) {
+        popup?.close();
+        return;
+      }
+      const data = await res.json();
+
+      // Navigate the already-open popup to GitHub
+      if (popup) {
+        popup.location.href = data.url;
+      } else {
+        // Popup was blocked despite our efforts — fall back to redirect
+        window.location.href = data.url;
+        return;
+      }
+
+      setConnecting(true);
+
+      // Poll for the installation to appear
+      const pollInterval = setInterval(async () => {
+        try {
+          const ghRes = await fetch("/api/github/repos");
+          if (!ghRes.ok) return;
+          const ghData = await ghRes.json();
+          if (ghData.connected || ghData.installations?.length > 0) {
+            clearInterval(pollInterval);
+            setConnecting(false);
+            setGithubRepos(ghData.repos || []);
+            setStep("select-repos");
+            try { popup?.close(); } catch {}
+          }
+        } catch {}
+      }, 2000);
+
+      // Stop polling after 5 minutes or if popup closes
+      const closeCheck = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(closeCheck);
+          // Give one last poll in case installation landed
+          setTimeout(async () => {
+            try {
+              const ghRes = await fetch("/api/github/repos");
+              if (ghRes.ok) {
+                const ghData = await ghRes.json();
+                if (ghData.connected || ghData.installations?.length > 0) {
+                  setGithubRepos(ghData.repos || []);
+                  setStep("select-repos");
+                }
+              }
+            } catch {}
+            clearInterval(pollInterval);
+            setConnecting(false);
+          }, 1000);
+        }
+      }, 500);
+
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        clearInterval(closeCheck);
+        setConnecting(false);
+      }, 5 * 60 * 1000);
+    } catch {
+      popup?.close();
+      setConnecting(false);
+    }
+  }
+
+  function toggleRepo(fullName: string) {
+    setSelectedRepos((prev) => {
+      const next = new Set(prev);
+      if (next.has(fullName)) {
+        next.delete(fullName);
+      } else if (next.size < repoLimit) {
+        next.add(fullName);
+      }
+      return next;
+    });
+  }
+
+  async function handleStartIndexing() {
+    if (selectedRepos.size === 0) return;
+    setSubmitting(true);
+
+    const reposToAdd = githubRepos
+      .filter((r) => selectedRepos.has(r.fullName))
+      .map((r) => ({
+        fullName: r.fullName,
+        defaultBranch: r.defaultBranch,
+        language: r.language,
+        private: r.private,
+        installationId: r.installationId ?? null,
+      }));
+
+    try {
+      const res = await fetch("/api/cloud-repos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repos: reposToAdd }),
+      });
+
+      if (res.ok) {
+        setStep("indexing");
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function copyToClipboard(text: string, label: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+      </div>
+    );
+  }
+
+  const filteredRepos = githubRepos.filter(
+    (r) =>
+      r.fullName.toLowerCase().includes(repoSearch.toLowerCase()) ||
+      (r.description?.toLowerCase().includes(repoSearch.toLowerCase()) ?? false)
+  );
+
+  // ---------------------------------------------------------------------------
+  // Step indicator
+  // ---------------------------------------------------------------------------
+
+  const steps = [
+    { id: "connect-github", label: "Connect GitHub" },
+    { id: "select-repos", label: "Select Repos" },
+    { id: "indexing", label: "Indexing" },
+    { id: "mcp-config", label: "MCP Config" },
+  ];
+
+  const currentStepIdx = steps.findIndex((s) => s.id === step);
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-medium text-[var(--ink)]">
+          Set up Cloud Search
+        </h2>
+        <p className="mt-1 text-sm text-[var(--ink-muted)]">
+          Connect your GitHub repos and get searching in minutes
+        </p>
+      </div>
+
+      {/* Step indicator */}
+      <div className="flex items-center gap-2">
+        {steps.map((s, i) => (
+          <div key={s.id} className="flex items-center gap-2">
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                i < currentStepIdx
+                  ? "bg-green-100 text-green-700"
+                  : i === currentStepIdx
+                    ? "bg-[var(--accent)] text-white"
+                    : "bg-[var(--cream-dark)] text-[var(--ink-muted)]"
+              }`}
+            >
+              {i < currentStepIdx ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                i + 1
+              )}
+            </div>
+            <span
+              className={`text-xs font-medium ${
+                i <= currentStepIdx
+                  ? "text-[var(--ink)]"
+                  : "text-[var(--ink-muted)]"
+              }`}
+            >
+              {s.label}
+            </span>
+            {i < steps.length - 1 && (
+              <div
+                className={`h-px w-8 ${
+                  i < currentStepIdx
+                    ? "bg-green-300"
+                    : "bg-[var(--cream-dark)]"
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Step 1: Connect GitHub ── */}
+      {step === "connect-github" && (
+        <div className="rounded-xl border-2 border-[var(--cream-dark)] bg-white p-8 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--ink)]">
+            <Github className="h-8 w-8 text-white" />
+          </div>
+          <h3 className="mt-5 text-lg font-semibold text-[var(--ink)]">
+            Connect your GitHub account
+          </h3>
+          <p className="mt-2 text-sm text-[var(--ink-muted)]">
+            Grant read-only access to your repositories.
+            You choose exactly which repos to share.
+          </p>
+          <button
+            onClick={handleConnectGitHub}
+            disabled={connecting}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90 disabled:opacity-70"
+          >
+            {connecting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Waiting for GitHub...
+              </>
+            ) : (
+              <>
+                <Github className="h-4 w-4" />
+                Connect GitHub
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+          {connecting && (
+            <p className="mt-3 text-xs text-[var(--accent)]">
+              Complete the setup in the popup window, then you&apos;ll continue here automatically.
+            </p>
+          )}
+          <p className="mt-4 text-xs text-[var(--ink-muted)]">
+            We only read code — never write or modify your repos.
+          </p>
+        </div>
+      )}
+
+      {/* ── Step 2: Select Repos ── */}
+      {step === "select-repos" && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+            <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-5 py-4">
+              <div>
+                <h3 className="font-semibold text-[var(--ink)]">
+                  Select repositories to index
+                </h3>
+                <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                  {selectedRepos.size}/{repoLimit === Infinity ? "\u221E" : repoLimit} repos selected
+                  {repoLimit !== Infinity && selectedRepos.size >= repoLimit && (
+                    <span className="ml-2 text-amber-600">
+                      — limit reached on your plan
+                    </span>
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={fetchGitHubRepos}
+                disabled={reposLoading}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${reposLoading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="border-b border-[var(--cream-dark)] px-5 py-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
+                <input
+                  type="text"
+                  placeholder="Search repositories..."
+                  value={repoSearch}
+                  onChange={(e) => setRepoSearch(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                />
+              </div>
+            </div>
+
+            {/* Repo list */}
+            <div className="max-h-96 overflow-y-auto">
+              {reposLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-[var(--accent)]" />
+                </div>
+              ) : filteredRepos.length === 0 ? (
+                <div className="py-12 text-center text-sm text-[var(--ink-muted)]">
+                  {githubRepos.length === 0
+                    ? "No repositories found. Make sure you granted access to at least one repo."
+                    : "No repos match your search."}
+                </div>
+              ) : (
+                filteredRepos.map((repo) => {
+                  const isSelected = selectedRepos.has(repo.fullName);
+                  const isDisabled =
+                    !isSelected && selectedRepos.size >= repoLimit;
+
+                  return (
+                    <button
+                      key={repo.id}
+                      onClick={() => !isDisabled && toggleRepo(repo.fullName)}
+                      disabled={isDisabled}
+                      className={`flex w-full items-center gap-3 border-b border-[var(--cream-dark)] px-5 py-3 text-left transition-colors last:border-b-0 ${
+                        isSelected
+                          ? "bg-[var(--accent)]/5"
+                          : isDisabled
+                            ? "cursor-not-allowed opacity-50"
+                            : "hover:bg-[var(--cream)]"
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <div
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
+                          isSelected
+                            ? "border-[var(--accent)] bg-[var(--accent)]"
+                            : "border-[var(--cream-dark)]"
+                        }`}
+                      >
+                        {isSelected && (
+                          <Check className="h-3 w-3 text-white" />
+                        )}
+                      </div>
+
+                      {/* Repo info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium text-[var(--ink)]">
+                            {repo.fullName}
+                          </span>
+                          {repo.private ? (
+                            <Lock className="h-3 w-3 text-[var(--ink-muted)]" />
+                          ) : (
+                            <Globe className="h-3 w-3 text-[var(--ink-muted)]" />
+                          )}
+                        </div>
+                        {repo.description && (
+                          <p className="mt-0.5 truncate text-xs text-[var(--ink-muted)]">
+                            {repo.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Language */}
+                      {repo.language && (
+                        <div className="flex items-center gap-1.5">
+                          <div
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{
+                              backgroundColor:
+                                LANG_COLORS[repo.language] || "#888",
+                            }}
+                          />
+                          <span className="text-xs text-[var(--ink-muted)]">
+                            {repo.language}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Action */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleConnectGitHub}
+              className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+            >
+              Reconnect GitHub
+            </button>
+            <button
+              onClick={handleStartIndexing}
+              disabled={selectedRepos.size === 0 || submitting}
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  Index {selectedRepos.size}{" "}
+                  {selectedRepos.size === 1 ? "repo" : "repos"}
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </div>
+
+          {repoLimit !== Infinity && selectedRepos.size >= repoLimit && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-800">
+              You&apos;ve reached the {repoLimit}-repo limit on your plan.{" "}
+              <button
+                onClick={() => router.push("/dashboard/billing")}
+                className="font-medium underline hover:no-underline"
+              >
+                Upgrade to Pro
+              </button>{" "}
+              for up to 15 repos.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Step 3: Indexing Progress ── */}
+      {step === "indexing" && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+            <div className="border-b border-[var(--cream-dark)] px-5 py-4">
+              <h3 className="font-semibold text-[var(--ink)]">
+                Indexing your repositories
+              </h3>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                This usually takes 1-5 minutes per repo depending on size
+              </p>
+            </div>
+
+            <div className="divide-y divide-[var(--cream-dark)]">
+              {cloudRepos.map((repo) => (
+                <div key={repo.id} className="px-5 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {repo.status === "ready" ? (
+                        <Check className="h-5 w-5 text-green-500" />
+                      ) : repo.status === "error" ? (
+                        <div className="h-5 w-5 rounded-full bg-red-100 p-1">
+                          <div className="h-full w-full rounded-full bg-red-500" />
+                        </div>
+                      ) : (
+                        <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-[var(--ink)]">
+                          {repo.fullName}
+                        </p>
+                        <p className="text-xs text-[var(--ink-muted)]">
+                          {repo.status === "ready"
+                            ? `${repo.entityCount?.toLocaleString() ?? 0} entities indexed`
+                            : repo.status === "error"
+                              ? repo.error || "Indexing failed"
+                              : repo.status === "cloning"
+                                ? "Cloning repository..."
+                                : repo.status === "indexing"
+                                  ? "Parsing and embedding..."
+                                  : "Waiting to start..."}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                        repo.status === "ready"
+                          ? "bg-green-100 text-green-700"
+                          : repo.status === "error"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {repo.status === "ready"
+                        ? "Done"
+                        : repo.status === "error"
+                          ? "Failed"
+                          : "In progress"}
+                    </span>
+                  </div>
+                  {(repo.status === "cloning" || repo.status === "indexing") && (
+                    <div className="mt-3">
+                      <Progress value={repo.status === "cloning" ? 20 : 60} className="h-1.5" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {cloudRepos.every((r) => r.status === "ready" || r.status === "error") &&
+            cloudRepos.some((r) => r.status === "ready") && (
+              <button
+                onClick={() => setStep("mcp-config")}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+              >
+                Continue to MCP Config
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
+        </div>
+      )}
+
+      {/* ── Step 4: MCP Config ── */}
+      {step === "mcp-config" && (
+        <div className="space-y-6">
+          {/* Status banner */}
+          {cloudRepos.some((r) => r.status === "ready") ? (
+            <div className="flex items-center gap-3 rounded-xl border-2 border-green-200 bg-green-50 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                <Sparkles className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-green-900">
+                  Your repos are indexed!
+                </h3>
+                <p className="text-sm text-green-700">
+                  Add this config to your editor to start searching with Clean.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-xl border-2 border-amber-200 bg-amber-50 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
+                <Sparkles className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-900">
+                  Indexing failed
+                </h3>
+                <p className="text-sm text-amber-700">
+                  Your repos couldn&apos;t be indexed right now. You can retry from the{" "}
+                  <button
+                    onClick={() => router.push("/dashboard/repositories")}
+                    className="font-medium underline hover:no-underline"
+                  >
+                    dashboard
+                  </button>.
+                  The MCP config below will work once indexing succeeds.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* API Key */}
+          {apiKey && (
+            <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+              <div className="border-b border-[var(--cream-dark)] px-5 py-3">
+                <h3 className="text-sm font-semibold text-[var(--ink)]">
+                  Your API Key
+                </h3>
+                <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                  Store this securely — it won&apos;t be shown again
+                </p>
+              </div>
+              <div className="p-5">
+                <div className="flex items-center gap-2 rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] px-3 py-2.5">
+                  <code className="flex-1 break-all font-mono text-xs text-[var(--ink)]">
+                    {apiKey}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(apiKey, "key")}
+                    className="shrink-0 text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                  >
+                    {copied === "key" ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MCP Config */}
+          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+            <div className="border-b border-[var(--cream-dark)] px-5 py-3">
+              <h3 className="text-sm font-semibold text-[var(--ink)]">
+                MCP Configuration
+              </h3>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex flex-wrap border-b border-[var(--cream-dark)]">
+              {(
+                [
+                  { id: "claude-code", label: "Claude Code" },
+                  { id: "cursor", label: "Cursor" },
+                  { id: "claude-desktop", label: "Claude Desktop" },
+                  { id: "antigravity", label: "Antigravity" },
+                  { id: "codex", label: "Codex" },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setConfigTab(tab.id)}
+                  className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                    configTab === tab.id
+                      ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
+                      : "text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-5">
+              <p className="mb-3 text-xs text-[var(--ink-muted)]">
+                {configTab === "claude-code"
+                  ? "Add to your Claude Code MCP settings:"
+                  : configTab === "cursor"
+                    ? "Add to ~/.cursor/mcp.json:"
+                    : configTab === "antigravity"
+                      ? "Add to ~/.gemini/antigravity/mcp_config.json:"
+                      : configTab === "codex"
+                        ? "Add to ~/.codex/config.toml:"
+                        : "Add to your Claude Desktop config:"}
+              </p>
+              <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)]">
+                <pre className="overflow-x-auto bg-[var(--cream)] p-4 font-mono text-[12px] leading-relaxed text-[var(--ink)]">
+                  {formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org")}
+                </pre>
+              </div>
+              <button
+                onClick={() =>
+                  copyToClipboard(
+                    formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org"),
+                    "config"
+                  )
+                }
+                className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                  copied === "config"
+                    ? "border border-green-200 bg-green-50 text-green-700"
+                    : "border border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream)]"
+                }`}
+              >
+                {copied === "config" ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                {copied === "config" ? "Copied!" : "Copy config"}
+              </button>
+            </div>
+          </div>
+
+          {/* Done button */}
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="w-full rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

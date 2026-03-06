@@ -74,7 +74,7 @@ export const organizations = pgTable(
     clerkOrgId: text("clerk_org_id"),
     metadata: jsonb("metadata").$type<OrgMetadata>(),
     licenseKey: text("license_key"),
-    tier: text("tier").$type<"free" | "starter" | "pro" | "enterprise">().default("free"),
+    tier: text("tier").$type<"free" | "pro" | "max" | "enterprise">().default("free"),
     seatLimit: integer("seat_limit"), // null = unlimited
     licenseExpiresAt: timestamp("license_expires_at"),
     licenseJti: text("license_jti"),
@@ -83,6 +83,9 @@ export const organizations = pgTable(
     stripeCustomerId: text("stripe_customer_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),
     stripePriceId: text("stripe_price_id"),
+    hostingMode: text("hosting_mode").$type<"cloud" | "self-hosted">().default("cloud"),
+    githubAccessToken: text("github_access_token"),
+    githubLogin: text("github_login"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -268,10 +271,11 @@ export type SubscriptionStatus =
   | "past_due"
   | "trialing"
   | "incomplete"
+  | "incomplete_expired"
   | "unpaid"
   | "paused";
 
-export type Plan = "starter" | "pro" | "enterprise";
+export type Plan = "free" | "pro" | "max" | "enterprise";
 
 export const subscriptions = pgTable(
   "subscriptions",
@@ -349,3 +353,68 @@ export const stripeWebhookEvents = pgTable("stripe_webhook_events", {
   type: text("type").notNull(),
   processedAt: timestamp("processed_at").defaultNow().notNull(),
 });
+
+// ============================================================================
+// GITHUB INSTALLATIONS (for cloud users)
+// ============================================================================
+
+export const githubInstallations = pgTable(
+  "github_installations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    installationId: integer("installation_id").notNull(), // GitHub App installation ID
+    accountLogin: text("account_login").notNull(), // GitHub user/org login
+    accountType: text("account_type").notNull(), // "User" or "Organization"
+    accountAvatarUrl: text("account_avatar_url"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("github_installations_org_id_idx").on(table.orgId),
+    index("github_installations_installation_id_idx").on(table.installationId),
+  ]
+);
+
+// ============================================================================
+// CLOUD REPOS (repos selected by cloud users for indexing)
+// ============================================================================
+
+export type CloudRepoStatus =
+  | "pending"
+  | "cloning"
+  | "indexing"
+  | "ready"
+  | "error"
+  | "disconnected"
+  | "paused";
+
+export const cloudRepos = pgTable(
+  "cloud_repos",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    installationId: uuid("installation_id")
+      .references(() => githubInstallations.id, { onDelete: "set null" }),
+    fullName: text("full_name").notNull(), // "owner/repo"
+    defaultBranch: text("default_branch").default("main"),
+    language: text("language"),
+    private: boolean("private").notNull().default(false),
+    status: text("status").$type<CloudRepoStatus>().notNull().default("pending"),
+    entityCount: integer("entity_count"),
+    lastIndexedAt: timestamp("last_indexed_at"),
+    error: text("error"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("cloud_repos_org_id_idx").on(table.orgId),
+    index("cloud_repos_installation_id_idx").on(table.installationId),
+    index("cloud_repos_full_name_idx").on(table.fullName),
+  ]
+);

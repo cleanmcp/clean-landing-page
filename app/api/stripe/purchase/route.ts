@@ -5,16 +5,31 @@ import { organizations, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/stripe";
 
+const PLAN_PRICE_MAP: Record<string, string | undefined> = {
+  pro: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+  max: process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID,
+};
+
 export async function POST(request: NextRequest) {
   try {
-    // 1. Auth check (Clerk session required)
     const ctx = await getAuthContext();
     if (!ctx) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const { userId, orgId } = ctx;
 
-    // 2. Look up org to get or create Stripe customer
+    // Read plan from form body
+    const formData = await request.formData();
+    const plan = formData.get("plan") as string | null;
+    const priceId = plan ? PLAN_PRICE_MAP[plan] : undefined;
+
+    if (!priceId) {
+      return NextResponse.json(
+        { error: "Invalid plan. Use 'pro' or 'max'." },
+        { status: 400 }
+      );
+    }
+
     const [org] = await db
       .select({ stripeCustomerId: organizations.stripeCustomerId })
       .from(organizations)
@@ -28,7 +43,6 @@ export async function POST(request: NextRequest) {
     let stripeCustomerId = org.stripeCustomerId;
 
     if (!stripeCustomerId) {
-      // Look up user email for customer creation
       const [user] = await db
         .select({ email: users.email })
         .from(users)
@@ -47,20 +61,14 @@ export async function POST(request: NextRequest) {
         .where(eq(organizations.id, orgId));
     }
 
-    // 3. Create Checkout Session with customer and metadata
     const origin = request.headers.get("origin") || new URL(request.url).origin;
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
-      line_items: [
-        {
-          price: "price_1T6IjXBWaGrUIdMvnsUHzpnY",
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      metadata: { userId, orgId },
+      metadata: { userId, orgId, plan: plan! },
       subscription_data: {
-        metadata: { userId, orgId },
+        metadata: { userId, orgId, plan: plan! },
       },
       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing-plan`,

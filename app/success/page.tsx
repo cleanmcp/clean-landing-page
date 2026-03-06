@@ -55,7 +55,7 @@ export default function SuccessPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.35 }}
           >
-            Welcome to the Starter Plan. Your team now has access to all features.
+            Your subscription is active. Your team now has access to all plan features.
           </motion.p>
 
           {/* CTA */}

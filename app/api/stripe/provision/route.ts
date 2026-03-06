@@ -10,10 +10,12 @@ export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { sessionId } = await req.json();
+  const body = await req.json();
+  const { sessionId } = body;
   if (!sessionId) {
     return Response.json({ error: "sessionId required" }, { status: 400 });
   }
+  const hostingMode: "cloud" | "self-hosted" = body.hostingMode === "self-hosted" ? "self-hosted" : "cloud";
 
   // Get user's org
   const membership = await db
@@ -84,11 +86,12 @@ export async function POST(req: Request) {
       stripeCustomerId: session.customer as string,
       stripeSubscriptionId: session.subscription as string,
       stripePriceId: session.metadata?.priceId || null,
-      tier: tier as "free" | "pro" | "enterprise",
+      tier: tier as "free" | "pro" | "max" | "enterprise",
       licenseKey,
       licenseJti: claims.jti,
       licenseExpiresAt: new Date(claims.exp * 1000),
       licenseRevoked: false,
+      hostingMode,
     })
     .where(eq(organizations.id, orgId));
 

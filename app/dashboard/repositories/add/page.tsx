@@ -1,0 +1,397 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Github,
+  Loader2,
+  Check,
+  Lock,
+  Globe,
+  Search,
+  RefreshCw,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
+
+interface GitHubRepoInfo {
+  id: number;
+  fullName: string;
+  name: string;
+  private: boolean;
+  defaultBranch: string;
+  language: string | null;
+  description: string | null;
+  updatedAt: string;
+  installationId: string | null;
+}
+
+const LANG_COLORS: Record<string, string> = {
+  TypeScript: "#3178c6",
+  JavaScript: "#f1e05a",
+  Python: "#3572A5",
+  Go: "#00ADD8",
+  Rust: "#dea584",
+  Java: "#b07219",
+  Ruby: "#701516",
+  C: "#555555",
+  "C++": "#f34b7d",
+  "C#": "#178600",
+  Swift: "#F05138",
+  Kotlin: "#A97BFF",
+  PHP: "#4F5D95",
+};
+
+export default function AddReposPage() {
+  const router = useRouter();
+
+  const [repos, setRepos] = useState<GitHubRepoInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [connected, setConnected] = useState(false);
+  const [repoLimit, setRepoLimit] = useState(3);
+  const [existingFullNames, setExistingFullNames] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [ghRes, crRes, orgRes] = await Promise.all([
+        fetch("/api/github/repos"),
+        fetch("/api/cloud-repos"),
+        fetch("/api/org"),
+      ]);
+
+      if (ghRes.ok) {
+        const ghData = await ghRes.json();
+        setConnected(ghData.connected || (ghData.installations?.length ?? 0) > 0);
+        setRepos(ghData.repos || []);
+      }
+
+      if (crRes.ok) {
+        const crData = await crRes.json();
+        setExistingFullNames(new Set((crData.repos ?? []).map((r: { fullName: string }) => r.fullName)));
+      }
+
+      if (orgRes.ok) {
+        const orgData = await orgRes.json();
+        const tier = orgData.org?.tier ?? "free";
+        const limits: Record<string, number> = { free: 3, pro: 15, max: Infinity, enterprise: Infinity };
+        setRepoLimit(limits[tier] ?? 3);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  async function handleConnectGitHub() {
+    const w = 700, h = 800;
+    const left = window.screenX + (window.innerWidth - w) / 2;
+    const top = window.screenY + (window.innerHeight - h) / 2;
+    const popup = window.open(
+      "about:blank",
+      "github-connect",
+      `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`
+    );
+
+    try {
+      const res = await fetch("/api/github/install");
+      if (!res.ok) { popup?.close(); return; }
+      const data = await res.json();
+      if (popup) {
+        popup.location.href = data.url;
+      } else {
+        window.location.href = data.url;
+        return;
+      }
+
+      setConnecting(true);
+
+      const poll = setInterval(async () => {
+        const ghRes = await fetch("/api/github/repos").catch(() => null);
+        if (!ghRes?.ok) return;
+        const ghData = await ghRes.json();
+        if (ghData.connected || ghData.installations?.length > 0) {
+          clearInterval(poll);
+          setConnecting(false);
+          setConnected(true);
+          setRepos(ghData.repos || []);
+          try { popup?.close(); } catch {}
+        }
+      }, 2000);
+
+      const closeCheck = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(closeCheck);
+          setTimeout(() => { clearInterval(poll); setConnecting(false); fetchData(); }, 1000);
+        }
+      }, 500);
+
+      setTimeout(() => { clearInterval(poll); clearInterval(closeCheck); setConnecting(false); }, 5 * 60 * 1000);
+    } catch {
+      popup?.close();
+      setConnecting(false);
+    }
+  }
+
+  function toggle(fullName: string) {
+    if (existingFullNames.has(fullName)) return; // already indexed, can't deselect
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(fullName)) {
+        next.delete(fullName);
+      } else if (existingCount + next.size < repoLimit) {
+        next.add(fullName);
+      }
+      return next;
+    });
+  }
+
+  async function handleAdd() {
+    if (selected.size === 0) return;
+    setSubmitting(true);
+    setError(null);
+
+    const reposToAdd = repos
+      .filter((r) => selected.has(r.fullName))
+      .map((r) => ({
+        fullName: r.fullName,
+        defaultBranch: r.defaultBranch,
+        language: r.language,
+        private: r.private,
+        installationId: r.installationId ?? null,
+      }));
+
+    try {
+      const res = await fetch("/api/cloud-repos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repos: reposToAdd }),
+      });
+
+      if (res.ok) {
+        router.push("/dashboard/repositories");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to add repos");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const existingCount = existingFullNames.size;
+  const slotsLeft = Math.max(0, repoLimit - existingCount);
+  const filtered = repos.filter(
+    (r) =>
+      r.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      (r.description?.toLowerCase().includes(search.toLowerCase()) ?? false)
+  );
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => router.push("/dashboard/repositories")}
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Repositories
+        </button>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-medium text-[var(--ink)]">Add Repositories</h2>
+        <p className="mt-1 text-sm text-[var(--ink-muted)]">
+          Select repos from your GitHub account to index.
+        </p>
+      </div>
+
+      {/* Not connected */}
+      {!loading && !connected && (
+        <div className="rounded-xl border-2 border-dashed border-[var(--cream-dark)] bg-white p-8 text-center">
+          <Github className="mx-auto h-10 w-10 text-[var(--ink-muted)]" />
+          <h3 className="mt-3 font-semibold text-[var(--ink)]">Connect GitHub first</h3>
+          <p className="mt-1 text-sm text-[var(--ink-muted)]">
+            Authorize Clean to read your repositories.
+          </p>
+          <button
+            onClick={handleConnectGitHub}
+            disabled={connecting}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90 disabled:opacity-70"
+          >
+            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
+            {connecting ? "Waiting for GitHub..." : "Connect GitHub"}
+          </button>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--ink-muted)]" />
+        </div>
+      )}
+
+      {/* Repo picker */}
+      {!loading && connected && (
+        <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+          <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-5 py-4">
+            <div>
+              <p className="text-sm font-medium text-[var(--ink)]">
+                {selected.size} selected
+                {repoLimit !== Infinity && (
+                  <span className="ml-2 text-[var(--ink-muted)]">
+                    · {slotsLeft} slot{slotsLeft !== 1 ? "s" : ""} remaining on your plan
+                  </span>
+                )}
+              </p>
+            </div>
+            <button
+              onClick={fetchData}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </button>
+          </div>
+
+          <div className="border-b border-[var(--cream-dark)] px-5 py-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
+              <input
+                type="text"
+                placeholder="Search repositories..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              />
+            </div>
+          </div>
+
+          <div className="max-h-[28rem] overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="py-10 text-center text-sm text-[var(--ink-muted)]">
+                {repos.length === 0 ? "No repositories found." : "No repos match your search."}
+              </p>
+            ) : (
+              filtered.map((repo) => {
+                const alreadyAdded = existingFullNames.has(repo.fullName);
+                const isSelected = alreadyAdded || selected.has(repo.fullName);
+                const atLimit = !isSelected && existingCount + selected.size >= repoLimit;
+                return (
+                  <button
+                    key={repo.id}
+                    onClick={() => !alreadyAdded && !atLimit && toggle(repo.fullName)}
+                    disabled={alreadyAdded || atLimit}
+                    className={`flex w-full items-center gap-3 border-b border-[var(--cream-dark)] px-5 py-3 text-left transition-colors last:border-b-0 ${
+                      alreadyAdded
+                        ? "cursor-default opacity-60"
+                        : isSelected
+                          ? "bg-[var(--accent)]/5"
+                          : atLimit
+                            ? "cursor-not-allowed opacity-40"
+                            : "hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
+                        isSelected
+                          ? "border-[var(--accent)] bg-[var(--accent)]"
+                          : "border-[var(--cream-dark)]"
+                      }`}
+                    >
+                      {isSelected && <Check className="h-3 w-3 text-white" />}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium text-[var(--ink)]">
+                          {repo.fullName}
+                        </span>
+                        {repo.private ? (
+                          <Lock className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
+                        ) : (
+                          <Globe className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
+                        )}
+                      </div>
+                      {repo.description && (
+                        <p className="mt-0.5 truncate text-xs text-[var(--ink-muted)]">
+                          {repo.description}
+                        </p>
+                      )}
+                    </div>
+
+           
+                    {repo.language && !alreadyAdded && (
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <div
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: LANG_COLORS[repo.language] || "#888" }}
+                        />
+                        <span className="text-xs text-[var(--ink-muted)]">{repo.language}</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </p>
+      )}
+
+      {!loading && connected && slotsLeft === 0 && selected.size === 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          You&apos;ve reached the repo limit on your plan.{" "}
+          <button
+            onClick={() => router.push("/dashboard/billing")}
+            className="font-medium underline hover:no-underline"
+          >
+            Upgrade to add more
+          </button>
+        </div>
+      )}
+
+      {!loading && connected && (
+        <div className="flex items-center justify-end gap-3">
+          <button
+            onClick={() => router.push("/dashboard/repositories")}
+            className="rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAdd}
+            disabled={selected.size === 0 || submitting}
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                Index {selected.size || ""} {selected.size === 1 ? "repo" : selected.size > 1 ? "repos" : "repos"}
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

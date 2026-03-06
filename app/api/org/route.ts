@@ -56,6 +56,7 @@ export async function GET() {
         ...(currentMember?.role === "OWNER" ? { licenseKey: org.licenseKey } : {}),
         licenseRevoked: org.licenseRevoked ?? false,
         tier: org.tier,
+        hostingMode: org.hostingMode ?? "self-hosted",
         createdAt: org.createdAt.toISOString(),
       },
       memberCount: members.length,

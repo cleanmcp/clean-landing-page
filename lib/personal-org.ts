@@ -23,16 +23,29 @@ export async function ensurePersonalOrg(
   const slug = `personal-${userId.slice(0, 8)}`;
   const orgName = userName ? `${userName}'s Org` : "Personal";
 
-  const [org] = await db
-    .insert(organizations)
-    .values({ name: orgName, slug })
-    .returning({ id: organizations.id });
+  // Check if an org with this slug already exists (orphaned from a previous attempt)
+  const [existingOrg] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.slug, slug))
+    .limit(1);
 
-  await db.insert(orgMembers).values({
-    orgId: org.id,
-    userId,
-    role: "OWNER",
-  });
+  let orgId: string;
 
-  return org.id;
+  if (existingOrg) {
+    orgId = existingOrg.id;
+  } else {
+    const [org] = await db
+      .insert(organizations)
+      .values({ name: orgName, slug })
+      .returning({ id: organizations.id });
+    orgId = org.id;
+  }
+
+  await db
+    .insert(orgMembers)
+    .values({ orgId, userId, role: "OWNER" })
+    .onConflictDoNothing();
+
+  return orgId;
 }

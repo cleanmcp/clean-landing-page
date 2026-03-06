@@ -6,7 +6,16 @@ interface KeySyncData {
   scopes?: string[];
   name?: string;
   expiresAt?: string | null;
+  tier?: string;
+  searchesPerDay?: number;
+  maxRepos?: number;
+  storageMb?: number;
 }
+
+import { db } from "@/lib/db";
+import { apiKeys, organizations } from "@/lib/db/schema";
+import { eq, and, isNull } from "drizzle-orm";
+import { getCloudTierLimitsForSync } from "@/lib/tier-limits";
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "https://api.tryclean.ai";
 const GATEWAY_SECRET = process.env.GATEWAY_INTERNAL_SECRET || "";
@@ -49,5 +58,41 @@ export async function syncKeyToEngine(
   } catch (error) {
     console.error(`Failed to sync key ${action} to engine:`, error);
     return { warning: "Key created but engine sync failed — key may take up to 5 minutes to activate" };
+  }
+}
+
+/**
+ * Re-sync all active keys for an org so the engine picks up new tier limits.
+ * Called after Stripe tier changes.
+ */
+export async function syncAllKeysForOrg(orgId: string): Promise<void> {
+  if (!GATEWAY_SECRET) return;
+
+  const [org] = await db
+    .select({ tier: organizations.tier })
+    .from(organizations)
+    .where(eq(organizations.id, orgId))
+    .limit(1);
+
+  const tier = org?.tier ?? "free";
+  const tierLimits = getCloudTierLimitsForSync(tier);
+
+  const keys = await db
+    .select()
+    .from(apiKeys)
+    .where(and(eq(apiKeys.orgId, orgId), isNull(apiKeys.revokedAt)));
+
+  for (const key of keys) {
+    await syncKeyToEngine(orgId, "create", {
+      id: key.id,
+      orgId: key.orgId,
+      keyPrefix: key.keyPrefix,
+      keyHash: key.keyHash,
+      scopes: key.scopes,
+      name: key.name,
+      expiresAt: key.expiresAt?.toISOString() ?? null,
+      tier,
+      ...tierLimits,
+    });
   }
 }

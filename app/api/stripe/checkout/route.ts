@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { users, organizations, orgMembers } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { createCheckoutSession } from "@/lib/stripe";
 
 export async function POST(req: Request) {
@@ -41,6 +41,14 @@ export async function POST(req: Request) {
     .from(organizations)
     .where(eq(organizations.id, orgId));
 
+  // Count org members for per-seat billing
+  const [memberCount] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(orgMembers)
+    .where(eq(orgMembers.orgId, orgId));
+
+  const seatCount = Math.max(memberCount?.count ?? 1, 1);
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tryclean.ai";
 
   const session = await createCheckoutSession({
@@ -48,6 +56,7 @@ export async function POST(req: Request) {
     orgName: org?.name || "Unknown",
     email: user.email,
     priceId,
+    quantity: seatCount,
     successUrl: `${baseUrl}/dashboard?setup=complete&session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${baseUrl}/dashboard?setup=cancelled`,
   });

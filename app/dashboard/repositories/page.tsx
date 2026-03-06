@@ -24,6 +24,7 @@ import {
   StopCircle,
   AlertTriangle,
 } from "lucide-react";
+import CloudReposPage from "./cloud-repos";
 
 interface JobInfo {
   current_phase: string | null;
@@ -91,6 +92,35 @@ const POLL_ACTIVE = 3000;
 const POLL_IDLE = 30000;
 
 export default function ReposPage() {
+  const [hostingMode, setHostingMode] = useState<string | null>(null);
+  const [modeLoading, setModeLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/org")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        setHostingMode(data?.org?.hostingMode ?? "cloud");
+      })
+      .catch(() => setHostingMode("cloud"))
+      .finally(() => setModeLoading(false));
+  }, []);
+
+  if (modeLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--ink-muted)]" />
+      </div>
+    );
+  }
+
+  if (hostingMode === "cloud") {
+    return <CloudReposPage />;
+  }
+
+  return <SelfHostedReposPage />;
+}
+
+function SelfHostedReposPage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [repoInput, setRepoInput] = useState("");
