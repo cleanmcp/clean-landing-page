@@ -3,7 +3,7 @@ import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 // GET /api/billing - Return current plan info and Stripe invoices
 export async function GET() {
@@ -37,7 +37,7 @@ export async function GET() {
     let subscriptionStatus: string | null = null;
     if (org.stripeSubscriptionId) {
       try {
-        const sub = await stripe.subscriptions.retrieve(
+        const sub = await getStripe().subscriptions.retrieve(
           org.stripeSubscriptionId
         );
         subscriptionStatus = sub.status;
@@ -58,7 +58,7 @@ export async function GET() {
 
     if (org.stripeCustomerId) {
       try {
-        const stripeInvoices = await stripe.invoices.list({
+        const stripeInvoices = await getStripe().invoices.list({
           customer: org.stripeCustomerId,
           limit: 12,
         });

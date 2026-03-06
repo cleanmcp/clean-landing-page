@@ -3,7 +3,7 @@ import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { organizations, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 const PLAN_PRICE_MAP: Record<string, string | undefined> = {
   pro: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         .where(eq(users.id, userId))
         .limit(1);
 
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: user?.email ?? undefined,
         metadata: { userId, orgId },
       });
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const origin = request.headers.get("origin") || new URL(request.url).origin;
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",

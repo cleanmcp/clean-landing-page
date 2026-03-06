@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { organizations, orgMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { generateLicenseKey } from "@/lib/license";
 
 // Called after Stripe checkout redirect — verifies payment and provisions license
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   }
 
   // Verify the Stripe checkout session
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
   if (session.payment_status !== "paid") {
     return Response.json({ error: "Payment not completed" }, { status: 400 });
@@ -57,11 +57,11 @@ export async function POST(req: Request) {
   let tier = session.metadata?.tier || "pro";
   if (session.subscription) {
     try {
-      const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+      const sub = await getStripe().subscriptions.retrieve(session.subscription as string);
       const priceId = sub.items.data[0]?.price?.id;
       if (priceId) {
-        const price = await stripe.prices.retrieve(priceId);
-        const product = await stripe.products.retrieve(price.product as string);
+        const price = await getStripe().prices.retrieve(priceId);
+        const product = await getStripe().products.retrieve(price.product as string);
         if (product.metadata?.tier) tier = product.metadata.tier;
       }
     } catch {
