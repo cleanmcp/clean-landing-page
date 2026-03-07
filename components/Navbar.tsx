@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const navItems = [
@@ -15,10 +16,10 @@ export default function Navbar() {
   const lastDirectionChangeY = useRef(0);
   const lastDirection = useRef<"up" | "down">("up");
   const prevScrollY = useRef(0);
-
   useEffect(() => {
     prevScrollY.current = window.scrollY;
     lastDirectionChangeY.current = window.scrollY;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- init scroll position on mount
     if (window.scrollY > 80) setCondensed(true);
   }, []);
 
@@ -78,7 +79,7 @@ export default function Navbar() {
         style={{ background: "var(--cream)" }}
       >
         {/* Logo */}
-        <a href="/" className="group flex items-center gap-2">
+        <Link href="/" className="group flex items-center gap-2">
           <motion.span
             className="font-normal tracking-tight transition-colors duration-300 group-hover:text-[var(--accent)]"
             style={{ fontFamily: "var(--font-display)" }}
@@ -88,7 +89,7 @@ export default function Navbar() {
           >
             Clean
           </motion.span>
-        </a>
+        </Link>
 
         {/* Nav Links — absolutely centered */}
         <motion.div
