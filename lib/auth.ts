@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
-import { orgMembers } from "@/lib/db/schema";
+import { orgMembers, users } from "@/lib/db/schema";
 import type { OrgRole } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { ensurePersonalOrg } from "@/lib/personal-org";
@@ -54,10 +54,19 @@ export async function getAuthContext(): Promise<{
     return { userId, orgId: membership.orgId, role: membership.role };
   }
 
-  // 3. Self-heal: create personal org if webhook missed it
+  // 3. Self-heal: create user + personal org if webhook missed it
   try {
     const user = await currentUser();
     const name = user?.firstName || user?.username || null;
+    const email = user?.emailAddresses?.[0]?.emailAddress || null;
+    const image = user?.imageUrl || null;
+
+    // Ensure user row exists (FK for orgMembers)
+    await db
+      .insert(users)
+      .values({ id: userId, name, email, image })
+      .onConflictDoNothing();
+
     const orgId = await ensurePersonalOrg(userId, name);
     return { userId, orgId, role: "OWNER" };
   } catch {
