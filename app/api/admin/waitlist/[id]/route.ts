@@ -2,20 +2,14 @@ import { db } from "@/lib/db";
 import { waitlist } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendAcceptanceEmail } from "@/lib/email";
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET;
-
-function isAuthorized(req: Request) {
-  if (!ADMIN_SECRET) return false;
-  const token = req.headers.get("x-admin-secret");
-  return token === ADMIN_SECRET;
-}
+import { requireAdmin } from "@/lib/admin";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(req)) {
+  const admin = await requireAdmin();
+  if (!admin) {
     return Response.json({ error: "Unauthorized" }, { status: 403 });
   }
 
