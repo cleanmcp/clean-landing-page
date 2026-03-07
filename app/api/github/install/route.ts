@@ -1,20 +1,19 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
-import { getGitHubOAuthUrl, signState } from "@/lib/github-oauth";
+import { getClerkGitHubToken } from "@/lib/github-clerk";
 
 /**
- * GET /api/github/install — Returns the GitHub OAuth authorization URL.
+ * GET /api/github/install — Check if user has GitHub connected.
+ * If yes, returns connected: true.
+ * If no, returns connected: false so the frontend can trigger Clerk OAuth linking.
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   const ctx = await getAuthContext();
   if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const returnTo = request.nextUrl.searchParams.get("returnTo") ?? "/dashboard/onboarding";
-  const payload = { orgId: ctx.orgId, userId: ctx.userId, returnTo };
-  const state = signState(payload);
-  const url = getGitHubOAuthUrl(state);
+  const token = await getClerkGitHubToken(ctx.userId);
 
-  return NextResponse.json({ url });
+  return NextResponse.json({ connected: !!token });
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import {
   Github,
   Check,
@@ -146,6 +147,7 @@ function formatMcpConfig(tab: ConfigTab, apiKey: string, slug: string): string {
 export default function CloudOnboardingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user: clerkUser } = useUser();
   const [step, setStep] = useState<OnboardingStep>("connect-github");
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -295,80 +297,33 @@ export default function CloudOnboardingPage() {
   }, [step, apiKey]);
 
   async function handleConnectGitHub() {
-    // Open popup immediately (must be synchronous from click) to avoid popup blocker
-    const w = 700, h = 800;
-    const left = window.screenX + (window.innerWidth - w) / 2;
-    const top = window.screenY + (window.innerHeight - h) / 2;
-    const popup = window.open(
-      "about:blank",
-      "github-install",
-      `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`
-    );
-
+    // First check if GitHub is already connected via Clerk
     try {
       const res = await fetch("/api/github/install");
-      if (!res.ok) {
-        popup?.close();
-        return;
-      }
-      const data = await res.json();
-
-      // Navigate the already-open popup to GitHub
-      if (popup) {
-        popup.location.href = data.url;
-      } else {
-        // Popup was blocked despite our efforts — fall back to redirect
-        window.location.href = data.url;
-        return;
-      }
-
-      setConnecting(true);
-
-      // Poll for the installation to appear
-      const pollInterval = setInterval(async () => {
-        try {
-          const ghRes = await fetch("/api/github/repos");
-          if (!ghRes.ok) return;
-          const ghData = await ghRes.json();
-          if (ghData.connected || ghData.installations?.length > 0) {
-            clearInterval(pollInterval);
-            setConnecting(false);
-            setGithubRepos(ghData.repos || []);
-            setStep("select-repos");
-            try { popup?.close(); } catch {}
-          }
-        } catch {}
-      }, 2000);
-
-      // Stop polling after 5 minutes or if popup closes
-      const closeCheck = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(closeCheck);
-          // Give one last poll in case installation landed
-          setTimeout(async () => {
-            try {
-              const ghRes = await fetch("/api/github/repos");
-              if (ghRes.ok) {
-                const ghData = await ghRes.json();
-                if (ghData.connected || ghData.installations?.length > 0) {
-                  setGithubRepos(ghData.repos || []);
-                  setStep("select-repos");
-                }
-              }
-            } catch {}
-            clearInterval(pollInterval);
-            setConnecting(false);
-          }, 1000);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.connected) {
+          // Already connected — fetch repos and go to select
+          await fetchGitHubRepos();
+          setStep("select-repos");
+          return;
         }
-      }, 500);
+      }
+    } catch {}
 
-      setTimeout(() => {
-        clearInterval(pollInterval);
-        clearInterval(closeCheck);
-        setConnecting(false);
-      }, 5 * 60 * 1000);
+    // Not connected — use Clerk's OAuth linking
+    if (!clerkUser) return;
+    setConnecting(true);
+    try {
+      const account = await clerkUser.createExternalAccount({
+        strategy: "oauth_github",
+        redirectUrl: `${window.location.origin}/dashboard/onboarding?github=connected`,
+      });
+      const url = account.verification?.externalVerificationRedirectURL?.href;
+      if (url) {
+        window.location.href = url;
+      }
     } catch {
-      popup?.close();
       setConnecting(false);
     }
   }

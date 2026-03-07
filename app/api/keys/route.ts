@@ -18,7 +18,15 @@ export async function GET() {
     }
 
     const userKeys = await db
-      .select()
+      .select({
+        id: apiKeys.id,
+        name: apiKeys.name,
+        keyPrefix: apiKeys.keyPrefix,
+        scopes: apiKeys.scopes,
+        lastUsedAt: apiKeys.lastUsedAt,
+        expiresAt: apiKeys.expiresAt,
+        createdAt: apiKeys.createdAt,
+      })
       .from(apiKeys)
       .where(
         and(eq(apiKeys.orgId, ctx.orgId), isNull(apiKeys.revokedAt))
@@ -63,9 +71,9 @@ export async function POST(request: NextRequest) {
     const body = JSON.parse(rawBody);
     const { name, scopes } = body;
 
-    if (!name || typeof name !== "string") {
+    if (!name || typeof name !== "string" || name.length > 100) {
       return NextResponse.json(
-        { error: "Name is required" },
+        { error: "Name is required and must be under 100 characters" },
         { status: 400 }
       );
     }

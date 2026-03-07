@@ -15,6 +15,10 @@ export async function GET() {
   const ctx = await getAuthContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  if (ctx.role !== "OWNER" && ctx.role !== "ADMIN") {
+    return NextResponse.json({ error: "Only owners and admins can view invites" }, { status: 403 });
+  }
+
   const rows = await db
     .select()
     .from(invites)

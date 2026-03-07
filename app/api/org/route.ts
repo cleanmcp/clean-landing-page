@@ -12,9 +12,18 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get org info
+    // Get org info (explicit columns — avoid loading secrets into memory)
     const [org] = await db
-      .select()
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        slug: organizations.slug,
+        tier: organizations.tier,
+        hostingMode: organizations.hostingMode,
+        licenseKey: organizations.licenseKey,
+        licenseRevoked: organizations.licenseRevoked,
+        createdAt: organizations.createdAt,
+      })
       .from(organizations)
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);

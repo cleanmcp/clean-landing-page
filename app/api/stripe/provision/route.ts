@@ -1,14 +1,18 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { organizations, orgMembers } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { organizations } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { getStripe } from "@/lib/stripe";
 import { generateLicenseKey } from "@/lib/license";
+import { getAuthContext } from "@/lib/auth";
 
 // Called after Stripe checkout redirect — verifies payment and provisions license
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await getAuthContext();
+  if (!ctx) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (ctx.role !== "OWNER" && ctx.role !== "ADMIN") {
+    return Response.json({ error: "Only owners and admins can provision licenses" }, { status: 403 });
+  }
 
   const body = await req.json();
   const { sessionId } = body;
@@ -17,19 +21,7 @@ export async function POST(req: Request) {
   }
   const hostingMode: "cloud" | "self-hosted" = body.hostingMode === "self-hosted" ? "self-hosted" : "cloud";
 
-  // Get user's org
-  const membership = await db
-    .select({ orgId: orgMembers.orgId })
-    .from(orgMembers)
-    .where(eq(orgMembers.userId, userId))
-    .orderBy(desc(orgMembers.joinedAt))
-    .limit(1);
-
-  if (membership.length === 0) {
-    return Response.json({ error: "No organization found" }, { status: 400 });
-  }
-
-  const orgId = membership[0].orgId;
+  const orgId = ctx.orgId;
 
   // Check if already has a valid license
   const [org] = await db

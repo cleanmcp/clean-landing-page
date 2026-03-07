@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import {
   Github,
   Loader2,
@@ -44,6 +45,7 @@ const LANG_COLORS: Record<string, string> = {
 
 export default function AddReposPage() {
   const router = useRouter();
+  const { user: clerkUser } = useUser();
 
   const [repos, setRepos] = useState<GitHubRepoInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,51 +94,31 @@ export default function AddReposPage() {
   }, [fetchData]);
 
   async function handleConnectGitHub() {
-    const w = 700, h = 800;
-    const left = window.screenX + (window.innerWidth - w) / 2;
-    const top = window.screenY + (window.innerHeight - h) / 2;
-    const popup = window.open(
-      "about:blank",
-      "github-connect",
-      `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`
-    );
-
+    // First check if already connected
     try {
       const res = await fetch("/api/github/install");
-      if (!res.ok) { popup?.close(); return; }
-      const data = await res.json();
-      if (popup) {
-        popup.location.href = data.url;
-      } else {
-        window.location.href = data.url;
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.connected) {
+          await fetchData();
+          return;
+        }
       }
+    } catch {}
 
-      setConnecting(true);
-
-      const poll = setInterval(async () => {
-        const ghRes = await fetch("/api/github/repos").catch(() => null);
-        if (!ghRes?.ok) return;
-        const ghData = await ghRes.json();
-        if (ghData.connected || ghData.installations?.length > 0) {
-          clearInterval(poll);
-          setConnecting(false);
-          setConnected(true);
-          setRepos(ghData.repos || []);
-          try { popup?.close(); } catch {}
-        }
-      }, 2000);
-
-      const closeCheck = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(closeCheck);
-          setTimeout(() => { clearInterval(poll); setConnecting(false); fetchData(); }, 1000);
-        }
-      }, 500);
-
-      setTimeout(() => { clearInterval(poll); clearInterval(closeCheck); setConnecting(false); }, 5 * 60 * 1000);
+    // Use Clerk's OAuth linking to connect GitHub
+    if (!clerkUser) return;
+    setConnecting(true);
+    try {
+      const account = await clerkUser.createExternalAccount({
+        strategy: "oauth_github",
+        redirectUrl: `${window.location.origin}/dashboard/repositories/add`,
+      });
+      const url = account.verification?.externalVerificationRedirectURL?.href;
+      if (url) {
+        window.location.href = url;
+      }
     } catch {
-      popup?.close();
       setConnecting(false);
     }
   }

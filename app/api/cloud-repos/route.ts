@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
+import { getClerkGitHubToken } from "@/lib/github-clerk";
 import { db } from "@/lib/db";
 import {
   cloudRepos,
@@ -122,14 +123,34 @@ export async function POST(request: NextRequest) {
       .onConflictDoNothing()
       .returning({ id: cloudRepos.id, fullName: cloudRepos.fullName });
 
+    // Get user's GitHub token from Clerk (needed for private repos)
+    const githubToken = await getClerkGitHubToken(ctx.userId);
+
+    // Build a lookup for repo details from the insert data
+    const repoDetails = new Map(toInsert.map((r) => [r.fullName, r]));
+
     // Trigger indexing for each repo via the engine
     for (const repo of inserted) {
       try {
-        await engineFetch(
+        const details = repoDetails.get(repo.fullName);
+        const engineRes = await engineFetch(
           ctx.orgId,
-          `/repos/index?repo=${encodeURIComponent(repo.fullName)}`,
-          { method: "POST" }
+          "/repos/index",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              repo: repo.fullName,
+              branch: details?.defaultBranch ?? "main",
+              ...(details?.private && githubToken ? { token: githubToken } : {}),
+            }),
+          }
         );
+
+        if (!engineRes.ok) {
+          const errBody = await engineRes.text().catch(() => "");
+          throw new Error(`Engine returned ${engineRes.status}: ${errBody}`);
+        }
 
         await db
           .update(cloudRepos)
@@ -144,12 +165,13 @@ export async function POST(request: NextRequest) {
           resourceId: repo.fullName,
           metadata: { repo: repo.fullName, mode: "cloud" },
         });
-      } catch {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to start indexing";
         await db
           .update(cloudRepos)
           .set({
             status: "error",
-            error: "Failed to start indexing",
+            error: message,
             updatedAt: new Date(),
           })
           .where(eq(cloudRepos.id, repo.id));
