@@ -28,6 +28,7 @@ import {
   PauseCircle,
   AlertTriangle,
 } from "lucide-react";
+import { UpgradeModal } from "@/components/upgrade-modal";
 
 interface CloudRepo {
   id: string;
@@ -77,6 +78,7 @@ export default function CloudReposPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const fetchRepos = useCallback(async () => {
     try {
@@ -285,7 +287,7 @@ export default function CloudReposPage() {
             )}
             Remove repos or{" "}
             <button
-              onClick={() => router.push("/dashboard/billing")}
+              onClick={() => setShowUpgrade(true)}
               className="font-medium underline hover:no-underline"
             >
               upgrade your plan
@@ -472,6 +474,11 @@ export default function CloudReposPage() {
           </p>
         </div>
       )}
+      <UpgradeModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="repos"
+      />
     </div>
   );
 }

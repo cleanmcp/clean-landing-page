@@ -109,7 +109,8 @@ export default function ClientLayout({
             );
           })}
           <Link
-            href="/documentation"
+            href="https://docs.tryclean.ai"
+            target="_blank"
             className="mt-2 flex h-10 w-10 items-center justify-center rounded-lg text-[var(--ink)] transition-all duration-300 hover:bg-[var(--cream-dark)] group-hover:w-40 group-hover:justify-start group-hover:gap-3 group-hover:px-3"
           >
             <FileText className="h-5 w-5 flex-shrink-0" />
