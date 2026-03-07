@@ -1,21 +1,15 @@
-import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { organizations, orgMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { generateLicenseKey } from "@/lib/license";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  let hostingMode: "cloud" | "self-hosted" = "cloud";
-  try {
-    const body = await request.json();
-    if (body.hostingMode === "self-hosted") hostingMode = "self-hosted";
-  } catch {
-    // no body or invalid JSON — default to cloud
-  }
+  // Free tier is always cloud-hosted.
+  const hostingMode: "cloud" | "self-hosted" = "cloud";
 
   // Get user's org
   const membership = await db

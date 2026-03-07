@@ -37,7 +37,7 @@ export async function ensurePersonalOrg(
   } else {
     const [org] = await db
       .insert(organizations)
-      .values({ name: orgName, slug })
+      .values({ name: orgName, slug, hostingMode: "cloud" })
       .returning({ id: organizations.id });
     orgId = org.id;
   }

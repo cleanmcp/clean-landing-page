@@ -1,8 +1,15 @@
-export const TIER_LIMITS = {
+/**
+ * Legacy self-hosted tier limits — all unlimited.
+ * Only used for enterprise / self-hosted orgs.
+ */
+export const SELF_HOSTED_TIER_LIMITS = {
   free: { repos: Infinity, apiKeys: Infinity, members: Infinity, searchesPerDay: Infinity, storageMb: Infinity },
   pro: { repos: Infinity, apiKeys: Infinity, members: Infinity, searchesPerDay: Infinity, storageMb: Infinity },
   enterprise: { repos: Infinity, apiKeys: Infinity, members: Infinity, searchesPerDay: Infinity, storageMb: Infinity },
 } as const;
+
+/** @deprecated Use SELF_HOSTED_TIER_LIMITS for enterprise orgs, or CLOUD_TIER_LIMITS for cloud orgs. */
+export const TIER_LIMITS = SELF_HOSTED_TIER_LIMITS;
 
 export const CLOUD_TIER_LIMITS = {
   free: { repos: 3, apiKeys: 5, members: 1, searchesPerDay: 50, storageMb: 100 },
@@ -17,11 +24,15 @@ export function getCloudTierLimits(tier: string) {
   return CLOUD_TIER_LIMITS[tier as CloudTier] ?? CLOUD_TIER_LIMITS.free;
 }
 
-export type Tier = keyof typeof TIER_LIMITS;
+export type SelfHostedTier = keyof typeof SELF_HOSTED_TIER_LIMITS;
 
+/** @deprecated Prefer getCloudTierLimits for cloud orgs. */
 export function getTierLimits(tier: string) {
-  return TIER_LIMITS[tier as Tier] ?? TIER_LIMITS.free;
+  return SELF_HOSTED_TIER_LIMITS[tier as SelfHostedTier] ?? SELF_HOSTED_TIER_LIMITS.free;
 }
+
+/** Alias kept for backwards compatibility — same as getCloudTierLimits. */
+export type Tier = SelfHostedTier;
 
 /** Return cloud tier limits with Infinity replaced by 0 for JSON serialization. */
 export function getCloudTierLimitsForSync(tier: string) {
