@@ -238,14 +238,28 @@ export default function CloudOnboardingPage() {
       .finally(() => setLoading(false));
   }, [searchParams]);
 
-  // Handle GitHub connected redirect
+  // Handle GitHub connected redirect — retry if token isn't ready yet
   useEffect(() => {
     const github = searchParams.get("github");
     if (github === "connected" || github === "updated") {
       setStep("select-repos");
-      fetchGitHubRepos();
+
+      let attempts = 0;
+      const tryFetch = async () => {
+        const res = await fetch("/api/github/repos");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.connected && data.repos?.length > 0) {
+            setGithubRepos(data.repos);
+            return;
+          }
+        }
+        attempts++;
+        if (attempts < 5) setTimeout(tryFetch, 2000);
+      };
+      tryFetch();
     }
-  }, [searchParams, fetchGitHubRepos]);
+  }, [searchParams]);
 
   // Poll cloud repos during indexing
   useEffect(() => {

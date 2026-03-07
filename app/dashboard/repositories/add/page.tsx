@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
   Github,
@@ -45,7 +45,9 @@ const LANG_COLORS: Record<string, string> = {
 
 export default function AddReposPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user: clerkUser } = useUser();
+  const retryRef = useRef(false);
 
   const [repos, setRepos] = useState<GitHubRepoInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,8 +71,16 @@ export default function AddReposPage() {
 
       if (ghRes.ok) {
         const ghData = await ghRes.json();
-        setConnected(ghData.connected || (ghData.installations?.length ?? 0) > 0);
+        const isConnected = ghData.connected || (ghData.installations?.length ?? 0) > 0;
+        setConnected(isConnected);
         setRepos(ghData.repos || []);
+
+        // After OAuth redirect, Clerk may not have the token yet — retry once
+        if (!isConnected && !retryRef.current && searchParams.has("github")) {
+          retryRef.current = true;
+          setTimeout(() => fetchData(), 2000);
+          return;
+        }
       }
 
       if (crRes.ok) {
@@ -87,7 +97,7 @@ export default function AddReposPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     fetchData();
@@ -112,7 +122,7 @@ export default function AddReposPage() {
     try {
       const account = await clerkUser.createExternalAccount({
         strategy: "oauth_github",
-        redirectUrl: `${window.location.origin}/dashboard/repositories/add`,
+        redirectUrl: `${window.location.origin}/dashboard/repositories/add?github=linked`,
       });
       const url = account.verification?.externalVerificationRedirectURL?.href;
       if (url) {
