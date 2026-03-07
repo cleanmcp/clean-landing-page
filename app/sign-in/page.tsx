@@ -181,13 +181,22 @@ function SignInContent() {
                 "--tw-ring-color": "var(--accent)",
               }}
             />
-            <label
-              htmlFor="password"
-              className="mb-1.5 block text-sm font-medium"
-              style={{ color: "var(--ink-light)" }}
-            >
-              Password
-            </label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium"
+                style={{ color: "var(--ink-light)" }}
+              >
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium transition-colors duration-200 hover:text-(--ink)"
+                style={{ color: "var(--accent)" }}
+              >
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"

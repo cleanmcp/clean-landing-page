@@ -1,9 +1,10 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { orgMembers } from "@/lib/db/schema";
 import type { OrgRole } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { ensurePersonalOrg } from "@/lib/personal-org";
 
 /**
  * Get the current user's ID, orgId, and role from Clerk + database.
@@ -11,8 +12,9 @@ import { eq, and, desc } from "drizzle-orm";
  * Org resolution order:
  *   1. `active_org` cookie (if set and the user is still a member)
  *   2. Most recently joined org (joinedAt DESC)
+ *   3. Auto-create personal org if none exists (self-healing)
  *
- * Returns null if not authenticated or has no org membership.
+ * Returns null if not authenticated.
  */
 export async function getAuthContext(): Promise<{
   userId: string;
@@ -48,7 +50,17 @@ export async function getAuthContext(): Promise<{
     .orderBy(desc(orgMembers.joinedAt))
     .limit(1);
 
-  if (!membership) return null;
+  if (membership) {
+    return { userId, orgId: membership.orgId, role: membership.role };
+  }
 
-  return { userId, orgId: membership.orgId, role: membership.role };
+  // 3. Self-heal: create personal org if webhook missed it
+  try {
+    const user = await currentUser();
+    const name = user?.firstName || user?.username || null;
+    const orgId = await ensurePersonalOrg(userId, name);
+    return { userId, orgId, role: "OWNER" };
+  } catch {
+    return null;
+  }
 }
