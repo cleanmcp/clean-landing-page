@@ -30,6 +30,14 @@ import {
 } from "lucide-react";
 import { UpgradeModal } from "@/components/upgrade-modal";
 
+interface JobProgress {
+  phase: string;
+  progress: number;
+  files_processed: number;
+  files_total: number;
+  entities_found: number;
+}
+
 interface CloudRepo {
   id: string;
   fullName: string;
@@ -41,6 +49,13 @@ interface CloudRepo {
   lastIndexedAt: string | null;
   error: string | null;
   createdAt: string;
+  job?: JobProgress | null;
+}
+
+interface Installation {
+  id: string;
+  accountLogin: string;
+  accountAvatarUrl: string;
 }
 
 const POLL_ACTIVE = 3000;
@@ -72,6 +87,8 @@ export default function CloudReposPage() {
   const [repos, setRepos] = useState<CloudRepo[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasInstallation, setHasInstallation] = useState(false);
+  const [installations, setInstallations] = useState<Installation[]>([]);
+  const [installUrl, setInstallUrl] = useState("");
   const [repoLimit, setRepoLimit] = useState<number | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [message, setMessage] = useState<{
@@ -82,9 +99,10 @@ export default function CloudReposPage() {
 
   const fetchRepos = useCallback(async () => {
     try {
-      const [crRes, ghRes] = await Promise.all([
+      const [crRes, ghRes, installRes] = await Promise.all([
         fetch("/api/cloud-repos"),
         fetch("/api/github/repos"),
+        fetch("/api/github/install"),
       ]);
 
       if (crRes.ok) {
@@ -96,6 +114,13 @@ export default function CloudReposPage() {
       if (ghRes.ok) {
         const data = await ghRes.json();
         setHasInstallation(data.connected || (data.installations?.length ?? 0) > 0);
+      }
+
+      if (installRes.ok) {
+        const data = await installRes.json();
+        setInstallations(data.installations || []);
+        setInstallUrl(data.installUrl || "");
+        if (data.connected) setHasInstallation(true);
       }
     } catch {
       // silently fail
@@ -261,6 +286,30 @@ export default function CloudReposPage() {
         </div>
       </div>
 
+      {/* Connected accounts */}
+      {installations.length > 0 && (
+        <div className="flex items-center gap-3 text-sm text-[var(--ink-muted)]">
+          <span>Connected:</span>
+          {installations.map((inst) => (
+            <span
+              key={inst.id}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)]"
+            >
+              {inst.accountAvatarUrl && (
+                <img src={inst.accountAvatarUrl} alt="" className="h-4 w-4 rounded-full" />
+              )}
+              {inst.accountLogin}
+            </span>
+          ))}
+          <a
+            href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
+            className="text-xs text-[var(--accent)] hover:underline"
+          >
+            + Add another account
+          </a>
+        </div>
+      )}
+
       {message && (
         <div
           className={`rounded-lg border px-4 py-3 text-sm ${
@@ -379,13 +428,23 @@ export default function CloudReposPage() {
                         ? `${repo.entityCount.toLocaleString()} entities`
                         : repo.error
                           ? repo.error
-                          : getStatusText(repo.status)}
+                          : repo.job
+                            ? `${repo.job.phase === "cloning" ? "Cloning" : "Indexing"}${repo.job.files_total > 0 ? ` · ${repo.job.files_processed}/${repo.job.files_total} files` : ""}${repo.job.entities_found > 0 ? ` · ${repo.job.entities_found} entities found` : ""}`
+                            : getStatusText(repo.status)}
                       {repo.lastIndexedAt && repo.status === "ready" && (
                         <span className="ml-2">
                           · Last indexed {formatDate(repo.lastIndexedAt)}
                         </span>
                       )}
                     </p>
+                    {repo.job && repo.job.progress > 0 && (
+                      <div className="mt-1.5 h-1.5 w-48 overflow-hidden rounded-full bg-[var(--cream-dark)]">
+                        <div
+                          className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
+                          style={{ width: `${Math.min(repo.job.progress, 100)}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
