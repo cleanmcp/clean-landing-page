@@ -33,7 +33,7 @@ if (process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID) {
   PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID] = { plan: "pro", tier: "pro", seatLimit: 5 };
 }
 if (process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID) {
-  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID] = { plan: "max", tier: "max", seatLimit: 25 };
+  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID] = { plan: "max", tier: "max", seatLimit: 10 };
 }
 
 function getPlanFromPriceId(priceId: string): PlanInfo {

@@ -32,16 +32,16 @@ const FEATURE_COPY = {
 const PLANS = [
   {
     name: "Pro",
-    price: "$29",
-    period: "/mo",
-    features: ["15 repositories", "5 team members", "20 API keys", "Unlimited searches", "Priority support"],
+    price: "$14.99",
+    period: "/user/mo",
+    features: ["15 repositories", "5 team members", "20 API keys", "1,000 searches/day", "Priority indexing"],
     accent: true,
   },
   {
     name: "Max",
-    price: "$79",
-    period: "/mo",
-    features: ["Unlimited repositories", "25 team members", "Unlimited API keys", "Unlimited searches", "Dedicated support", "1 GB storage"],
+    price: "$29.99",
+    period: "/user/mo",
+    features: ["Unlimited repositories", "10 team members", "Unlimited API keys", "10,000 searches/day", "Private cloud + SLA"],
     accent: false,
   },
 ];

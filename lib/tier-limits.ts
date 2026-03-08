@@ -13,8 +13,8 @@ export const TIER_LIMITS = SELF_HOSTED_TIER_LIMITS;
 
 export const CLOUD_TIER_LIMITS = {
   free: { repos: 3, apiKeys: 5, members: 1, searchesPerDay: 50, storageMb: 100 },
-  pro: { repos: 15, apiKeys: 20, members: 5, searchesPerDay: Infinity, storageMb: 500 },
-  max: { repos: Infinity, apiKeys: Infinity, members: 25, searchesPerDay: Infinity, storageMb: 1000 },
+  pro: { repos: 15, apiKeys: 20, members: 5, searchesPerDay: 1000, storageMb: 500 },
+  max: { repos: Infinity, apiKeys: Infinity, members: 10, searchesPerDay: 10000, storageMb: 1000 },
   enterprise: { repos: Infinity, apiKeys: Infinity, members: Infinity, searchesPerDay: Infinity, storageMb: Infinity },
 } as const;
 

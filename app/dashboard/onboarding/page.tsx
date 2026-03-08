@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import {
   Github,
   Check,
@@ -14,6 +13,7 @@ import {
   RefreshCw,
   Search,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -33,6 +33,12 @@ interface GitHubRepoInfo {
   description: string | null;
   updatedAt: string;
   installationId: string | null;
+}
+
+interface Installation {
+  id: string;
+  accountLogin: string;
+  accountAvatarUrl: string;
 }
 
 interface CloudRepo {
@@ -145,13 +151,29 @@ function formatMcpConfig(tab: ConfigTab, apiKey: string, slug: string): string {
 // ---------------------------------------------------------------------------
 
 export default function CloudOnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+        </div>
+      }
+    >
+      <CloudOnboardingContent />
+    </Suspense>
+  );
+}
+
+function CloudOnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user: clerkUser } = useUser();
   const [step, setStep] = useState<OnboardingStep>("connect-github");
   const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState(false);
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
+
+  // GitHub App state
+  const [installUrl, setInstallUrl] = useState<string>("");
+  const [installations, setInstallations] = useState<Installation[]>([]);
 
   // GitHub repos
   const [githubRepos, setGithubRepos] = useState<GitHubRepoInfo[]>([]);
@@ -163,11 +185,25 @@ export default function CloudOnboardingPage() {
   // Cloud repos (indexing progress)
   const [cloudRepos, setCloudRepos] = useState<CloudRepo[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // MCP config
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [configTab, setConfigTab] = useState<ConfigTab>("claude-code");
   const [copied, setCopied] = useState<string | null>(null);
+
+  const fetchGitHubStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/github/install");
+      if (res.ok) {
+        const data = await res.json();
+        setInstallUrl(data.installUrl || "");
+        setInstallations(data.installations || []);
+        return data.connected as boolean;
+      }
+    } catch {}
+    return false;
+  }, []);
 
   const fetchGitHubRepos = useCallback(async () => {
     setReposLoading(true);
@@ -176,6 +212,7 @@ export default function CloudOnboardingPage() {
       if (res.ok) {
         const data = await res.json();
         setGithubRepos(data.repos || []);
+        setInstallations(data.installations || []);
       }
     } catch {
       // silently fail
@@ -188,30 +225,42 @@ export default function CloudOnboardingPage() {
   useEffect(() => {
     const requestedStep = searchParams.get("step") as OnboardingStep | null;
 
-    fetch("/api/org")
-      .then((r) => (r.ok ? r.json() : null))
-      .then(async (data) => {
-        if (!data?.org) return;
-        const org = data.org as OrgInfo & { tier: string };
-        setOrgInfo(org);
+    (async () => {
+      try {
+        const [orgRes, installRes] = await Promise.all([
+          fetch("/api/org"),
+          fetch("/api/github/install"),
+        ]);
 
-        // Determine repo limit from tier
-        const limits: Record<string, number> = { free: 3, pro: 15, max: Infinity, enterprise: Infinity };
-        setRepoLimit(limits[org.tier ?? "free"] ?? 3);
+        // Org info
+        const orgData = orgRes.ok ? await orgRes.json() : null;
+        if (orgData?.org) {
+          const org = orgData.org as OrgInfo & { tier: string };
+          setOrgInfo(org);
+          const limits: Record<string, number> = { free: 3, pro: 15, max: Infinity, enterprise: Infinity };
+          setRepoLimit(limits[org.tier ?? "free"] ?? 3);
+        }
 
-        // Check for existing GitHub connection
-        const ghRes = await fetch("/api/github/repos");
-        if (ghRes.ok) {
-          const ghData = await ghRes.json();
-          if (ghData.connected || ghData.installations?.length > 0) {
+        // GitHub App installation status
+        const installData = installRes.ok ? await installRes.json() : null;
+        if (installData) {
+          setInstallUrl(installData.installUrl || "");
+          setInstallations(installData.installations || []);
+        }
+
+        const isConnected = installData?.connected ?? false;
+
+        if (isConnected) {
+          // Fetch repos
+          const ghRes = await fetch("/api/github/repos");
+          if (ghRes.ok) {
+            const ghData = await ghRes.json();
             setGithubRepos(ghData.repos || []);
+          }
 
-            // If caller explicitly requested select-repos, go there
-            if (requestedStep === "select-repos") {
-              setStep("select-repos");
-              return;
-            }
-
+          if (requestedStep === "select-repos") {
+            setStep("select-repos");
+          } else {
             // Check for existing cloud repos
             const crRes = await fetch("/api/cloud-repos");
             if (crRes.ok) {
@@ -221,11 +270,7 @@ export default function CloudOnboardingPage() {
                 const allDone = crData.repos.every(
                   (r: CloudRepo) => r.status === "ready" || r.status === "error"
                 );
-                if (allDone) {
-                  setStep("mcp-config");
-                } else {
-                  setStep("indexing");
-                }
+                setStep(allDone ? "mcp-config" : "indexing");
               } else {
                 setStep("select-repos");
               }
@@ -234,31 +279,11 @@ export default function CloudOnboardingPage() {
             }
           }
         }
-      })
-      .finally(() => setLoading(false));
-  }, [searchParams]);
-
-  // Handle GitHub connected redirect — retry if token isn't ready yet
-  useEffect(() => {
-    const github = searchParams.get("github");
-    if (github === "connected" || github === "updated") {
-      setStep("select-repos");
-
-      let attempts = 0;
-      const tryFetch = async () => {
-        const res = await fetch("/api/github/repos");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.connected && data.repos?.length > 0) {
-            setGithubRepos(data.repos);
-            return;
-          }
-        }
-        attempts++;
-        if (attempts < 5) setTimeout(tryFetch, 2000);
-      };
-      tryFetch();
-    }
+        // else: stay on connect-github
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [searchParams]);
 
   // Poll cloud repos during indexing
@@ -276,13 +301,10 @@ export default function CloudOnboardingPage() {
             (r: CloudRepo) => r.status === "ready" || r.status === "error"
           );
           if (allDone && data.repos.length > 0) {
-            // Auto-advance after a brief delay
             setTimeout(() => setStep("mcp-config"), 1500);
           }
         }
-      } catch {
-        // silently fail
-      }
+      } catch {}
     };
 
     poll();
@@ -290,55 +312,48 @@ export default function CloudOnboardingPage() {
     return () => clearInterval(interval);
   }, [step]);
 
-  // Auto-create API key when reaching MCP config step
+  // Auto-create API key when reaching MCP config step (check existing first)
   useEffect(() => {
     if (step !== "mcp-config" || apiKey) return;
 
-    fetch("/api/keys", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "Cloud Onboarding Key",
-        scopes: ["search", "index"],
-        expiresAt: null,
-      }),
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.key) setApiKey(data.key);
-      })
-      .catch(() => {});
+    (async () => {
+      try {
+        // Check if an onboarding key already exists
+        const listRes = await fetch("/api/keys");
+        if (listRes.ok) {
+          const listData = await listRes.json();
+          const existing = (listData.keys ?? []).find(
+            (k: { name: string; revokedAt: string | null }) =>
+              k.name === "Cloud Onboarding Key" && !k.revokedAt
+          );
+          if (existing) {
+            // Key exists but we can't show the raw key again — show prefix
+            setApiKey(existing.keyPrefix + "...");
+            return;
+          }
+        }
+
+        // Create new key
+        const res = await fetch("/api/keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: "Cloud Onboarding Key",
+            scopes: ["search", "index"],
+            expiresAt: null,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.key) setApiKey(data.key);
+        }
+      } catch {}
+    })();
   }, [step, apiKey]);
 
-  async function handleConnectGitHub() {
-    // First check if GitHub is already connected via Clerk
-    try {
-      const res = await fetch("/api/github/install");
-      if (res.ok) {
-        const data = await res.json();
-        if (data.connected) {
-          // Already connected — fetch repos and go to select
-          await fetchGitHubRepos();
-          setStep("select-repos");
-          return;
-        }
-      }
-    } catch {}
-
-    // Not connected — use Clerk's OAuth linking
-    if (!clerkUser) return;
-    setConnecting(true);
-    try {
-      const account = await clerkUser.createExternalAccount({
-        strategy: "oauth_github",
-        redirectUrl: `${window.location.origin}/dashboard/onboarding?github=connected`,
-      });
-      const url = account.verification?.externalVerificationRedirectURL?.href;
-      if (url) {
-        window.location.href = url;
-      }
-    } catch {
-      setConnecting(false);
+  function handleInstallGitHubApp() {
+    if (installUrl) {
+      window.location.href = installUrl;
     }
   }
 
@@ -357,6 +372,7 @@ export default function CloudOnboardingPage() {
   async function handleStartIndexing() {
     if (selectedRepos.size === 0) return;
     setSubmitting(true);
+    setSubmitError(null);
 
     const reposToAdd = githubRepos
       .filter((r) => selectedRepos.has(r.fullName))
@@ -376,10 +392,28 @@ export default function CloudOnboardingPage() {
       });
 
       if (res.ok) {
+        const data = await res.json();
+        // Immediately populate cloudRepos from the response so the indexing
+        // step has something to show before the first poll completes
+        if (data.repos?.length > 0) {
+          setCloudRepos(
+            data.repos.map((r: { id: string; fullName: string }) => ({
+              id: r.id,
+              fullName: r.fullName,
+              status: "pending",
+              entityCount: null,
+              lastIndexedAt: null,
+              error: null,
+            }))
+          );
+        }
         setStep("indexing");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setSubmitError(data.error || "Failed to start indexing. Please try again.");
       }
     } catch {
-      // silently fail
+      setSubmitError("Network error. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -471,44 +505,30 @@ export default function CloudOnboardingPage() {
         ))}
       </div>
 
-      {/* ── Step 1: Connect GitHub ── */}
+      {/* ── Step 1: Install GitHub App ── */}
       {step === "connect-github" && (
         <div className="rounded-xl border-2 border-[var(--cream-dark)] bg-white p-8 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--ink)]">
             <Github className="h-8 w-8 text-white" />
           </div>
           <h3 className="mt-5 text-lg font-semibold text-[var(--ink)]">
-            Connect your GitHub account
+            Install the Clean GitHub App
           </h3>
           <p className="mt-2 text-sm text-[var(--ink-muted)]">
             Grant read-only access to your repositories.
             You choose exactly which repos to share.
           </p>
           <button
-            onClick={handleConnectGitHub}
-            disabled={connecting}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90 disabled:opacity-70"
+            onClick={handleInstallGitHubApp}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90"
           >
-            {connecting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Waiting for GitHub...
-              </>
-            ) : (
-              <>
-                <Github className="h-4 w-4" />
-                Connect GitHub
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
+            <Github className="h-4 w-4" />
+            Install GitHub App
+            <ExternalLink className="h-3.5 w-3.5" />
           </button>
-          {connecting && (
-            <p className="mt-3 text-xs text-[var(--accent)]">
-              Complete the setup in the popup window, then you&apos;ll continue here automatically.
-            </p>
-          )}
           <p className="mt-4 text-xs text-[var(--ink-muted)]">
             We only read code — never write or modify your repos.
+            Works with personal accounts and organizations.
           </p>
         </div>
       )}
@@ -516,6 +536,30 @@ export default function CloudOnboardingPage() {
       {/* ── Step 2: Select Repos ── */}
       {step === "select-repos" && (
         <div className="space-y-4">
+          {/* Connected accounts */}
+          {installations.length > 0 && (
+            <div className="flex items-center gap-3 text-sm text-[var(--ink-muted)]">
+              <span>Connected:</span>
+              {installations.map((inst) => (
+                <span
+                  key={inst.id}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)]"
+                >
+                  {inst.accountAvatarUrl && (
+                    <img src={inst.accountAvatarUrl} alt="" className="h-4 w-4 rounded-full" />
+                  )}
+                  {inst.accountLogin}
+                </span>
+              ))}
+              <a
+                href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
+                className="text-xs text-[var(--accent)] hover:underline"
+              >
+                + Add another account
+              </a>
+            </div>
+          )}
+
           <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
             <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-5 py-4">
               <div>
@@ -566,7 +610,7 @@ export default function CloudOnboardingPage() {
               ) : filteredRepos.length === 0 ? (
                 <div className="py-12 text-center text-sm text-[var(--ink-muted)]">
                   {githubRepos.length === 0
-                    ? "No repositories found. Make sure you granted access to at least one repo."
+                    ? "No repositories found. Make sure you granted access to at least one repo when installing the app."
                     : "No repos match your search."}
                 </div>
               ) : (
@@ -588,7 +632,6 @@ export default function CloudOnboardingPage() {
                             : "hover:bg-[var(--cream)]"
                       }`}
                     >
-                      {/* Checkbox */}
                       <div
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
                           isSelected
@@ -601,7 +644,6 @@ export default function CloudOnboardingPage() {
                         )}
                       </div>
 
-                      {/* Repo info */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="truncate text-sm font-medium text-[var(--ink)]">
@@ -620,7 +662,6 @@ export default function CloudOnboardingPage() {
                         )}
                       </div>
 
-                      {/* Language */}
                       {repo.language && (
                         <div className="flex items-center gap-1.5">
                           <div
@@ -642,14 +683,29 @@ export default function CloudOnboardingPage() {
             </div>
           </div>
 
+          {/* Error */}
+          {submitError && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {submitError}
+            </p>
+          )}
+
           {/* Action */}
           <div className="flex items-center justify-between">
-            <button
-              onClick={handleConnectGitHub}
-              className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
-            >
-              Reconnect GitHub
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+              >
+                Skip for now
+              </button>
+              <a
+                href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
+                className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+              >
+                Add more repos on GitHub
+              </a>
+            </div>
             <button
               onClick={handleStartIndexing}
               disabled={selectedRepos.size === 0 || submitting}

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Github,
   Loader2,
@@ -13,6 +12,7 @@ import {
   RefreshCw,
   ArrowLeft,
   ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 
 interface GitHubRepoInfo {
@@ -25,6 +25,12 @@ interface GitHubRepoInfo {
   description: string | null;
   updatedAt: string;
   installationId: string | null;
+}
+
+interface Installation {
+  id: string;
+  accountLogin: string;
+  accountAvatarUrl: string;
 }
 
 const LANG_COLORS: Record<string, string> = {
@@ -45,42 +51,40 @@ const LANG_COLORS: Record<string, string> = {
 
 export default function AddReposPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user: clerkUser } = useUser();
-  const retryRef = useRef(false);
 
   const [repos, setRepos] = useState<GitHubRepoInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [installUrl, setInstallUrl] = useState("");
+  const [installations, setInstallations] = useState<Installation[]>([]);
   const [repoLimit, setRepoLimit] = useState(3);
   const [existingFullNames, setExistingFullNames] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ghRes, crRes, orgRes] = await Promise.all([
+      const [installRes, ghRes, crRes, orgRes] = await Promise.all([
+        fetch("/api/github/install"),
         fetch("/api/github/repos"),
         fetch("/api/cloud-repos"),
         fetch("/api/org"),
       ]);
 
+      if (installRes.ok) {
+        const installData = await installRes.json();
+        setConnected(installData.connected);
+        setInstallUrl(installData.installUrl || "");
+        setInstallations(installData.installations || []);
+      }
+
       if (ghRes.ok) {
         const ghData = await ghRes.json();
-        const isConnected = ghData.connected || (ghData.installations?.length ?? 0) > 0;
-        setConnected(isConnected);
         setRepos(ghData.repos || []);
-
-        // After OAuth redirect, Clerk may not have the token yet — retry once
-        if (!isConnected && !retryRef.current && searchParams.has("github")) {
-          retryRef.current = true;
-          setTimeout(() => fetchData(), 2000);
-          return;
-        }
+        if (ghData.connected) setConnected(true);
       }
 
       if (crRes.ok) {
@@ -97,44 +101,20 @@ export default function AddReposPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  async function handleConnectGitHub() {
-    // First check if already connected
-    try {
-      const res = await fetch("/api/github/install");
-      if (res.ok) {
-        const data = await res.json();
-        if (data.connected) {
-          await fetchData();
-          return;
-        }
-      }
-    } catch {}
-
-    // Use Clerk's OAuth linking to connect GitHub
-    if (!clerkUser) return;
-    setConnecting(true);
-    try {
-      const account = await clerkUser.createExternalAccount({
-        strategy: "oauth_github",
-        redirectUrl: `${window.location.origin}/dashboard/repositories/add?github=linked`,
-      });
-      const url = account.verification?.externalVerificationRedirectURL?.href;
-      if (url) {
-        window.location.href = url;
-      }
-    } catch {
-      setConnecting(false);
+  function handleInstallGitHubApp() {
+    if (installUrl) {
+      window.location.href = installUrl;
     }
   }
 
   function toggle(fullName: string) {
-    if (existingFullNames.has(fullName)) return; // already indexed, can't deselect
+    if (existingFullNames.has(fullName)) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(fullName)) {
@@ -209,21 +189,21 @@ export default function AddReposPage() {
         </p>
       </div>
 
-      {/* Not connected */}
+      {/* Not connected — install GitHub App */}
       {!loading && !connected && (
         <div className="rounded-xl border-2 border-dashed border-[var(--cream-dark)] bg-white p-8 text-center">
           <Github className="mx-auto h-10 w-10 text-[var(--ink-muted)]" />
-          <h3 className="mt-3 font-semibold text-[var(--ink)]">Connect GitHub first</h3>
+          <h3 className="mt-3 font-semibold text-[var(--ink)]">Install the Clean GitHub App</h3>
           <p className="mt-1 text-sm text-[var(--ink-muted)]">
-            Authorize Clean to read your repositories.
+            Grant read-only access so Clean can index your repositories.
           </p>
           <button
-            onClick={handleConnectGitHub}
-            disabled={connecting}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90 disabled:opacity-70"
+            onClick={handleInstallGitHubApp}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90"
           >
-            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
-            {connecting ? "Waiting for GitHub..." : "Connect GitHub"}
+            <Github className="h-4 w-4" />
+            Install GitHub App
+            <ExternalLink className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
@@ -237,109 +217,134 @@ export default function AddReposPage() {
 
       {/* Repo picker */}
       {!loading && connected && (
-        <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
-          <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-5 py-4">
-            <div>
-              <p className="text-sm font-medium text-[var(--ink)]">
-                {selected.size} selected
-                {repoLimit !== Infinity && (
-                  <span className="ml-2 text-[var(--ink-muted)]">
-                    · {slotsLeft} slot{slotsLeft !== 1 ? "s" : ""} remaining on your plan
-                  </span>
-                )}
-              </p>
+        <>
+          {/* Connected accounts */}
+          {installations.length > 0 && (
+            <div className="flex items-center gap-3 text-sm text-[var(--ink-muted)]">
+              <span>Connected:</span>
+              {installations.map((inst) => (
+                <span
+                  key={inst.id}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)]"
+                >
+                  {inst.accountAvatarUrl && (
+                    <img src={inst.accountAvatarUrl} alt="" className="h-4 w-4 rounded-full" />
+                  )}
+                  {inst.accountLogin}
+                </span>
+              ))}
+              <a
+                href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
+                className="text-xs text-[var(--accent)] hover:underline"
+              >
+                + Add another account
+              </a>
             </div>
-            <button
-              onClick={fetchData}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Refresh
-            </button>
-          </div>
+          )}
 
-          <div className="border-b border-[var(--cream-dark)] px-5 py-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
-              <input
-                type="text"
-                placeholder="Search repositories..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              />
+          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
+            <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-5 py-4">
+              <div>
+                <p className="text-sm font-medium text-[var(--ink)]">
+                  {selected.size} selected
+                  {repoLimit !== Infinity && (
+                    <span className="ml-2 text-[var(--ink-muted)]">
+                      · {slotsLeft} slot{slotsLeft !== 1 ? "s" : ""} remaining on your plan
+                    </span>
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={fetchData}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Refresh
+              </button>
             </div>
-          </div>
 
-          <div className="max-h-[28rem] overflow-y-auto">
-            {filtered.length === 0 ? (
-              <p className="py-10 text-center text-sm text-[var(--ink-muted)]">
-                {repos.length === 0 ? "No repositories found." : "No repos match your search."}
-              </p>
-            ) : (
-              filtered.map((repo) => {
-                const alreadyAdded = existingFullNames.has(repo.fullName);
-                const isSelected = alreadyAdded || selected.has(repo.fullName);
-                const atLimit = !isSelected && existingCount + selected.size >= repoLimit;
-                return (
-                  <button
-                    key={repo.id}
-                    onClick={() => !alreadyAdded && !atLimit && toggle(repo.fullName)}
-                    disabled={alreadyAdded || atLimit}
-                    className={`flex w-full items-center gap-3 border-b border-[var(--cream-dark)] px-5 py-3 text-left transition-colors last:border-b-0 ${
-                      alreadyAdded
-                        ? "cursor-default opacity-60"
-                        : isSelected
-                          ? "bg-[var(--accent)]/5"
-                          : atLimit
-                            ? "cursor-not-allowed opacity-40"
-                            : "hover:bg-[var(--cream)]"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
-                        isSelected
-                          ? "border-[var(--accent)] bg-[var(--accent)]"
-                          : "border-[var(--cream-dark)]"
+            <div className="border-b border-[var(--cream-dark)] px-5 py-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
+                <input
+                  type="text"
+                  placeholder="Search repositories..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                />
+              </div>
+            </div>
+
+            <div className="max-h-[28rem] overflow-y-auto">
+              {filtered.length === 0 ? (
+                <p className="py-10 text-center text-sm text-[var(--ink-muted)]">
+                  {repos.length === 0 ? "No repositories found." : "No repos match your search."}
+                </p>
+              ) : (
+                filtered.map((repo) => {
+                  const alreadyAdded = existingFullNames.has(repo.fullName);
+                  const isSelected = alreadyAdded || selected.has(repo.fullName);
+                  const atLimit = !isSelected && existingCount + selected.size >= repoLimit;
+                  return (
+                    <button
+                      key={repo.id}
+                      onClick={() => !alreadyAdded && !atLimit && toggle(repo.fullName)}
+                      disabled={alreadyAdded || atLimit}
+                      className={`flex w-full items-center gap-3 border-b border-[var(--cream-dark)] px-5 py-3 text-left transition-colors last:border-b-0 ${
+                        alreadyAdded
+                          ? "cursor-default opacity-60"
+                          : isSelected
+                            ? "bg-[var(--accent)]/5"
+                            : atLimit
+                              ? "cursor-not-allowed opacity-40"
+                              : "hover:bg-[var(--cream)]"
                       }`}
                     >
-                      {isSelected && <Check className="h-3 w-3 text-white" />}
-                    </div>
+                      <div
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
+                          isSelected
+                            ? "border-[var(--accent)] bg-[var(--accent)]"
+                            : "border-[var(--cream-dark)]"
+                        }`}
+                      >
+                        {isSelected && <Check className="h-3 w-3 text-white" />}
+                      </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium text-[var(--ink)]">
-                          {repo.fullName}
-                        </span>
-                        {repo.private ? (
-                          <Lock className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
-                        ) : (
-                          <Globe className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium text-[var(--ink)]">
+                            {repo.fullName}
+                          </span>
+                          {repo.private ? (
+                            <Lock className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
+                          ) : (
+                            <Globe className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
+                          )}
+                        </div>
+                        {repo.description && (
+                          <p className="mt-0.5 truncate text-xs text-[var(--ink-muted)]">
+                            {repo.description}
+                          </p>
                         )}
                       </div>
-                      {repo.description && (
-                        <p className="mt-0.5 truncate text-xs text-[var(--ink-muted)]">
-                          {repo.description}
-                        </p>
-                      )}
-                    </div>
 
-           
-                    {repo.language && !alreadyAdded && (
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <div
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: LANG_COLORS[repo.language] || "#888" }}
-                        />
-                        <span className="text-xs text-[var(--ink-muted)]">{repo.language}</span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })
-            )}
+                      {repo.language && !alreadyAdded && (
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <div
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: LANG_COLORS[repo.language] || "#888" }}
+                          />
+                          <span className="text-xs text-[var(--ink-muted)]">{repo.language}</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {error && (
