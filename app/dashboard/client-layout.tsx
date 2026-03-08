@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { Toaster } from "sonner";
@@ -32,6 +32,7 @@ export default function ClientLayout({
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -39,7 +40,28 @@ export default function ClientLayout({
     }
   }, [isLoaded, user, router]);
 
-  if (!isLoaded || !user) {
+  // Redirect users who haven't completed the initial onboarding form
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    // Don't check if we're already on the onboarding sub-page
+    if (pathname.startsWith("/dashboard/onboarding")) {
+      setOnboardingChecked(true);
+      return;
+    }
+
+    fetch("/api/onboarding")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.step < 2) {
+          router.replace("/onboarding");
+        } else {
+          setOnboardingChecked(true);
+        }
+      })
+      .catch(() => setOnboardingChecked(true));
+  }, [isLoaded, user, pathname, router]);
+
+  if (!isLoaded || !user || !onboardingChecked) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--cream)]">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" />

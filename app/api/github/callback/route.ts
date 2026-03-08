@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}/dashboard/repositories`);
   }
 
+  let installSaved = false;
   try {
     // Fetch installation details from GitHub to verify the installation exists
     const info = await getInstallationInfo(numericInstallationId);
@@ -60,9 +61,10 @@ export async function GET(request: NextRequest) {
           updatedAt: new Date(),
         },
       });
+    installSaved = true;
   } catch (error) {
     console.error("Failed to process GitHub App callback:", error);
-    // Still redirect — they can retry from the dashboard
+    // Still redirect — pass installation_id so the onboarding page can retry
   }
 
   // Redirect based on context
@@ -70,5 +72,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}/dashboard/repositories`);
   }
 
-  return NextResponse.redirect(`${appUrl}/dashboard/onboarding?step=select-repos`);
+  // Pass installation_id as fallback if save failed, so onboarding can retry
+  const fallbackParam = !installSaved ? `&installation_id=${numericInstallationId}` : "";
+  return NextResponse.redirect(`${appUrl}/dashboard/onboarding?step=select-repos${fallbackParam}`);
 }

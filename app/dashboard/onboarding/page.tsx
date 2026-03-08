@@ -248,7 +248,51 @@ function CloudOnboardingContent() {
           setInstallations(installData.installations || []);
         }
 
-        const isConnected = installData?.connected ?? false;
+        let isConnected = installData?.connected ?? false;
+
+        // If redirected from callback but connection not detected yet,
+        // retry after a short delay (handles race condition / slow DB propagation)
+        if (!isConnected && requestedStep === "select-repos") {
+          await new Promise((r) => setTimeout(r, 1500));
+          const retryRes = await fetch("/api/github/install");
+          if (retryRes.ok) {
+            const retryData = await retryRes.json();
+            if (retryData.connected) {
+              isConnected = true;
+              setInstallUrl(retryData.installUrl || "");
+              setInstallations(retryData.installations || []);
+            }
+          }
+
+          // If still not connected, try saving the installation via the
+          // installation_id param that the callback may have passed through
+          if (!isConnected) {
+            const installationId = searchParams.get("installation_id");
+            if (installationId) {
+              try {
+                const saveRes = await fetch("/api/github/install", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ installationId }),
+                });
+                if (saveRes.ok) {
+                  // Re-check connection after saving
+                  const recheck = await fetch("/api/github/install");
+                  if (recheck.ok) {
+                    const recheckData = await recheck.json();
+                    if (recheckData.connected) {
+                      isConnected = true;
+                      setInstallUrl(recheckData.installUrl || "");
+                      setInstallations(recheckData.installations || []);
+                    }
+                  }
+                }
+              } catch {
+                // silently fail — user can retry from step 1
+              }
+            }
+          }
+        }
 
         if (isConnected) {
           // Fetch repos
