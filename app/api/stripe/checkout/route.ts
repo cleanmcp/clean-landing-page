@@ -43,15 +43,21 @@ export async function POST(req: Request) {
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tryclean.ai";
 
-  const session = await createCheckoutSession({
-    orgId,
-    orgName: org?.name || "Unknown",
-    email: user.email,
-    priceId,
-    quantity: seatCount,
-    successUrl: `${baseUrl}/dashboard?setup=complete&session_id={CHECKOUT_SESSION_ID}`,
-    cancelUrl: `${baseUrl}/dashboard?setup=cancelled`,
-  });
+  try {
+    const session = await createCheckoutSession({
+      orgId,
+      orgName: org?.name || "Unknown",
+      email: user.email,
+      priceId,
+      quantity: seatCount,
+      successUrl: `${baseUrl}/dashboard?setup=complete&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/dashboard?setup=cancelled`,
+    });
 
-  return Response.json({ url: session.url });
+    return Response.json({ url: session.url });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[stripe/checkout] Failed to create session:", message);
+    return Response.json({ error: message }, { status: 500 });
+  }
 }
