@@ -94,8 +94,8 @@ function getMcpConfig(tab: ConfigTab, apiKey: string, slug: string) {
     return {
       mcpServers: {
         clean: {
-          type: "http",
-          url: "https://api.tryclean.ai/mcp",
+          type: "sse",
+          url: "https://api.tryclean.ai/mcp/sse",
           headers,
         },
       },
