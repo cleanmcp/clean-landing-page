@@ -3,7 +3,6 @@
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 
 const navItems = [
   { label: "Pricing", href: "/pricing-plan" },
