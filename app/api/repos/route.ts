@@ -5,7 +5,7 @@ import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { getTierLimits } from "@/lib/tier-limits";
+import { getCloudTierLimits } from "@/lib/tier-limits";
 
 // GET /api/repos - List all indexed repositories
 export async function GET() {
@@ -122,8 +122,8 @@ export async function POST(request: NextRequest) {
         .where(eq(organizations.id, ctx.orgId))
         .limit(1);
 
-      const limits = getTierLimits(org?.tier ?? "free");
-      if (repoCount >= limits.repos) {
+      const limits = getCloudTierLimits(org?.tier ?? "free");
+      if (limits.repos !== Infinity && repoCount >= limits.repos) {
         return NextResponse.json(
           {
             error: `Repository limit reached for your plan (${repoCount}/${limits.repos}). Upgrade to index more repositories.`,

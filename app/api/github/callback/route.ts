@@ -1,67 +1,78 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { organizations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { exchangeCodeForToken, getGitHubUser, verifyState } from "@/lib/github-oauth";
+import { githubInstallations } from "@/lib/db/schema";
+import { getInstallationInfo } from "@/lib/github-app";
 
 /**
- * GET /api/github/callback — GitHub redirects here after OAuth authorization.
- * Query params: code, state
+ * GET /api/github/callback — Handle redirect after GitHub App installation.
  *
- * Auth is handled via HMAC-signed state (set during the authenticated /api/github/install call)
- * rather than Clerk session, because the popup redirect from GitHub may not carry cookies.
+ * GitHub redirects here with ?installation_id=123&setup_action=install
+ * after a user installs or updates the GitHub App.
+ *
+ * We link the GitHub installation to the user's current Clean org.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code");
-  const stateParam = searchParams.get("state");
+  const installationIdStr = searchParams.get("installation_id");
+  const setupAction = searchParams.get("setup_action");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tryclean.ai";
 
-  if (!code) {
-    return NextResponse.redirect(new URL("/dashboard?github_error=missing_code", request.url));
+  // Must be authenticated — if session expired while on GitHub, redirect to
+  // sign-in with a return URL so the installation isn't lost
+  const ctx = await getAuthContext();
+  if (!ctx) {
+    const returnUrl = `/api/github/callback?installation_id=${installationIdStr ?? ""}&setup_action=${setupAction ?? ""}`;
+    const signInUrl = `/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`;
+    return NextResponse.redirect(`${appUrl}${signInUrl}`);
   }
 
-  if (!stateParam) {
-    return NextResponse.redirect(new URL("/dashboard?github_error=missing_state", request.url));
+  if (!installationIdStr) {
+    return NextResponse.redirect(`${appUrl}/dashboard/repositories`);
   }
 
-  // Verify the HMAC-signed state
-  const state = verifyState(stateParam);
-  if (!state || !state.orgId || !state.userId) {
-    return NextResponse.redirect(new URL("/dashboard?github_error=invalid_state", request.url));
+  const numericInstallationId = parseInt(installationIdStr, 10);
+  if (isNaN(numericInstallationId)) {
+    return NextResponse.redirect(`${appUrl}/dashboard/repositories`);
   }
 
-  const orgId = state.orgId as string;
-  const returnTo = typeof state.returnTo === "string" && (state.returnTo as string).startsWith("/")
-    ? (state.returnTo as string)
-    : "/dashboard/onboarding";
-
-  // Exchange code for access token
-  let accessToken: string;
+  let installSaved = false;
   try {
-    accessToken = await exchangeCodeForToken(code);
-  } catch (err) {
-    console.error("GitHub OAuth token exchange failed:", err);
-    return NextResponse.redirect(new URL("/dashboard?github_error=token_exchange_failed", request.url));
+    // Fetch installation details from GitHub to verify the installation exists
+    const info = await getInstallationInfo(numericInstallationId);
+
+    // Atomic upsert using the unique constraint on (org_id, installation_id)
+    await db
+      .insert(githubInstallations)
+      .values({
+        orgId: ctx.orgId,
+        installationId: numericInstallationId,
+        accountLogin: info.account.login,
+        accountType: info.account.type,
+        accountAvatarUrl: info.account.avatar_url,
+      })
+      .onConflictDoUpdate({
+        target: [githubInstallations.orgId, githubInstallations.installationId],
+        set: {
+          active: true,
+          accountLogin: info.account.login,
+          accountType: info.account.type,
+          accountAvatarUrl: info.account.avatar_url,
+          updatedAt: new Date(),
+        },
+      });
+    installSaved = true;
+  } catch (error) {
+    console.error("Failed to process GitHub App callback:", error);
+    // Still redirect — pass installation_id so the onboarding page can retry
   }
 
-  // Fetch GitHub user info
-  let githubLogin = "unknown";
-  try {
-    const user = await getGitHubUser(accessToken);
-    githubLogin = user.login;
-  } catch {
-    // continue with defaults
+  // Redirect based on context
+  if (setupAction === "update") {
+    return NextResponse.redirect(`${appUrl}/dashboard/repositories`);
   }
 
-  // Store token + login on the organization and set cloud mode
-  await db
-    .update(organizations)
-    .set({
-      githubAccessToken: accessToken,
-      githubLogin: githubLogin,
-      hostingMode: "cloud",
-    })
-    .where(eq(organizations.id, orgId));
-
-  return NextResponse.redirect(new URL(`${returnTo}?github=connected`, request.url));
+  // Pass installation_id as fallback if save failed, so onboarding can retry
+  const fallbackParam = !installSaved ? `&installation_id=${numericInstallationId}` : "";
+  return NextResponse.redirect(`${appUrl}/dashboard/onboarding?step=select-repos${fallbackParam}`);
 }

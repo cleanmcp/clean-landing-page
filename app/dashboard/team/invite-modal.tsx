@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Copy, Trash2, Link, Check } from "lucide-react";
 import { toast } from "sonner";
+import { UpgradeModal } from "@/components/upgrade-modal";
 
 interface Invite {
   id: string;
@@ -30,6 +31,7 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
   const [copied, setCopied] = useState(false);
   const [existingInvites, setExistingInvites] = useState<Invite[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -65,7 +67,11 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Failed to create invite");
+        if (data.error === "upgrade_required") {
+          setShowUpgrade(true);
+          return;
+        }
+        toast.error(data.message || data.error || "Failed to create invite");
         return;
       }
       setGeneratedUrl(data.invite.inviteUrl);
@@ -249,6 +255,11 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
           )}
         </div>
       </div>
+      <UpgradeModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="members"
+      />
     </div>
   );
 }

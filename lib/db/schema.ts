@@ -8,6 +8,7 @@ import {
   primaryKey,
   boolean,
   index,
+  uniqueIndex,
   pgEnum,
 } from "drizzle-orm/pg-core";
 
@@ -376,6 +377,7 @@ export const githubInstallations = pgTable(
   (table) => [
     index("github_installations_org_id_idx").on(table.orgId),
     index("github_installations_installation_id_idx").on(table.installationId),
+    uniqueIndex("github_installations_org_installation_uniq").on(table.orgId, table.installationId),
   ]
 );
 
@@ -416,5 +418,6 @@ export const cloudRepos = pgTable(
     index("cloud_repos_org_id_idx").on(table.orgId),
     index("cloud_repos_installation_id_idx").on(table.installationId),
     index("cloud_repos_full_name_idx").on(table.fullName),
+    uniqueIndex("cloud_repos_org_full_name_uniq").on(table.orgId, table.fullName),
   ]
 );

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
@@ -16,10 +17,10 @@ export default function Navbar() {
   const lastDirectionChangeY = useRef(0);
   const lastDirection = useRef<"up" | "down">("up");
   const prevScrollY = useRef(0);
-
   useEffect(() => {
     prevScrollY.current = window.scrollY;
     lastDirectionChangeY.current = window.scrollY;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- init scroll position on mount
   }, []);
 
   useMotionValueEvent(scrollY, "change", (current) => {

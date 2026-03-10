@@ -38,13 +38,13 @@ const plans: Plan[] = [
   },
   {
     name: "Pro",
-    price: "$12",
+    price: "$14.99",
     period: "/ user / mo",
     icon: <Zap className="h-4 w-4" />,
     rows: [
       { label: "Hosting", value: "Cloud only" },
       { label: "Repos", value: "15" },
-      { label: "Searches", value: "Unlimited" },
+      { label: "Searches", value: "1,000/day" },
       { label: "Team", value: "5 users" },
       { label: "Setup", value: "API key only" },
     ],
@@ -56,14 +56,14 @@ const plans: Plan[] = [
   },
   {
     name: "Max",
-    price: "$30",
+    price: "$29.99",
     period: "/ user / mo",
     icon: <Rocket className="h-4 w-4" />,
     rows: [
       { label: "Hosting", value: "Cloud + Self-host" },
       { label: "Repos", value: "Unlimited" },
-      { label: "Searches", value: "Unlimited" },
-      { label: "Team", value: "25 users" },
+      { label: "Searches", value: "10,000/day" },
+      { label: "Team", value: "10 users" },
       { label: "Setup", value: "API key or Docker" },
     ],
     features: ["Everything in Pro", "Private cloud", "SLA"],

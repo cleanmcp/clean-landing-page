@@ -58,6 +58,7 @@ interface EngineStatus {
 
 interface OrgInfo {
   slug: string;
+  tier: string;
   licenseKey: string | null;
 }
 
@@ -117,8 +118,8 @@ export default function KeysPage() {
   // Org info state
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
 
-  // Hosting mode
-  const [hostingMode, setHostingMode] = useState<string>("cloud");
+  // Org tier (enterprise unlocks self-hosted sections)
+  const [orgTier, setOrgTier] = useState<string>("free");
 
   // License reveal state
   const [licenseRevealed, setLicenseRevealed] = useState(false);
@@ -162,9 +163,10 @@ export default function KeysPage() {
         const data = await res.json();
         setOrgInfo({
           slug: data.org.slug,
+          tier: data.org.tier ?? "free",
           licenseKey: data.org.licenseKey ?? null,
         });
-        setHostingMode(data.org.hostingMode ?? "cloud");
+        setOrgTier(data.org.tier ?? "free");
       }
     } catch {
       // silently fail
@@ -393,8 +395,8 @@ export default function KeysPage() {
         </div>
       </div>
 
-      {/* Self-hosted only: Engine Connection + Org Tokens + License */}
-      {hostingMode !== "cloud" && (
+      {/* Enterprise only: Engine Connection + Org Tokens + License */}
+      {orgTier === "enterprise" && (
       <>
       {/* Divider */}
       <div className="border-t border-[var(--cream-dark)]" />

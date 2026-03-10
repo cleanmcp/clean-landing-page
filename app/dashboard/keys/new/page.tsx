@@ -30,33 +30,71 @@ const EXPIRATION_OPTIONS = [
   { id: "1y", label: "1 year" },
 ];
 
-type ConfigTab = "claude" | "cursor";
+type ConfigTab = "claude-code" | "cursor" | "windsurf" | "gemini" | "cline" | "continue" | "claude-desktop" | "codex";
 
-function getMcpConfig(tab: ConfigTab, key: string, slug: string | null) {
+const CONFIG_TABS: { id: ConfigTab; label: string; file: string }[] = [
+  { id: "claude-code", label: "Claude Code", file: ".mcp.json (project root)" },
+  { id: "cursor", label: "Cursor", file: "~/.cursor/mcp.json" },
+  { id: "windsurf", label: "Windsurf", file: "~/.codeium/windsurf/mcp_config.json" },
+  { id: "gemini", label: "Gemini CLI", file: "~/.gemini/settings.json" },
+  { id: "cline", label: "Cline", file: "VS Code MCP Settings" },
+  { id: "continue", label: "Continue", file: "~/.continue/config.json" },
+  { id: "claude-desktop", label: "Claude Desktop", file: "claude_desktop_config.json" },
+  { id: "codex", label: "Codex", file: "~/.codex/config.toml" },
+];
+
+const SSE_URL = "https://api.tryclean.ai/mcp/sse";
+
+function getMcpConfig(tab: ConfigTab, key: string, slug: string | null): string {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${key}`,
   };
   if (slug) headers["X-Clean-Slug"] = slug;
 
-  if (tab === "claude") {
-    return {
-      mcpServers: {
-        clean: {
-          type: "sse",
-          url: "https://api.tryclean.ai/mcp/sse",
-          headers,
+  switch (tab) {
+    case "claude-code":
+      return JSON.stringify({ mcpServers: { clean: { type: "sse", url: SSE_URL, headers } } }, null, 2);
+
+    case "cursor":
+      return JSON.stringify({ mcpServers: { clean: { url: SSE_URL, headers } } }, null, 2);
+
+    case "windsurf":
+      return JSON.stringify({ mcpServers: { clean: { serverUrl: SSE_URL, headers } } }, null, 2);
+
+    case "gemini":
+      return JSON.stringify({ mcpServers: { clean: { url: SSE_URL, headers } } }, null, 2);
+
+    case "cline":
+      return JSON.stringify({ mcpServers: { clean: { url: SSE_URL, headers, disabled: false } } }, null, 2);
+
+    case "continue":
+      return JSON.stringify({ mcpServers: { clean: { type: "sse", url: SSE_URL, headers } } }, null, 2);
+
+    case "claude-desktop": {
+      const headerArgs = [`--header`, `Authorization:Bearer ${key}`];
+      if (slug) headerArgs.push(`--header`, `X-Clean-Slug:${slug}`);
+      return JSON.stringify({
+        mcpServers: {
+          clean: {
+            command: "npx",
+            args: ["-y", "mcp-remote", SSE_URL, ...headerArgs],
+          },
         },
-      },
-    };
+      }, null, 2);
+    }
+
+    case "codex": {
+      const lines = [
+        `[mcp_servers.clean]`,
+        `command = "npx"`,
+        `args = ["-y", "mcp-remote", ${JSON.stringify(SSE_URL)}, "--header", "Authorization:Bearer ${key}"${slug ? `, "--header", "X-Clean-Slug:${slug}"` : ""}]`,
+      ];
+      return lines.join("\n");
+    }
+
+    default:
+      return JSON.stringify({ mcpServers: { clean: { type: "sse", url: SSE_URL, headers } } }, null, 2);
   }
-  return {
-    mcpServers: {
-      clean: {
-        url: "https://api.tryclean.ai/mcp/sse",
-        headers,
-      },
-    },
-  };
 }
 
 export default function NewApiKeyPage() {
@@ -67,7 +105,7 @@ export default function NewApiKeyPage() {
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedConfig, setCopiedConfig] = useState(false);
-  const [configTab, setConfigTab] = useState<ConfigTab>("claude");
+  const [configTab, setConfigTab] = useState<ConfigTab>("claude-code");
   const [expiration, setExpiration] = useState<string>("never");
   const [error, setError] = useState<string | null>(null);
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
@@ -147,7 +185,7 @@ export default function NewApiKeyPage() {
     if (!generatedKey) return;
     try {
       const config = getMcpConfig(configTab, generatedKey, orgSlug);
-      await navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+      await navigator.clipboard.writeText(config);
       setCopiedConfig(true);
       setTimeout(() => setCopiedConfig(false), 2000);
     } catch {
@@ -162,6 +200,7 @@ export default function NewApiKeyPage() {
   // ── Success screen (replaces the form after key is created) ──
   if (generatedKey) {
     const config = getMcpConfig(configTab, generatedKey, orgSlug);
+    const activeTab = CONFIG_TABS.find((t) => t.id === configTab) ?? CONFIG_TABS[0];
 
     return (
       <div className="max-w-2xl space-y-6">
@@ -219,19 +258,19 @@ export default function NewApiKeyPage() {
             <span className="text-sm font-semibold text-[var(--ink)]">MCP Configuration</span>
           </div>
 
-          {/* Tabs */}
-          <div className="flex border-b border-[var(--cream-dark)]">
-            {(["claude", "cursor"] as const).map((tab) => (
+          {/* Agent tabs — scrollable row */}
+          <div className="flex overflow-x-auto border-b border-[var(--cream-dark)]">
+            {CONFIG_TABS.map((tab) => (
               <button
-                key={tab}
-                onClick={() => { setConfigTab(tab); setCopiedConfig(false); }}
-                className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
-                  configTab === tab
+                key={tab.id}
+                onClick={() => { setConfigTab(tab.id); setCopiedConfig(false); }}
+                className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  configTab === tab.id
                     ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
                     : "text-[var(--ink-muted)] hover:text-[var(--ink)]"
                 }`}
               >
-                {tab === "claude" ? "Claude Code" : "Cursor"}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -239,13 +278,14 @@ export default function NewApiKeyPage() {
           {/* Config content */}
           <div className="p-5">
             <p className="mb-3 text-xs text-[var(--ink-muted)]">
-              {configTab === "claude"
-                ? "Add this to your Claude Code MCP settings:"
-                : "Add this to ~/.cursor/mcp.json:"}
+              Add to <code className="rounded bg-[var(--cream)] px-1.5 py-0.5 font-mono text-[11px]">{activeTab.file}</code>
+              {configTab === "claude-desktop" || configTab === "codex" ? (
+                <span className="ml-1 text-amber-600">(requires npx / Node.js installed)</span>
+              ) : null}
             </p>
             <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)]">
               <pre className="overflow-x-auto bg-[var(--cream)] p-4 font-mono text-[12px] leading-relaxed text-[var(--ink)]">
-                {JSON.stringify(config, null, 2)}
+                {config}
               </pre>
             </div>
             <button

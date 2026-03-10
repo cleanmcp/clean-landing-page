@@ -12,9 +12,18 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get org info
+    // Get org info (explicit columns — avoid loading secrets into memory)
     const [org] = await db
-      .select()
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        slug: organizations.slug,
+        tier: organizations.tier,
+        hostingMode: organizations.hostingMode,
+        licenseKey: organizations.licenseKey,
+        licenseRevoked: organizations.licenseRevoked,
+        createdAt: organizations.createdAt,
+      })
       .from(organizations)
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);
@@ -56,7 +65,7 @@ export async function GET() {
         ...(currentMember?.role === "OWNER" ? { licenseKey: org.licenseKey } : {}),
         licenseRevoked: org.licenseRevoked ?? false,
         tier: org.tier,
-        hostingMode: org.hostingMode ?? "self-hosted",
+        hostingMode: org.hostingMode ?? "cloud",
         createdAt: org.createdAt.toISOString(),
       },
       memberCount: members.length,

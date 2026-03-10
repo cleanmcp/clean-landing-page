@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, XCircle, Clock, Loader2, Mail, Lock } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Loader2, Mail, ShieldX } from "lucide-react";
 
 type WaitlistEntry = {
   id: string;
@@ -14,37 +14,23 @@ type WaitlistEntry = {
 };
 
 export default function AdminPage() {
-  const [secret, setSecret] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "accepted" | "rejected">("all");
 
-  // Check if secret is stored in sessionStorage
   useEffect(() => {
-    const stored = sessionStorage.getItem("admin_secret");
-    if (stored) {
-      setSecret(stored);
-      setAuthenticated(true);
-    }
+    fetchEntries();
   }, []);
-
-  useEffect(() => {
-    if (authenticated) fetchEntries();
-  }, [authenticated]);
 
   async function fetchEntries() {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/waitlist", {
-        headers: { "x-admin-secret": secret || sessionStorage.getItem("admin_secret") || "" },
-      });
+      const res = await fetch("/api/admin/waitlist");
       if (res.status === 403) {
-        setAuthenticated(false);
-        sessionStorage.removeItem("admin_secret");
-        setError("Wrong password");
+        setForbidden(true);
         setLoading(false);
         return;
       }
@@ -59,22 +45,12 @@ export default function AdminPage() {
     }
   }
 
-  function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    if (!secret.trim()) return;
-    sessionStorage.setItem("admin_secret", secret.trim());
-    setAuthenticated(true);
-  }
-
   async function handleAction(id: string, action: "accept" | "reject") {
     setActionLoading(id);
     try {
       const res = await fetch(`/api/admin/waitlist/${id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-secret": sessionStorage.getItem("admin_secret") || "",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
       if (!res.ok) throw new Error("Action failed");
@@ -86,36 +62,17 @@ export default function AdminPage() {
     }
   }
 
-  // Login screen
-  if (!authenticated) {
+  if (forbidden) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
-        <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4 px-6">
-          <div className="flex items-center justify-center gap-2 text-white/60">
-            <Lock className="h-5 w-5" />
-            <span className="text-sm font-medium tracking-wide uppercase">Admin</span>
-          </div>
-          <input
-            type="password"
-            value={secret}
-            onChange={(e) => { setSecret(e.target.value); setError(""); }}
-            placeholder="Password"
-            autoFocus
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/25"
-          />
-          {error && <p className="text-center text-xs text-red-400">{error}</p>}
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-white py-3 text-sm font-medium text-black transition-colors hover:bg-white/90"
-          >
-            Enter
-          </button>
-        </form>
+        <div className="text-center">
+          <ShieldX className="mx-auto h-8 w-8 text-red-400" />
+          <p className="mt-3 text-sm text-white/50">Access denied</p>
+        </div>
       </div>
     );
   }
 
-  // Loading
   if (loading && entries.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
@@ -149,6 +106,8 @@ export default function AdminPage() {
             Refresh
           </button>
         </div>
+
+        {error && <p className="mb-4 text-center text-xs text-red-400">{error}</p>}
 
         {/* Filter tabs */}
         <div className="mb-6 flex gap-2">

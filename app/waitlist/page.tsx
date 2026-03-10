@@ -1,11 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function WaitlistPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[var(--cream)]"><div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" /></div>}>
+      <WaitlistContent />
+    </Suspense>
+  );
+}
+
+function WaitlistContent() {
+  const searchParams = useSearchParams();
+  const notApproved = searchParams.get("not_approved") === "1";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -100,7 +111,9 @@ export default function WaitlistPage() {
                 Join the waitlist
               </h1>
               <p className="text-[var(--ink-light)]">
-                Get early access to Clean and start saving tokens across all your AI agents.
+                {notApproved
+                  ? "You're not on the approved list yet. Join below and we'll let you know when you're in."
+                  : "Get early access to Clean and start saving tokens across all your AI agents."}
               </p>
             </div>
 

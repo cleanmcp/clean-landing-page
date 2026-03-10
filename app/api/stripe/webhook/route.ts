@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import {
   organizations,
@@ -33,7 +33,7 @@ if (process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID) {
   PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID] = { plan: "pro", tier: "pro", seatLimit: 5 };
 }
 if (process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID) {
-  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID] = { plan: "max", tier: "max", seatLimit: 25 };
+  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID] = { plan: "max", tier: "max", seatLimit: 10 };
 }
 
 function getPlanFromPriceId(priceId: string): PlanInfo {
@@ -326,7 +326,7 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    event = getStripe().webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
     console.error("[webhook] Signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });

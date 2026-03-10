@@ -1,19 +1,31 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 const FROM_EMAIL = "Clean <hello@tryclean.ai>";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export async function sendWaitlistNotification(name: string, email: string) {
   try {
-    await resend.emails.send({
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: "hello@tryclean.ai",
-      subject: `New waitlist signup: ${name}`,
+      subject: `New waitlist signup: ${safeName}`,
       html: `
         <h2>New Waitlist Signup</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Name:</strong> ${safeName}</p>
+        <p><strong>Email:</strong> ${safeEmail}</p>
         <p><strong>Time:</strong> ${new Date().toISOString()}</p>
       `,
     });
@@ -24,15 +36,16 @@ export async function sendWaitlistNotification(name: string, email: string) {
 
 export async function sendAcceptanceEmail(name: string, email: string) {
   try {
+    const safeName = escapeHtml(name);
     const signUpUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://tryclean.ai"}/sign-up`;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: "You're in! Welcome to Clean",
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
-          <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 16px;">Welcome to Clean, ${name}!</h1>
+          <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 16px;">Welcome to Clean, ${safeName}!</h1>
           <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
             Your waitlist request has been approved. You can now create your account and start using Clean to give your AI agents semantic code search.
           </p>

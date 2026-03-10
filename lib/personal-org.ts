@@ -20,7 +20,9 @@ export async function ensurePersonalOrg(
 
   if (existing.length > 0) return existing[0].orgId;
 
-  const slug = `personal-${userId.slice(0, 8)}`;
+  // Clerk user IDs contain underscores (e.g. user_2abc...) which are invalid
+  // in slugs (gateway only allows lowercase alphanumeric + hyphens).
+  const slug = `personal-${userId.replace(/[^a-z0-9]/g, "").slice(0, 12)}`;
   const orgName = userName ? `${userName}'s Org` : "Personal";
 
   // Check if an org with this slug already exists (orphaned from a previous attempt)
@@ -37,7 +39,7 @@ export async function ensurePersonalOrg(
   } else {
     const [org] = await db
       .insert(organizations)
-      .values({ name: orgName, slug })
+      .values({ name: orgName, slug, hostingMode: "cloud" })
       .returning({ id: organizations.id });
     orgId = org.id;
   }

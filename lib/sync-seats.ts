@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { orgMembers, organizations } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 /**
  * Sync the Stripe subscription seat quantity with the actual member count.
@@ -27,12 +27,12 @@ export async function syncSeatCount(orgId: string): Promise<void> {
   if (!org?.stripeSubscriptionId) return;
 
   try {
-    const sub = await stripe.subscriptions.retrieve(org.stripeSubscriptionId);
+    const sub = await getStripe().subscriptions.retrieve(org.stripeSubscriptionId);
     const item = sub.items.data[0];
     if (!item) return;
 
     if (item.quantity !== seats) {
-      await stripe.subscriptionItems.update(item.id, { quantity: seats });
+      await getStripe().subscriptionItems.update(item.id, { quantity: seats });
     }
   } catch (err) {
     console.error(`[sync-seats] Failed to sync seats for org ${orgId}:`, err);

@@ -1,14 +1,18 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { organizations, orgMembers } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
-import { stripe } from "@/lib/stripe";
+import { organizations } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { getStripe } from "@/lib/stripe";
 import { generateLicenseKey } from "@/lib/license";
+import { getAuthContext } from "@/lib/auth";
 
 // Called after Stripe checkout redirect — verifies payment and provisions license
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await getAuthContext();
+  if (!ctx) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (ctx.role !== "OWNER" && ctx.role !== "ADMIN") {
+    return Response.json({ error: "Only owners and admins can provision licenses" }, { status: 403 });
+  }
 
   const body = await req.json();
   const { sessionId } = body;
@@ -17,19 +21,7 @@ export async function POST(req: Request) {
   }
   const hostingMode: "cloud" | "self-hosted" = body.hostingMode === "self-hosted" ? "self-hosted" : "cloud";
 
-  // Get user's org
-  const membership = await db
-    .select({ orgId: orgMembers.orgId })
-    .from(orgMembers)
-    .where(eq(orgMembers.userId, userId))
-    .orderBy(desc(orgMembers.joinedAt))
-    .limit(1);
-
-  if (membership.length === 0) {
-    return Response.json({ error: "No organization found" }, { status: 400 });
-  }
-
-  const orgId = membership[0].orgId;
+  const orgId = ctx.orgId;
 
   // Check if already has a valid license
   const [org] = await db
@@ -42,7 +34,7 @@ export async function POST(req: Request) {
   }
 
   // Verify the Stripe checkout session
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
   if (session.payment_status !== "paid") {
     return Response.json({ error: "Payment not completed" }, { status: 400 });
@@ -57,11 +49,11 @@ export async function POST(req: Request) {
   let tier = session.metadata?.tier || "pro";
   if (session.subscription) {
     try {
-      const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+      const sub = await getStripe().subscriptions.retrieve(session.subscription as string);
       const priceId = sub.items.data[0]?.price?.id;
       if (priceId) {
-        const price = await stripe.prices.retrieve(priceId);
-        const product = await stripe.products.retrieve(price.product as string);
+        const price = await getStripe().prices.retrieve(priceId);
+        const product = await getStripe().products.retrieve(price.product as string);
         if (product.metadata?.tier) tier = product.metadata.tier;
       }
     } catch {

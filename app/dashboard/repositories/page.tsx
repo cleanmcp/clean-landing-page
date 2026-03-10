@@ -92,20 +92,20 @@ const POLL_ACTIVE = 3000;
 const POLL_IDLE = 30000;
 
 export default function ReposPage() {
-  const [hostingMode, setHostingMode] = useState<string | null>(null);
-  const [modeLoading, setModeLoading] = useState(true);
+  const [tier, setTier] = useState<string | null>(null);
+  const [tierLoading, setTierLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/org")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        setHostingMode(data?.org?.hostingMode ?? "cloud");
+        setTier(data?.org?.tier ?? "free");
       })
-      .catch(() => setHostingMode("cloud"))
-      .finally(() => setModeLoading(false));
+      .catch(() => setTier("free"))
+      .finally(() => setTierLoading(false));
   }, []);
 
-  if (modeLoading) {
+  if (tierLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-[var(--ink-muted)]" />
@@ -113,11 +113,12 @@ export default function ReposPage() {
     );
   }
 
-  if (hostingMode === "cloud") {
-    return <CloudReposPage />;
+  // Enterprise orgs may use a self-hosted engine; everyone else uses cloud.
+  if (tier === "enterprise") {
+    return <SelfHostedReposPage />;
   }
 
-  return <SelfHostedReposPage />;
+  return <CloudReposPage />;
 }
 
 function SelfHostedReposPage() {
