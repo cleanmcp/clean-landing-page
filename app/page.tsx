@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import AgentMarquee from "@/components/AgentMarquee";
@@ -561,9 +562,9 @@ export default function Home() {
             Clean
           </span>
           <div className="flex gap-6 text-sm text-[var(--ink-light)]">
-            <a href="#" className="hover:text-[var(--ink)]">
+            <Link href="/documentation" className="hover:text-[var(--ink)]">
               Documentation
-            </a>
+            </Link>
             <a href="#" className="hover:text-[var(--ink)]">
               GitHub
             </a>

@@ -2,10 +2,11 @@
 
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 const navItems = [
-  { label: "Pricing", href: "pricing-plan" },
-  { label: "Docs", href: "#docs" },
+  { label: "Pricing", href: "/pricing-plan" },
+  { label: "Docs", href: "/documentation" },
   { label: "Resources", href: "#resources" },
 ];
 
@@ -19,7 +20,6 @@ export default function Navbar() {
   useEffect(() => {
     prevScrollY.current = window.scrollY;
     lastDirectionChangeY.current = window.scrollY;
-    if (window.scrollY > 80) setCondensed(true);
   }, []);
 
   useMotionValueEvent(scrollY, "change", (current) => {
@@ -78,7 +78,7 @@ export default function Navbar() {
         style={{ background: "var(--cream)" }}
       >
         {/* Logo */}
-        <a href="/" className="group flex items-center gap-2">
+        <Link href="/" className="group flex items-center gap-2">
           <motion.span
             className="font-normal tracking-tight transition-colors duration-300 group-hover:text-[var(--accent)]"
             style={{ fontFamily: "var(--font-display)" }}
@@ -88,7 +88,7 @@ export default function Navbar() {
           >
             Clean
           </motion.span>
-        </a>
+        </Link>
 
         {/* Nav Links — absolutely centered */}
         <motion.div
@@ -101,21 +101,31 @@ export default function Navbar() {
           style={{ pointerEvents: condensed ? "none" : "auto" }}
         >
           {navItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="group relative text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)]"
-            >
-              {item.label}
-              <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--accent)] transition-all duration-300 group-hover:w-full" />
-            </a>
+            item.href.startsWith("#") ? (
+              <a
+                key={item.href}
+                href={item.href}
+                className="group relative text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)]"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--accent)] transition-all duration-300 group-hover:w-full" />
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group relative text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)]"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--accent)] transition-all duration-300 group-hover:w-full" />
+              </Link>
+            )
           ))}
         </motion.div>
 
         {/* CTA */}
         <div className="flex items-center gap-4">
-          <motion.a
-            href="/sign-in"
+          <motion.div
             className="hidden text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)] sm:block"
             initial={false}
             animate={{
@@ -126,14 +136,14 @@ export default function Navbar() {
             transition={{ ...spring, opacity: { duration: 0.2 } }}
             style={{ overflow: "hidden", whiteSpace: "nowrap" }}
           >
-            Sign In
-          </motion.a>
-          <a
+            <Link href="/sign-in">Sign In</Link>
+          </motion.div>
+          <Link
             href="/waitlist"
             className="btn-primary rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
           >
             Join Waitlist
-          </a>
+          </Link>
         </div>
       </motion.nav>
     </motion.div>

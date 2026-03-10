@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { Toaster } from "sonner";
@@ -13,6 +13,8 @@ import {
   Key,
   CreditCard,
   LogOut,
+  Settings,
+  ChevronDown,
 } from "lucide-react";
 
 const navItems = [
@@ -30,8 +32,20 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { signOut, openUserProfile } = useClerk();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -58,28 +72,50 @@ export default function ClientLayout({
         >
           Clean
         </h1>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-white/80">
-            {user.primaryEmailAddress?.emailAddress ?? user.fullName}
-          </span>
-          {user.imageUrl ? (
-            <img
-              src={user.imageUrl}
-              alt={user.fullName ?? "User"}
-              className="h-9 w-9 rounded-full border-2 border-white/20 object-cover"
-            />
-          ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-medium text-white">
-              {(user.fullName ?? user.primaryEmailAddress?.emailAddress ?? "U").charAt(0).toUpperCase()}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex items-center gap-2 rounded-full px-3 py-1 transition-colors duration-200 hover:bg-white/10"
+          >
+            <span className="text-sm text-white/80">
+              {user.primaryEmailAddress?.emailAddress ?? user.fullName}
+            </span>
+            {user.imageUrl ? (
+              <img
+                src={user.imageUrl}
+                alt={user.fullName ?? "User"}
+                className="h-9 w-9 rounded-full border-2 border-white/20 object-cover"
+              />
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-medium text-white">
+                {(user.fullName ?? user.primaryEmailAddress?.emailAddress ?? "U").charAt(0).toUpperCase()}
+              </div>
+            )}
+            <ChevronDown className={`h-4 w-4 text-white/60 transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-[var(--cream-dark)] bg-[var(--cream)] shadow-lg">
+              <div className="border-b border-[var(--cream-dark)] px-4 py-3">
+                <p className="text-xs font-medium text-[var(--ink)]">{user.fullName ?? "Account"}</p>
+                <p className="truncate text-xs text-[var(--ink-light)]">{user.primaryEmailAddress?.emailAddress}</p>
+              </div>
+              <button
+                onClick={() => { setMenuOpen(false); openUserProfile(); }}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </button>
+              <button
+                onClick={() => signOut({ redirectUrl: "/" })}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </button>
             </div>
           )}
-          <button
-            onClick={() => signOut({ redirectUrl: "/" })}
-            className="ml-1 flex h-9 w-9 items-center justify-center rounded-full text-white/60 transition-colors duration-200 hover:bg-white/10 hover:text-white"
-            title="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
         </div>
       </header>
 
