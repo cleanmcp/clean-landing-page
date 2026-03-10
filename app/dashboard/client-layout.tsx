@@ -58,10 +58,7 @@ export default function ClientLayout({
   useEffect(() => {
     if (!isLoaded || !user) return;
     // Don't check if we're already on the onboarding sub-page
-    if (pathname.startsWith("/dashboard/onboarding")) {
-      setOnboardingChecked(true);
-      return;
-    }
+    if (pathname.startsWith("/dashboard/onboarding")) return;
 
     fetch("/api/onboarding")
       .then((res) => (res.ok ? res.json() : null))
@@ -75,7 +72,7 @@ export default function ClientLayout({
       .catch(() => setOnboardingChecked(true));
   }, [isLoaded, user, pathname, router]);
 
-  if (!isLoaded || !user || !onboardingChecked) {
+  if (!isLoaded || !user || (!onboardingChecked && !pathname.startsWith("/dashboard/onboarding"))) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--cream)]">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" />

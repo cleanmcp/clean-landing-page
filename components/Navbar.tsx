@@ -19,7 +19,6 @@ export default function Navbar() {
   useEffect(() => {
     prevScrollY.current = window.scrollY;
     lastDirectionChangeY.current = window.scrollY;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- init scroll position on mount
   }, []);
 
   useMotionValueEvent(scrollY, "change", (current) => {

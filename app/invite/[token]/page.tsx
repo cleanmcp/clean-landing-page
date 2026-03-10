@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { Loader2, CheckCircle2, XCircle, Users } from "lucide-react";
@@ -12,19 +12,9 @@ export default function InvitePage() {
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
 
-  const [status, setStatus] = useState<InviteStatus>("loading");
+  const [status, setStatus] = useState<InviteStatus>("ready");
   const [orgName, setOrgName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) {
-      setStatus("ready");
-      return;
-    }
-    // Auto-check if invite is valid once signed in
-    setStatus("ready");
-  }, [isLoaded, isSignedIn]);
 
   async function handleAccept() {
     setStatus("accepting");
