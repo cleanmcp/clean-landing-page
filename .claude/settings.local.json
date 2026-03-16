@@ -5,7 +5,19 @@
       "mcp__Neon__list_projects",
       "mcp__Neon__get_database_tables",
       "mcp__Neon__run_sql",
-      "mcp__Neon__list_shared_projects"
+      "mcp__Neon__list_shared_projects",
+      "mcp__plugin_figma_figma__get_metadata",
+      "mcp__plugin_figma_figma__get_screenshot",
+      "mcp__plugin_figma_figma__whoami",
+      "mcp__plugin_figma_figma__get_design_context",
+      "Bash(curl:*)",
+      "WebFetch(domain:21st.dev)",
+      "Bash(npm ls:*)",
+      "WebFetch(domain:api.fontsource.org)",
+      "WebFetch(domain:api.fontshare.com)",
+      "Bash(cd:*)",
+      "Bash(xxd:*)",
+      "Bash(cp:*)"
     ]
   }
 }
