@@ -186,10 +186,16 @@ html {
 
 /* Stat card */
 .stat-card {
-  border-radius: 36px;
+  border-radius: 20px;
   overflow: hidden;
   position: relative;
   padding: 17px;
+}
+
+@media (min-width: 640px) {
+  .stat-card {
+    border-radius: 36px;
+  }
 }
 
 /* Number emphasis animation */

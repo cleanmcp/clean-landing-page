@@ -56,6 +56,7 @@ function BtnJoinWaitlist({ className = "" }: { className?: string }) {
 /* ───── Sticky Glass Navbar ───── */
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -64,54 +65,84 @@ function Navbar() {
   }, []);
 
   return (
-    <motion.nav
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-500"
-      style={{
-        padding: scrolled ? "12px 48px" : "30px 67px 30px 67px",
-      }}
-      initial={false}
-    >
-      {/* Glass background — fades in on scroll */}
-      <motion.div
-        className="absolute inset-0 rounded-b-[24px] border-b border-white/20 pointer-events-none"
-        style={{
-          backdropFilter: scrolled ? "blur(24px) saturate(1.6)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(24px) saturate(1.6)" : "none",
-          background: scrolled
-            ? "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.25) 100%)"
-            : "transparent",
-          boxShadow: scrolled
-            ? "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.08)"
-            : "none",
-          opacity: scrolled ? 1 : 0,
-          transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-        }}
-      />
+    <>
+      <motion.nav
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-500 px-4 py-3 sm:px-8 sm:py-4 lg:px-[67px] lg:py-[30px]"
+        initial={false}
+        animate={scrolled ? {
+          paddingLeft: 48,
+          paddingRight: 48,
+          paddingTop: 12,
+          paddingBottom: 12,
+        } : undefined}
+      >
+        {/* Glass background — fades in on scroll */}
+        <motion.div
+          className="absolute inset-0 rounded-b-[24px] border-b border-white/20 pointer-events-none"
+          style={{
+            backdropFilter: scrolled ? "blur(24px) saturate(1.6)" : "none",
+            WebkitBackdropFilter: scrolled ? "blur(24px) saturate(1.6)" : "none",
+            background: scrolled
+              ? "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.25) 100%)"
+              : "transparent",
+            boxShadow: scrolled
+              ? "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.08)"
+              : "none",
+            opacity: scrolled ? 1 : 0,
+            transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
 
-      {/* Left — links */}
-      <div className="relative z-10 flex items-center gap-6 text-white text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-        <Link href="/pricing-plan" className="hover:opacity-80 transition-opacity">Pricing</Link>
-        <Link href="/documentation" className="hover:opacity-80 transition-opacity">Docs</Link>
-        <Link href="/resources" className="hover:opacity-80 transition-opacity">Resources</Link>
-      </div>
+        {/* Left — links (hidden on mobile) */}
+        <div className="relative z-10 hidden md:flex items-center gap-6 text-white text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+          <Link href="/pricing-plan" className="hover:opacity-80 transition-opacity">Pricing</Link>
+          <Link href="https://docs.tryclean.ai" className="hover:opacity-80 transition-opacity">Docs</Link>
+          <Link href="/resources" className="hover:opacity-80 transition-opacity">Resources</Link>
+        </div>
 
-      {/* Center — logo */}
-      <Link href="/" className="relative z-10 flex items-center gap-0.5">
-        <Image src={`${A}/clean-icon.svg`} alt="" width={24} height={24} />
-        <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>lean.ai</span>
-      </Link>
+        {/* Mobile hamburger */}
+        <button
+          className="relative z-10 flex md:hidden items-center justify-center w-10 h-10 text-white"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            {mobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
 
-      {/* Right — actions */}
-      <div className="relative z-10 flex items-center gap-6">
-        <Link href="/sign-in" className="text-base font-semibold text-white w-[120px] text-center hover:opacity-80 transition-opacity">Sign In</Link>
-        <a href="/waitlist" className="group relative inline-flex items-center h-[46px] rounded-full text-white text-[15px] font-semibold tracking-tight pl-5 pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
-          <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
-          <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-8 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
-            <svg className="w-3.5 h-3.5 text-[#1772e7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
-          </span>
-        </a>
-      </div>
-    </motion.nav>
+        {/* Center — logo */}
+        <Link href="/" className="relative z-10 flex items-center gap-0.5">
+          <Image src={`${A}/clean-icon.svg`} alt="" width={24} height={24} />
+          <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>lean.ai</span>
+        </Link>
+
+        {/* Right — actions */}
+        <div className="relative z-10 flex items-center gap-4 sm:gap-6">
+          <Link href="/sign-in" className="hidden sm:block text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
+          <a href="/waitlist" className="group relative inline-flex items-center h-[40px] sm:h-[46px] rounded-full text-white text-[13px] sm:text-[15px] font-semibold tracking-tight pl-4 sm:pl-5 pr-10 sm:pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
+            <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
+            <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-7 sm:size-8 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#1772e7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+            </span>
+          </a>
+        </div>
+      </motion.nav>
+
+      {/* Mobile menu overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center gap-8 md:hidden">
+          <Link href="/pricing-plan" className="text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+          <Link href="/documentation" className="text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>Docs</Link>
+          <Link href="/resources" className="text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>Resources</Link>
+          <Link href="/sign-in" className="text-xl font-semibold text-white/70" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -238,7 +269,7 @@ function FlowDiagram({ step }: { step: 1 | 2 | 3 }) {
 function TerminalMockup({ variant }: { variant: "before" | "after" }) {
   const isBefore = variant === "before";
   return (
-    <div className="bg-[rgba(255,255,255,0.2)] border border-[rgba(255,255,255,0.1)] rounded-[20px] p-2.5 overflow-hidden">
+    <div className={`rounded-[20px] p-2.5 overflow-hidden ${isBefore ? "bg-[rgba(255,255,255,0.2)] border border-[rgba(255,255,255,0.1)]" : "bg-[rgba(0,0,0,0.15)] border border-[rgba(94,177,255,0.3)] shadow-[0_0_30px_rgba(59,146,243,0.15)]"}`}>
       <div className="bg-[#0a0a0a] border border-[rgba(54,65,83,0.5)] rounded-lg w-[314px] h-[421px] overflow-hidden relative">
         {/* Header */}
         <div className="bg-[#111] border-b border-[#1e2939] h-[84px] px-3 pt-2">
@@ -296,7 +327,7 @@ function DifferencesSection() {
   const isBefore = tab === "before";
   return (
     <section className="relative bg-white py-3">
-      <div className={`mx-3 rounded-[48px] overflow-hidden relative ${isBefore ? "bg-[#1c1c1c]" : "bg-[#E8F4FC]"}`} style={{ height: 705 }}>
+      <div className={`mx-2 sm:mx-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden relative ${isBefore ? "bg-[#1c1c1c]" : "bg-[#E8F4FC]"} min-h-[550px] sm:min-h-[650px] lg:min-h-[705px]`} style={{ height: 705 }}>
         {/* Background */}
         {isBefore ? (
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full overflow-hidden pointer-events-none">
@@ -322,19 +353,19 @@ function DifferencesSection() {
         {/* Watermark text */}
         {isBefore ? (
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <span className="text-[200px] font-bold tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap bg-gradient-to-b from-white to-transparent opacity-50" style={{ fontFamily: "var(--font-jakarta)", wordSpacing: "0.75em" }}>
+            <span className="text-[80px] sm:text-[140px] lg:text-[200px] font-bold tracking-[-2px] sm:tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap bg-gradient-to-b from-white to-transparent opacity-50" style={{ fontFamily: "var(--font-jakarta)", wordSpacing: "0.75em" }}>
               before clean
             </span>
           </div>
         ) : (
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <span className="text-[200px] font-bold tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, #79c0ff 0%, rgba(121,192,255,0) 82.54%)", wordSpacing: "0.95em" }}>
+            <span className="text-[80px] sm:text-[140px] lg:text-[200px] font-bold tracking-[-2px] sm:tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, #79c0ff 0%, rgba(121,192,255,0) 82.54%)", wordSpacing: "0.95em" }}>
               after clean
             </span>
           </div>
         )}
         {/* Toggle pill */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[30px] z-20 flex items-center p-1.5 backdrop-blur-md bg-black/40 border border-white/20 rounded-full w-[360px] h-[64px]">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[30px] z-20 flex items-center p-1.5 backdrop-blur-md bg-black/40 border border-white/20 rounded-full w-[280px] sm:w-[360px] h-[52px] sm:h-[64px]">
           <div className="relative flex w-full h-full items-center">
             {/* Animated Background Highlight */}
             <motion.div
@@ -370,7 +401,7 @@ function DifferencesSection() {
             <div className="absolute -inset-4 blur-[50px] pointer-events-none" style={{
               backgroundImage: isBefore
                 ? "radial-gradient(circle, white 10%, #bce0ff 15%, #79c0ff 20%, #5eb1ff 30%, #3b92f3 45%, #2982ed 53%, #1772e7 60%)"
-                : "radial-gradient(circle, rgba(255,255,255,0.8) 10%, rgba(188,224,255,0.5) 15%, rgba(121,192,255,0.3) 20%)"
+                : "radial-gradient(circle, white 10%, #d2e9ff 15%, #aed8ff 20%, #79c0ff 30%, #5eb1ff 50%, #79c0ff 70%)"
             }} />
             <TerminalMockup variant={tab} />
           </div>
@@ -392,11 +423,19 @@ function OrbitSection() {
      Figma section = 1440×800. Icons positioned absolutely within that. */
   const iconClass = "absolute z-10 w-[80px] h-[80px] bg-white border-[8px] border-[#5eb1ff] rounded-full flex items-center justify-center -translate-x-1/2";
 
+  const agentIcons = [
+    { src: "claude-icon.svg", alt: "Claude" },
+    { src: "cursor-icon.svg", alt: "Cursor" },
+    { src: "antigravity-icon.png", alt: "ChatGPT" },
+    { src: "windsurf-icon.svg", alt: "Windsurf" },
+    { src: "openai-icon.svg", alt: "OpenAI" },
+  ];
+
   return (
-    <section ref={sectionRef} className="relative bg-black rounded-t-[48px] overflow-hidden" style={{ height: 800 }}>
+    <section ref={sectionRef} className="relative bg-black rounded-t-[24px] sm:rounded-t-[36px] lg:rounded-t-[48px] overflow-hidden sm:h-[650px] lg:h-[800px]">
       {/* Text */}
       <motion.div
-        className="absolute left-1/2 -translate-x-1/2 top-[140px] w-[1280px] text-center z-10"
+        className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-auto sm:top-[110px] lg:top-[140px] w-full max-w-[1280px] px-5 pt-12 sm:py-0 text-center z-10 mx-auto"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -405,56 +444,76 @@ function OrbitSection() {
           text="Enable your coding agents to collaborate seamlessly with a shared context."
           baseOverlayColor="rgba(255, 255, 255, 0.3)"
           activeColor="#ffffff"
-          className="text-[56px] font-semibold text-center tracking-[-1.12px] leading-[normal] max-w-[800px] mx-auto justify-center"
+          className="text-[24px] sm:text-[36px] lg:text-[56px] font-semibold text-center tracking-[-1.12px] leading-[normal] max-w-full sm:max-w-[800px] mx-auto justify-center"
           style={{ fontFamily: "var(--font-jakarta)" }}
         />
       </motion.div>
 
+      {/* ── Mobile: agent icons hub visual ── */}
+      <div className="relative sm:hidden flex flex-col items-center gap-6 pb-14 pt-10 px-5">
+        {/* Agent icons row */}
+        <div className="flex items-center justify-center gap-3">
+          {agentIcons.map((icon, i) => (
+            <motion.div
+              key={icon.alt}
+              className="w-[48px] h-[48px] bg-white border-[4px] border-[#5eb1ff] rounded-full flex items-center justify-center"
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.4 }}
+            >
+              <Image src={`${A}/${icon.src}`} alt={icon.alt} width={24} height={24} className="object-contain" />
+            </motion.div>
+          ))}
+        </div>
+        {/* Connecting lines to center */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-px h-6 bg-gradient-to-b from-[#5eb1ff] to-[#79c0ff]" />
+          <div className="w-[56px] h-[56px] rounded-full bg-[#79c0ff] border-[4px] border-[#5eb1ff] flex items-center justify-center shadow-[0_0_30px_rgba(94,177,255,0.5)]">
+            <Image src={`${A}/orbit-clean.svg`} alt="Clean" width={32} height={32} className="object-contain" />
+          </div>
+          <span className="text-xs font-semibold text-[#79c0ff] uppercase tracking-wider mt-1" style={{ fontFamily: "var(--font-jakarta)" }}>Shared Context</span>
+        </div>
+      </div>
+
+      {/* ── Desktop: orbit assembly ── */}
       {/* Radial glow behind the rings */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[236px] w-[994px] h-[564px] pointer-events-none">
+      <div className="absolute left-1/2 -translate-x-1/2 top-[236px] w-[994px] h-[564px] pointer-events-none hidden sm:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img alt="" src={`${A}/orbit-glow.svg`} className="w-full h-full" />
       </div>
 
       {/* Bottom ellipse glow */}
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[1440px] h-[223px] pointer-events-none">
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[1440px] h-[223px] pointer-events-none hidden sm:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img alt="" src={`${A}/orbit-ellipse-glow.svg`} className="w-full h-full" />
       </div>
 
-      {/* Orbit assembly — rotates 30° → 0° on scroll, pivoting from center bottom of the section */}
+      {/* Orbit assembly — tablet/desktop only */}
       <motion.div
-        className="absolute inset-0"
+        className="absolute inset-0 hidden sm:block sm:scale-[0.7] lg:scale-100 origin-bottom"
         style={{ rotate: orbitRotate, transformOrigin: "50% 100%" }}
       >
-        {/* Concentric rings — Figma: 786×690 at (318, 425) in 1440-wide section = centered at ~50% */}
         <div className="absolute left-1/2 -translate-x-1/2 w-[786px] h-[690px]" style={{ top: 425 }}>
           <Image src={`${A}/orbit-rings.svg`} alt="" fill className="object-contain" />
         </div>
 
-        {/* Agent icons — Figma top-left positions with -translate-x/y-1/2 to center on arcs */}
-        {/* Windsurf — top center, outermost arc */}
         <div className={iconClass} style={{ left: 'calc(50% - 8px)', top: 385 }}>
           <Image src={`${A}/claude-icon.svg`} alt="Windsurf" width={40} height={40} className="object-contain" />
         </div>
-        {/* Cursor — left, 3rd arc */}
         <div className={iconClass} style={{ left: 'calc(50% - 236px)', top: 455 }}>
           <Image src={`${A}/cursor-icon.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
         </div>
-        {/* ChatGPT — right, 3rd arc */}
         <div className={iconClass} style={{ left: 'calc(50% + 218px)', top: 456 }}>
           <Image src={`${A}/antigravity-icon.png`} alt="ChatGPT" width={40} height={40} className="object-contain" />
         </div>
-        {/* OpenAI — bottom left, outermost arc */}
         <div className={iconClass} style={{ left: 'calc(50% - 374px)', top: 643 }}>
           <Image src={`${A}/windsurf-icon.svg`} alt="OpenAI" width={40} height={40} className="object-contain" />
         </div>
-        {/* Codex — bottom right, outermost arc */}
         <div className={iconClass} style={{ left: 'calc(50% + 358px)', top: 643 }}>
           <Image src={`${A}/openai-icon.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
         </div>
 
-        {/* Clean App Icon — center bottom of arcs */}
         <div className="absolute left-1/2 -translate-x-1/2 z-20 w-[90px] h-[90px]" style={{ top: 641 }}>
           <Image src={`${A}/orbit-clean.svg`} alt="Clean" fill className="object-contain" />
         </div>
@@ -470,36 +529,36 @@ export default function Home() {
       <Navbar />
 
       {/* ═══════════ 1. HERO SECTION ═══════════ */}
-      <section className="relative h-[1024px] w-full bg-white overflow-hidden">
+      <section className="relative h-[600px] sm:h-[800px] lg:h-[1024px] w-full bg-white overflow-hidden">
         {/* Background image */}
-        <div className="absolute inset-3 rounded-[48px] overflow-hidden">
+        <div className="absolute inset-2 sm:inset-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden">
           <Image src={`${A}/hero-bg.png`} alt="" fill className="object-cover" priority />
           {/* 3D Glass logo */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-[420px] w-[962px] h-[950px]">
+          <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 top-[420px] w-[962px] h-[950px]">
             <Image src={`${A}/glass-logo.png`} alt="" fill className="object-cover" />
           </div>
         </div>
         {/* Navbar placeholder — actual navbar is fixed/sticky, rendered outside hero */}
-        <div className="h-[76px]" />
+        <div className="h-[60px] sm:h-[76px]" />
         {/* Hero content */}
         <motion.div
-          className="absolute left-1/2 -translate-x-1/2 top-[182px] flex flex-col items-center gap-6 w-[603px] z-10"
+          className="absolute left-1/2 -translate-x-1/2 top-[120px] sm:top-[150px] lg:top-[182px] flex flex-col items-center gap-4 sm:gap-6 w-full max-w-[603px] px-5 z-10"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
           <div className="flex flex-col items-center">
-            <p className="text-[32px] font-semibold text-white text-center tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+            <p className="text-[20px] sm:text-[26px] lg:text-[32px] font-semibold text-white text-center tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
               Stop burning <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>tokens</em>
             </p>
-            <p className="text-[64px] font-semibold text-white text-center tracking-tight leading-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+            <p className="text-[32px] sm:text-[48px] lg:text-[64px] font-semibold text-white text-center tracking-tight leading-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
               Sync context across
             </p>
             {/* Rotating large text */}
-            <div className="h-[165px] flex items-end justify-center overflow-hidden">
+            <div className="h-[80px] sm:h-[120px] lg:h-[165px] flex items-end justify-center overflow-hidden min-w-[320px] sm:min-w-[540px] lg:min-w-[750px]">
               <RotatingText
                 texts={["agents", "engineers", "codebases"]}
-                mainClassName="text-[140px] font-bold tracking-[-4px] inline-flex items-center justify-center"
+                mainClassName="text-[60px] sm:text-[100px] lg:text-[140px] font-bold tracking-[-2px] sm:tracking-[-4px] inline-flex items-center justify-center"
                 style={{ fontFamily: "var(--font-display)" }}
                 elementLevelClassName="gradient-text-hero"
                 staggerFrom="last"
@@ -514,7 +573,7 @@ export default function Home() {
             </div>
             <BtnBookDemo />
           </div>
-          <p className="text-xl font-semibold text-white text-center tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+          <p className="text-base sm:text-xl font-semibold text-white text-center tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
             Every agent synced. 50% less spend, 3x faster.
           </p>
         </motion.div>
@@ -522,13 +581,13 @@ export default function Home() {
 
       {/* ═══════════ 2. PROBLEM SECTION ═══════════ */}
       <section className="relative bg-white py-3">
-        <div className="mx-3 rounded-[48px] bg-[#1c1c1c] overflow-hidden relative" style={{ height: 705 }}>
+        <div className="mx-2 sm:mx-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] bg-[#1c1c1c] overflow-hidden relative min-h-[705px] h-auto py-16 lg:py-0 lg:h-[705px]">
           {/* Dark gradient bg */}
           <div className="absolute inset-0 opacity-50 overflow-hidden">
             <Image src={`${A}/dark-bg.png`} alt="" fill className="object-cover" />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-[1280px] flex items-center justify-between">
+          <div className="relative lg:absolute inset-0 flex items-center justify-center px-5 sm:px-10">
+            <div className="w-full max-w-[1280px] flex flex-col lg:flex-row items-center lg:justify-between gap-10 lg:gap-8">
               {/* Left text */}
               <motion.div
                 className="flex flex-col gap-6 max-w-[667px]"
@@ -538,12 +597,13 @@ export default function Home() {
                 transition={{ duration: 0.6 }}
               >
                 <SectionBadge icon="question-icon.svg" label={<>The <em style={{ fontFamily: "var(--font-display)" }}>Problem</em></>} variant="dark" />
-                <h2 className="text-5xl font-semibold text-white leading-[60px] tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white leading-[1.25] tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
                   Every agent <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>re-reads</em> your{"\n"}entire codebase. <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>Every time</em>.
                 </h2>
               </motion.div>
               {/* Right chart */}
               <motion.div
+                className="w-full max-w-[448px] lg:w-auto"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -552,7 +612,7 @@ export default function Home() {
                 <div className="relative">
                   <div className="absolute inset-0 blur-[50px] mix-blend-plus-lighter" style={{ backgroundImage: "radial-gradient(circle, white 10%, #bce0ff 15%, #79c0ff 20%, #5eb1ff 30%, #3b92f3 45%, #2982ed 53%, #1772e7 60%)" }} />
                   <div className="relative bg-white/20 border border-white/10 rounded-[20px] p-2.5 overflow-hidden">
-                    <div className="bg-[#1a1a1a] rounded-2xl w-[448px] h-[408px] p-8 overflow-hidden">
+                    <div className="bg-[#1a1a1a] rounded-2xl w-full sm:w-[448px] h-auto sm:h-[408px] p-6 sm:p-8 overflow-hidden">
                       <p className="text-[12px] text-white uppercase tracking-[0.6px] mb-6" style={{ fontFamily: "var(--font-jakarta)" }}>Avg. tokens burned per coding session</p>
                       {[
                         { label: "Claude Code", tokens: 250, pct: 100 },
@@ -596,22 +656,22 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 3. CONTEXT SECTION ═══════════ */}
-      <section className="relative bg-white px-[68px] py-[169px]" style={{ height: 705 }}>
+      <section className="relative bg-white px-5 py-20 sm:px-10 sm:py-28 lg:px-[68px] lg:py-[169px]">
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
           <div className="flex mb-4">
             <ScrollRevealText
               text="Every AI coding tool uses the same models."
               baseOverlayColor="rgba(28, 28, 28, 0.4)"
               activeColor="#1c1c1c"
-              className="text-5xl font-semibold tracking-tight leading-[60px] justify-start"
+              className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight leading-[1.25] justify-start"
               style={{ fontFamily: "var(--font-jakarta)" }}
             />
           </div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="flex -space-x-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-8">
+            <div className="flex -space-x-3 sm:-space-x-5">
               {["claude-icon.svg", "cursor-icon.svg", "antigravity-icon.png", "openai-icon.svg", "windsurf-icon.svg"].map((img, i) => (
-                <div key={i} className="w-20 h-20 rounded-full bg-white border-8 border-[#5eb1ff] flex items-center justify-center overflow-hidden">
-                  <Image src={`${A}/${img}`} alt="" width={40} height={40} className="object-contain" />
+                <div key={i} className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-white border-4 sm:border-6 lg:border-8 border-[#5eb1ff] flex items-center justify-center overflow-hidden">
+                  <Image src={`${A}/${img}`} alt="" width={40} height={40} className="object-contain w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10" />
                 </div>
               ))}
             </div>
@@ -619,7 +679,7 @@ export default function Home() {
               text="The difference is context."
               baseOverlayColor="rgba(28, 28, 28, 0.4)"
               activeColor="#1c1c1c"
-              className="text-5xl font-semibold tracking-tight m-0 justify-start"
+              className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight m-0 justify-start"
               style={{ fontFamily: "var(--font-jakarta)" }}
             />
           </div>
@@ -628,7 +688,7 @@ export default function Home() {
               text="Without shared context, each agent burns through hundreds of thousands of tokens re-exploring code that another agent already understood."
               baseOverlayColor="rgba(28, 28, 28, 0.4)"
               activeColor="#1c1c1c"
-              className="text-5xl font-semibold tracking-tight leading-[60px] max-w-[1304px] text-left justify-start"
+              className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight leading-[1.25] max-w-[1304px] text-left justify-start"
               style={{ fontFamily: "var(--font-jakarta)" }}
             />
           </div>
@@ -640,42 +700,42 @@ export default function Home() {
 
 
       {/* ═══════════ 5. SOLUTION SECTION ═══════════ */}
-      <section className="relative rounded-t-[48px] -mt-12 overflow-hidden bg-white" style={{ minHeight: 1466 }}>
+      <section className="relative rounded-t-[24px] sm:rounded-t-[36px] lg:rounded-t-[48px] -mt-12 overflow-hidden bg-white pb-12 sm:pb-0 sm:min-h-[1200px] lg:min-h-[1466px]">
         {/* Subtle light background image (rotated 180°, 50% opacity) */}
         <div className="absolute left-1/2 -translate-x-1/2 top-[-54px] w-full h-full rotate-180 opacity-50 pointer-events-none">
           <Image src={`${A}/light-gradient-bg.png`} alt="" fill className="object-fit" />
         </div>
         {/* "clean" watermark — glassy, visible but subtle */}
         <div className="absolute left-1/2 -translate-x-1/2 top-[17px] pointer-events-none select-none">
-          <span className="text-[500px] font-bold tracking-[-10px] leading-none bg-clip-text text-transparent whitespace-nowrap opacity-50" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, white 0%, rgba(255,255,255,0) 100%)" }}>clean</span>
+          <span className="text-[120px] sm:text-[300px] lg:text-[500px] font-bold tracking-[-4px] sm:tracking-[-10px] leading-none bg-clip-text text-transparent whitespace-nowrap opacity-50" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, white 0%, rgba(255,255,255,0) 100%)" }}>clean</span>
         </div>
         {/* Glassy semicircle behind the arc */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[356px] w-full h-[880px] pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[200px] sm:top-[280px] lg:top-[356px] w-full h-[880px] pointer-events-none hidden sm:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" src={`${A}/solution-arc-glass.svg`} className="w-full h-full" />
         </div>
         {/* Blue arc ring */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[449px] w-full h-[763px] pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[280px] sm:top-[360px] lg:top-[449px] w-full h-[763px] pointer-events-none hidden sm:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" src={`${A}/solution-arc-ring.svg`} className="w-full h-full" />
         </div>
         {/* Inner edge blur — backdrop-blur clipped inside the arc, softening the inner rim */}
-        <div className="absolute left-0 right-0 top-[650px] h-[808px] pointer-events-none backdrop-blur-[50px]" style={{ maskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)" }} />
+        <div className="absolute left-0 right-0 top-[650px] h-[808px] pointer-events-none backdrop-blur-[50px] hidden sm:block" style={{ maskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)" }} />
         {/* Clean app icon */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[244px] w-[157px] h-[157px] z-10">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[60px] sm:top-[200px] lg:top-[244px] w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[157px] lg:h-[157px] z-10">
           <Image src={`${A}/clean-app-icon.svg`} alt="" fill className="object-contain" />
         </div>
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center pt-[563px] w-[1280px] mx-auto gap-9">
+        <div className="relative z-10 flex flex-col items-center pt-[120px] sm:pt-[400px] lg:pt-[563px] w-full max-w-[1280px] mx-auto px-5 gap-6 sm:gap-9">
           <SectionBadge icon="ai-idea-icon.svg" label={<>The <em style={{ fontFamily: "var(--font-display)" }}>Solutions</em></>} />
-          <h2 className="text-[48px] font-semibold text-[#1c1c1c] text-center leading-[60px] w-[894px]" style={{ fontFamily: "var(--font-jakarta)" }}>
+          <h2 className="text-[24px] sm:text-[36px] lg:text-[48px] font-semibold text-[#1c1c1c] text-center leading-[1.25] w-full max-w-[894px]" style={{ fontFamily: "var(--font-jakarta)" }}>
             One{" "}
             <span className="text-[#66a6dd]">MCP server</span>
             {" "}that pre-indexes your codebase and{" "}
             <span className="text-[#66a6dd]">syncs context</span>
             {" "}across every agent your team uses
           </h2>
-          <div>
+          <div className="hidden md:block">
             <FlowDiagram step={3} />
           </div>
           <div className="flex flex-col items-center gap-1">
@@ -696,27 +756,27 @@ export default function Home() {
         ].map((s) => (
           <ScrollStackItem key={s.num}>
             <div className="bg-transparent py-3">
-              <div className="mx-3 rounded-[48px] overflow-hidden relative bg-[#f8fbff]" style={{ height: 705 }}>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-[1280px] flex items-center justify-between">
+              <div className="mx-2 sm:mx-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden relative bg-[#f8fbff] min-h-[500px] sm:min-h-[600px] lg:min-h-[705px] h-auto">
+                <div className="flex items-center justify-center py-12 lg:py-0 lg:absolute lg:inset-0 px-5 sm:px-10">
+                  <div className="w-full max-w-[1280px] flex flex-col lg:flex-row items-start lg:items-center lg:justify-between gap-8">
                     {/* Left — step content */}
-                    <div className="flex gap-12 items-stretch">
+                    <div className="flex gap-6 sm:gap-12 items-stretch">
                       {/* Step number + line */}
-                      <div className="flex flex-col items-center gap-1 py-12">
+                      <div className="flex flex-col items-center gap-1 py-6 sm:py-12">
                         <span className="text-lg font-semibold text-[#66a6dd] uppercase">{s.num}</span>
                         <div className="step-line flex-1 w-[3px] rounded-full" />
                         <span className="text-lg text-[#1c1c1c] opacity-10 uppercase">03</span>
                       </div>
                       {/* Text */}
-                      <div className="flex flex-col gap-6 justify-center py-12 max-w-[531px]">
+                      <div className="flex flex-col gap-4 sm:gap-6 justify-center py-6 sm:py-12 max-w-[531px]">
                         <span className="gradient-text-blue text-xl font-bold uppercase" style={{ fontFamily: "var(--font-display)" }}>{s.label}</span>
-                        <h3 className="text-5xl font-bold text-[#1c1c1c] leading-[60px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.heading}</h3>
-                        <p className="text-lg text-[#8b949e] tracking-tight leading-[29px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.desc}</p>
+                        <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1c1c1c] leading-[1.25] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.heading}</h3>
+                        <p className="text-base sm:text-lg text-[#8b949e] tracking-tight leading-[29px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.desc}</p>
                         <BtnTryClean />
                       </div>
                     </div>
-                    {/* Right — flow diagram */}
-                    <div>
+                    {/* Right — flow diagram (hidden on mobile) */}
+                    <div className="hidden md:block">
                       <FlowDiagram step={s.step} />
                     </div>
                   </div>
@@ -733,7 +793,7 @@ export default function Home() {
         <div className="absolute top-[-29px] left-0 right-0 h-[262px] overflow-hidden opacity-30">
           {/* Placeholder for the line graph decoration */}
         </div>
-        <div className="relative mx-auto max-w-[1280px] px-20">
+        <div className="relative mx-auto max-w-[1280px] px-5 sm:px-10 lg:px-20">
           <motion.div
             className="flex flex-col items-center gap-3 mb-9"
             initial={{ opacity: 0, y: 20 }}
@@ -746,7 +806,7 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
             {/* Card 1: Team Alignment */}
             <motion.div className="feature-card flex flex-col gap-4" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="feature-card__preview relative">
@@ -762,7 +822,7 @@ export default function Home() {
             <motion.div className="feature-card flex flex-col gap-4" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
               <div className="feature-card__preview relative flex items-center justify-center">
                 {/* Setup preview mockup */}
-                <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(121,192,255,0.5)] w-[406px] h-[140px] overflow-hidden p-4">
+                <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(121,192,255,0.5)] w-full max-w-[406px] h-[140px] overflow-hidden p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-6 h-6 rounded-md bg-[#d1d5dc]" />
                     <div><div className="w-32 h-2 rounded bg-black/20 mb-1.5" /><div className="w-24 h-2 rounded bg-black/10" /></div>
@@ -785,7 +845,7 @@ export default function Home() {
             {/* Card 3: Universal Compatibility */}
             <motion.div className="feature-card flex flex-col gap-4" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
               <div className="feature-card__preview relative flex items-center justify-center">
-                <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(121,192,255,0.5)] w-[416px] h-[140px] overflow-hidden p-4 relative">
+                <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(121,192,255,0.5)] w-full max-w-[416px] h-[140px] overflow-hidden p-4 relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent mix-blend-screen" />
                   <p className="text-xs font-semibold text-black/70 tracking-wide mb-3">Choose any agent</p>
                   <span className="absolute top-4 right-4 bg-[#09463f]/10 border border-black/10 rounded-full px-3 py-1 text-[10px] font-semibold text-[#09463f]">MCP</span>
@@ -812,7 +872,7 @@ export default function Home() {
             {/* Card 4: Synced Context */}
             <motion.div className="feature-card flex flex-col gap-4" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
               <div className="feature-card__preview relative flex items-center justify-center">
-                <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(121,192,255,0.5)] w-[419px] h-[140px] overflow-hidden p-4">
+                <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(121,192,255,0.5)] w-full max-w-[419px] h-[140px] overflow-hidden p-4">
                   <div className="flex gap-2 mb-3">
                     <span className="bg-[#aed8ff]/50 border border-white/10 rounded-full px-2.5 py-1 text-[10px] font-semibold text-[#66a6dd] uppercase tracking-wide">shared context</span>
                     <span className="bg-[#79c0ff]/10 border border-[#79c0ff]/30 rounded-full px-2.5 py-1 text-[10px] font-semibold text-[#79c0ff] uppercase tracking-wide">auth/service.ts</span>
@@ -857,33 +917,33 @@ export default function Home() {
       <DifferencesSection />
 
       {/* ═══════════ 11. IMPACT / STATS SECTION ═══════════ */}
-      <section className="relative bg-white rounded-t-[48px] overflow-hidden" style={{ height: 917 }}>
+      <section className="relative bg-white rounded-t-[24px] sm:rounded-t-[36px] lg:rounded-t-[48px] overflow-hidden h-auto min-h-[600px] sm:min-h-[800px] lg:min-h-[917px] pb-12">
         {/* Light gradient bg */}
         <div className="absolute inset-0 opacity-50 overflow-hidden" style={{ transform: "rotate(180deg)" }}>
           <Image src={`${A}/stats-bg.png`} alt="" fill className="object-cover" />
         </div>
         {/* "impact" watermark */}
-        <div className="absolute left-[50px] top-[-16px]">
-          <span className="watermark-text text-[400px] font-bold tracking-[-8px] leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>impact</span>
+        <div className="absolute left-[20px] sm:left-[50px] top-[-16px]">
+          <span className="watermark-text text-[100px] sm:text-[250px] lg:text-[400px] font-bold tracking-[-4px] sm:tracking-[-8px] leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>impact</span>
         </div>
         {/* Stat cards */}
         <motion.div
-          className="absolute left-[42px] top-[369px] right-[42px] flex gap-6 uppercase"
+          className="relative sm:absolute left-0 sm:left-[42px] top-auto sm:top-[369px] right-0 sm:right-[42px] flex flex-col sm:flex-row gap-4 sm:gap-6 uppercase px-5 sm:px-0 pt-[150px] sm:pt-0"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <div className="stat-card flex-1 bg-[#1772e7] h-[506px] text-white">
-            <span className="stat-number block text-[164px] font-bold leading-none tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>50%</span>
-            <span className="absolute bottom-[17px] left-[17px] text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>less token spend</span>
+          <div className="stat-card flex-1 bg-[#1772e7] h-[160px] sm:h-[300px] lg:h-[506px] text-white flex flex-col justify-between">
+            <span className="stat-number block text-[48px] sm:text-[100px] lg:text-[164px] font-bold leading-none tracking-[-3px] sm:tracking-[-8px] lg:tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>50%</span>
+            <span className="text-sm sm:text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>less token spend</span>
           </div>
-          <div className="stat-card flex-1 bg-[#66a6dd] h-[506px] text-white">
-            <span className="stat-number block text-[164px] font-bold leading-none tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>3x</span>
-            <span className="absolute bottom-[17px] left-[17px] text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>faster sessions</span>
+          <div className="stat-card flex-1 bg-[#66a6dd] h-[160px] sm:h-[300px] lg:h-[506px] text-white flex flex-col justify-between">
+            <span className="stat-number block text-[48px] sm:text-[100px] lg:text-[164px] font-bold leading-none tracking-[-3px] sm:tracking-[-8px] lg:tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>3x</span>
+            <span className="text-sm sm:text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>faster sessions</span>
           </div>
-          <div className="stat-card flex-1 bg-white border border-[#5eb1ff] h-[506px] text-[#1772e7]">
-            <span className="stat-number block text-[164px] font-bold leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>1</span>
-            <span className="absolute bottom-[17px] left-[17px] text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>MCP to rule them all</span>
+          <div className="stat-card flex-1 bg-white border border-[#5eb1ff] h-[160px] sm:h-[300px] lg:h-[506px] text-[#1772e7] flex flex-col justify-between">
+            <span className="stat-number block text-[48px] sm:text-[100px] lg:text-[164px] font-bold leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>1</span>
+            <span className="text-sm sm:text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>MCP to rule them all</span>
           </div>
         </motion.div>
       </section>
@@ -891,40 +951,35 @@ export default function Home() {
       {/* ═══════════ 11. CTA + 12. FOOTER ═══════════ */}
       <div className="relative flex flex-col items-start">
         {/* CTA */}
-        <section className="relative  overflow-hidden w-full z-0" style={{ height: 950, background: "linear-gradient(180deg, #000 0%, #666 100%)" }}>
+        <section className="relative overflow-hidden w-full z-0 lg:min-h-[950px]" style={{ background: "linear-gradient(180deg, #000 0%, #666 100%)" }}>
           {/* V3 dark bg layer */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2  w-full h-full pointer-events-none">
-            <div className="absolute inset-0 bg-black" />
-            {/* <div className="absolute inset-0 opacity-50 overflow-hidden">
-              <img alt="" src={`${A}/dark-bg.png`} className="absolute max-w-none" style={{ width: "169.65%", height: "226.58%", left: "-34.82%", top: "-126.58%" }} />
-            </div> */}
-          </div>
+          <div className="absolute inset-0 bg-black pointer-events-none" />
           {/* Intersect — large circular cutout shape on left */}
-          <div className="absolute pointer-events-none" style={{ left: '-51.5%', top: '2%', width: '138%', height: '210%' }}>
+          <div className="absolute pointer-events-none hidden lg:block" style={{ left: '-51.5%', top: '2%', width: '138%', height: '210%' }}>
             <img alt="" src={`${A}/cta-intersect.svg`} className="w-full h-full" style={{ transform: "rotate(90deg) scaleY(-1)" }} />
           </div>
           {/* Small ellipse glow under glass logo */}
-          <div className="absolute pointer-events-none" style={{ left: '11.2%', top: '72.8%', width: '26.3%', height: '3.6%' }}>
+          <div className="absolute pointer-events-none hidden lg:block" style={{ left: '11.2%', top: '72.8%', width: '26.3%', height: '3.6%' }}>
             <img alt="" src={`${A}/cta-ellipse-glow.svg`} className="absolute w-full h-full" style={{ transform: "scale(2.2)" }} />
           </div>
-          {/* 3D Glass logo */}
-          <div className="absolute" style={{ left: '-1.9%', top: '5.3%', width: '45.7%', height: '80.4%' }}>
+          {/* 3D Glass logo — hidden on mobile */}
+          <div className="absolute hidden lg:block" style={{ left: '-1.9%', top: '5.3%', width: '45.7%', height: '80.4%' }}>
             <Image src={`${A}/cta-glass-logo.png`} alt="" fill className="object-contain" />
           </div>
-          {/* CTA content */}
+          {/* CTA content — centered on mobile, right-half on desktop */}
           <motion.div
-            className="absolute flex flex-col gap-8 z-10" style={{ left: '50%', top: '29%', width: '48.5%' }}
+            className="relative lg:absolute flex flex-col gap-5 sm:gap-8 z-10 px-5 sm:px-10 py-14 sm:py-20 lg:py-0 items-center lg:items-start text-center lg:text-left lg:left-[50%] lg:top-[29%] lg:w-[48.5%]"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-[80px] text-white leading-none tracking-[-3.2px]" style={{ fontFamily: "var(--font-jakarta)" }}>
+            <h2 className="text-[28px] sm:text-[50px] lg:text-[80px] text-white leading-none tracking-[-1.5px] sm:tracking-[-2px] lg:tracking-[-3.2px]" style={{ fontFamily: "var(--font-jakarta)" }}>
               Ready to stop{" "}
               <em className="font-bold italic" style={{ fontFamily: "var(--font-display)", marginRight: "0.25em" }}>burning</em>
               tokens?
             </h2>
-            <p className="text-lg text-white" style={{ fontFamily: "var(--font-jakarta)" }}>Join teams saving thousands on AI agent costs every month.</p>
-            <div className="flex gap-8">
+            <p className="text-sm sm:text-lg text-white/80" style={{ fontFamily: "var(--font-jakarta)" }}>Join teams saving thousands on AI agent costs every month.</p>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center">
               <BtnBookDemo />
               <BtnJoinWaitlist />
             </div>
@@ -932,13 +987,13 @@ export default function Home() {
         </section>
 
         {/* Footer — overlaps CTA by 279px */}
-        <footer className="relative bg-white rounded-t-[72px] overflow-hidden w-full h-[279px] z-10">
+        <footer className="relative bg-white rounded-t-[36px] sm:rounded-t-[72px] overflow-hidden w-full h-auto min-h-[200px] sm:min-h-[279px] py-8 z-10">
           {/* Subtle background — flipped gradient image */}
           <div className="absolute left-1/2 -translate-x-1/2 w-[1820px] h-[731px] opacity-50 pointer-events-none" style={{ bottom: -440, transform: "translateX(-50%) rotate(180deg) scaleY(-1)" }}>
             <Image src={`${A}/footer-subtle-bg.jpg`} alt="" fill className="object-cover" />
           </div>
-          {/* "clean" gradient text — Figma radial gradient via inline SVG */}
-          <div className="absolute -translate-y-1/2 bg-clip-text text-transparent whitespace-nowrap" style={{
+          {/* "clean" gradient text — hidden on mobile, visible on sm+ */}
+          <div className="hidden sm:block absolute -translate-y-1/2 bg-clip-text text-transparent whitespace-nowrap" style={{
             left: "calc(50% - 226px)",
             top: 156,
             fontFamily: "var(--font-jakarta)",
@@ -952,7 +1007,7 @@ export default function Home() {
             clean
           </div>
           {/* Footer nav */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-[207px] flex items-center justify-between w-[1326px]">
+          <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:top-[207px] flex flex-col sm:flex-row items-center sm:justify-between w-full max-w-[1326px] px-5 gap-4 sm:gap-0 mx-auto">
             <div className="flex gap-6 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
               <Link href="/documentation" className="hover:opacity-70">Docs</Link>
               <a href="#" className="hover:opacity-70">GitHub</a>
