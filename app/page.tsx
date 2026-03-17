@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import RotatingText from "@/components/RotatingText";
+import { CardsStackContainer, CardSticky } from "@/components/systaliko-ui/cards/cards-stack";
 
 /* ───────────────────────── asset paths ───────────────────────── */
 const A = "/landing";
@@ -358,9 +359,10 @@ function DifferencesSection() {
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[31px] z-10">
           <div className="relative">
             {/* Glow behind terminal */}
-            <div className="absolute -inset-4 blur-[50px] pointer-events-none" style={{ backgroundImage: isBefore
-              ? "radial-gradient(circle, white 10%, #bce0ff 15%, #79c0ff 20%, #5eb1ff 30%, #3b92f3 45%, #2982ed 53%, #1772e7 60%)"
-              : "radial-gradient(circle, rgba(255,255,255,0.8) 10%, rgba(188,224,255,0.5) 15%, rgba(121,192,255,0.3) 20%)"
+            <div className="absolute -inset-4 blur-[50px] pointer-events-none" style={{
+              backgroundImage: isBefore
+                ? "radial-gradient(circle, white 10%, #bce0ff 15%, #79c0ff 20%, #5eb1ff 30%, #3b92f3 45%, #2982ed 53%, #1772e7 60%)"
+                : "radial-gradient(circle, rgba(255,255,255,0.8) 10%, rgba(188,224,255,0.5) 15%, rgba(121,192,255,0.3) 20%)"
             }} />
             <TerminalMockup variant={tab} />
           </div>
@@ -456,7 +458,7 @@ function OrbitSection() {
 /* ───────────────────────── MAIN PAGE ─────────────────────────── */
 export default function Home() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-white">
+    <div className="relative min-h-screen bg-white" style={{ overflowX: 'clip' }}>
       <Navbar />
 
       {/* ═══════════ 1. HERO SECTION ═══════════ */}
@@ -677,52 +679,45 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════ 6-8. STEPS SECTIONS ═══════════ */}
-      {[
-        { num: "01", label: "Connect Once", heading: "Point Clean\nat your codebase.", desc: "We index everything intelligently—structure, patterns, dependencies.", step: 1 as const, img: "step01-container.png" },
-        { num: "02", label: "Use Any Agent", heading: "Claude, Cursor, Codex", desc: "—doesn't matter. They all tap into the same pre-built", step: 2 as const, img: "step02-container.png" },
-        { num: "03", label: "Stay in Sync", heading: "With Team", desc: "Your whole team shares the same codebase understanding.\nNo more repeated explanations.", step: 3 as const, img: "step03-container.png" },
-      ].map((s) => (
-        <section key={s.num} className="relative bg-white py-3">
-          <div className="mx-3 rounded-[48px] overflow-hidden relative" style={{ height: 705 }}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-[1280px] flex items-center justify-between">
-                {/* Left — step content */}
-                <motion.div
-                  className="flex gap-12 items-stretch"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                >
-                  {/* Step number + line */}
-                  <div className="flex flex-col items-center gap-1 py-12">
-                    <span className="text-lg font-semibold text-[#66a6dd] uppercase">{s.num}</span>
-                    <div className="step-line flex-1 w-[3px] rounded-full" />
-                    <span className="text-lg text-[#1c1c1c] opacity-10 uppercase">03</span>
+      {/* ═══════════ 6-8. STEPS SECTIONS (Sticky Stack) ═══════════ */}
+      <CardsStackContainer className="pb-24">
+        {[
+          { num: "01", label: "Connect Once", heading: "Point Clean\nat your codebase.", desc: "We index everything intelligently—structure, patterns, dependencies.", step: 1 as const },
+          { num: "02", label: "Use Any Agent", heading: "Claude, Cursor, Codex", desc: "—doesn't matter. They all tap into the same pre-built", step: 2 as const },
+          { num: "03", label: "Stay in Sync", heading: "With Team", desc: "Your whole team shares the same codebase understanding.\nNo more repeated explanations.", step: 3 as const },
+        ].map((s, idx) => (
+          <CardSticky key={s.num} index={idx} incrementY={20} className="w-full">
+            <div className="bg-transparent px-2 py-3">
+              <div className="mx-3 rounded-[48px] overflow-hidden relative bg-[#f8fbff]" style={{ height: 705 }}>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-[1280px] flex items-center justify-between">
+                    {/* Left — step content */}
+                    <div className="flex gap-12 items-stretch">
+                      {/* Step number + line */}
+                      <div className="flex flex-col items-center gap-1 py-12">
+                        <span className="text-lg font-semibold text-[#66a6dd] uppercase">{s.num}</span>
+                        <div className="step-line flex-1 w-[3px] rounded-full" />
+                        <span className="text-lg text-[#1c1c1c] opacity-10 uppercase">03</span>
+                      </div>
+                      {/* Text */}
+                      <div className="flex flex-col gap-6 justify-center py-12 max-w-[531px]">
+                        <span className="gradient-text-blue text-xl font-bold uppercase" style={{ fontFamily: "var(--font-display)" }}>{s.label}</span>
+                        <h3 className="text-5xl font-bold text-[#1c1c1c] leading-[60px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.heading}</h3>
+                        <p className="text-lg text-[#8b949e] tracking-tight leading-[29px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.desc}</p>
+                        <BtnTryClean />
+                      </div>
+                    </div>
+                    {/* Right — flow diagram */}
+                    <div>
+                      <FlowDiagram step={s.step} />
+                    </div>
                   </div>
-                  {/* Text */}
-                  <div className="flex flex-col gap-6 justify-center py-12 max-w-[531px]">
-                    <span className="gradient-text-blue text-xl font-bold uppercase" style={{ fontFamily: "var(--font-display)" }}>{s.label}</span>
-                    <h3 className="text-5xl font-bold text-[#1c1c1c] leading-[60px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.heading}</h3>
-                    <p className="text-lg text-[#8b949e] tracking-tight leading-[29px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.desc}</p>
-                    <BtnTryClean />
-                  </div>
-                </motion.div>
-                {/* Right — flow diagram */}
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.15 }}
-                >
-                  <FlowDiagram step={s.step} />
-                </motion.div>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      ))}
+          </CardSticky>
+        ))}
+      </CardsStackContainer>
 
       {/* ═══════════ 9. FEATURES SECTION ═══════════ */}
       <section className="relative bg-white py-24 overflow-hidden">
