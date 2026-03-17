@@ -1,14 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Zap, Rocket, Building2 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import { Check } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 type Plan = {
   name: string;
   price: string;
   period: string;
-  icon: React.ReactNode;
   rows: { label: string; value: string }[];
   features: string[];
   ctaLabel: string;
@@ -22,7 +22,6 @@ const plans: Plan[] = [
     name: "Free",
     price: "$0",
     period: "forever",
-    icon: <Zap className="h-4 w-4" />,
     rows: [
       { label: "Hosting", value: "Cloud only" },
       { label: "Repos", value: "3" },
@@ -40,7 +39,6 @@ const plans: Plan[] = [
     name: "Pro",
     price: "$14.99",
     period: "/ user / mo",
-    icon: <Zap className="h-4 w-4" />,
     rows: [
       { label: "Hosting", value: "Cloud only" },
       { label: "Repos", value: "15" },
@@ -58,7 +56,6 @@ const plans: Plan[] = [
     name: "Max",
     price: "$29.99",
     period: "/ user / mo",
-    icon: <Rocket className="h-4 w-4" />,
     rows: [
       { label: "Hosting", value: "Cloud + Self-host" },
       { label: "Repos", value: "Unlimited" },
@@ -76,7 +73,6 @@ const plans: Plan[] = [
     name: "Enterprise",
     price: "Custom",
     period: "tailored to your org",
-    icon: <Building2 className="h-4 w-4" />,
     rows: [
       { label: "Hosting", value: "Cloud + Self-host" },
       { label: "Repos", value: "Unlimited" },
@@ -97,14 +93,14 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
     plan.ctaAction === "dashboard" ? (
       <a
         href="/dashboard"
-        className="btn-secondary block w-full rounded-xl py-3 text-center text-base font-medium"
+        className="block w-full rounded-xl border border-[var(--blue-border)] bg-white py-3 text-center text-sm font-semibold text-[var(--ink)] transition-all duration-200 hover:border-[var(--blue-dark)] hover:text-[var(--blue-dark)]"
       >
         {plan.ctaLabel}
       </a>
     ) : plan.ctaAction === "contact" ? (
       <a
         href="mailto:hello@tryclean.ai"
-        className="btn-secondary block w-full rounded-xl py-3 text-center text-base font-medium"
+        className="block w-full rounded-xl border border-[var(--blue-border)] bg-white py-3 text-center text-sm font-semibold text-[var(--ink)] transition-all duration-200 hover:border-[var(--blue-dark)] hover:text-[var(--blue-dark)]"
       >
         {plan.ctaLabel} &rarr;
       </a>
@@ -113,7 +109,7 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
         <input type="hidden" name="plan" value={plan.ctaAction} />
         <button
           type="submit"
-          className="btn-primary w-full rounded-xl py-3 text-base font-medium"
+          className="btn-gradient w-full rounded-xl py-3 text-sm font-semibold text-white"
         >
           {plan.ctaLabel} &rarr;
         </button>
@@ -127,28 +123,29 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
       transition={{ duration: 0.55, delay: 0.08 + index * 0.08 }}
       className={`relative flex flex-col rounded-2xl border p-7 ${
         plan.highlighted
-          ? "border-[var(--accent)]/30 bg-white shadow-lg ring-1 ring-[var(--accent)]/10"
-          : "border-[var(--cream-dark)] bg-white shadow-sm"
+          ? "border-[var(--blue-dark)]/30 bg-white shadow-[0_0_40px_rgba(23,114,231,0.08)] ring-1 ring-[var(--blue-dark)]/10"
+          : "border-[var(--blue-border)] bg-white"
       }`}
     >
       {plan.highlighted && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="rounded-full bg-[var(--accent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
+          <span
+            className="btn-gradient rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white"
+          >
             Most Popular
           </span>
         </div>
       )}
 
-      {/* Plan badge */}
-      <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-3 py-1">
-        <span className="text-[var(--accent)]">{plan.icon}</span>
-        <span className="text-xs font-medium uppercase tracking-wider text-[var(--accent)]">
+      {/* Plan name */}
+      <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--blue-border)] bg-[var(--blue-faint)]/40 px-3 py-1">
+        <span className="text-xs font-semibold uppercase tracking-wider text-[var(--blue-dark)]">
           {plan.name}
         </span>
       </div>
 
       {/* Price */}
-      <div className="mb-6 border-b border-[var(--cream-dark)] pb-6">
+      <div className="mb-6 border-b border-[var(--blue-border)] pb-6">
         <div className="flex items-end gap-2">
           <span
             className="text-4xl font-bold tracking-tight text-[var(--ink)] sm:text-5xl"
@@ -165,10 +162,7 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
       {/* Spec rows */}
       <div className="mb-6 space-y-2.5">
         {plan.rows.map((row) => (
-          <div
-            key={row.label}
-            className="flex items-center justify-between text-sm"
-          >
+          <div key={row.label} className="flex items-center justify-between text-sm">
             <span className="text-[var(--ink-muted)]">{row.label}</span>
             <span className="font-medium text-[var(--ink)]">{row.value}</span>
           </div>
@@ -178,9 +172,9 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
       {/* Features */}
       <ul className="mb-7 flex-1 space-y-2.5">
         {plan.features.map((f) => (
-          <li key={f} className="flex items-center gap-2.5 text-[var(--ink-light)]">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/10">
-              <Check className="h-3 w-3 text-[var(--accent)]" strokeWidth={2.5} />
+          <li key={f} className="flex items-center gap-2.5 text-[var(--ink-muted)]">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--blue-dark)]/10">
+              <Check className="h-3 w-3 text-[var(--blue-dark)]" strokeWidth={2.5} />
             </span>
             <span className="text-sm">{f}</span>
           </li>
@@ -190,9 +184,7 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
       {/* CTA */}
       <div>
         {cta}
-        <p className="mt-3 text-center text-xs text-[var(--ink-muted)]">
-          {plan.note}
-        </p>
+        <p className="mt-3 text-center text-xs text-[var(--ink-muted)]">{plan.note}</p>
       </div>
     </motion.div>
   );
@@ -200,14 +192,32 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
 
 export default function PricingPlanPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--cream)]">
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000003_1px,transparent_1px),linear-gradient(to_bottom,#00000003_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-white">
+      {/* Navbar */}
+      <nav className="relative z-10 flex items-center justify-between px-8 py-5 sm:px-12">
+        <Link href="/" className="flex items-center gap-1">
+          <Image src="/landing/clean-icon.svg" alt="" width={20} height={20} />
+          <span
+            className="text-xl font-bold tracking-tight text-[var(--ink)]"
+            style={{ fontFamily: "var(--font-jakarta)" }}
+          >
+            lean.ai
+          </span>
+        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/sign-in" className="text-sm font-medium text-[var(--ink-muted)] transition-colors hover:text-[var(--ink)]">
+            Sign In
+          </Link>
+          <Link
+            href="/waitlist"
+            className="btn-gradient rounded-full px-5 py-2 text-sm font-semibold text-white"
+          >
+            Join Waitlist
+          </Link>
+        </div>
+      </nav>
 
-      <Navbar />
-
-      <section className="px-5 pt-32 pb-24 sm:px-6 lg:px-12">
+      <section className="px-5 pt-16 pb-24 sm:px-6 lg:px-12">
         <div className="mx-auto w-full max-w-6xl">
           {/* Header */}
           <motion.div
@@ -216,21 +226,28 @@ export default function PricingPlanPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <p className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
-              [ PRICING ]
-            </p>
+            <div className="section-badge mx-auto mb-6 w-fit bg-white/50">
+              <span className="section-badge__icon">
+                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              <span className="font-semibold text-lg text-[var(--ink)]" style={{ fontFamily: "var(--font-jakarta)" }}>
+                Pricing
+              </span>
+            </div>
             <h1
               className="mb-4 text-4xl font-normal leading-[1.1] tracking-tight text-[var(--ink)] sm:text-5xl lg:text-6xl"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Simple, <em>transparent</em> pricing.
             </h1>
-            <p className="mx-auto max-w-md text-lg text-[var(--ink-light)]">
+            <p className="mx-auto max-w-md text-lg text-[var(--ink-muted)]" style={{ fontFamily: "var(--font-jakarta)" }}>
               Start free in the cloud. Scale when you&apos;re ready.
             </p>
           </motion.div>
 
-          {/* Plans grid — 4 columns */}
+          {/* Plans grid */}
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan, i) => (
               <PlanCard key={plan.name} plan={plan} index={i} />
@@ -238,6 +255,20 @@ export default function PricingPlanPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-[var(--blue-border)] px-8 py-8 sm:px-12">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="flex gap-6 text-sm text-[var(--ink-muted)]" style={{ fontFamily: "var(--font-display)" }}>
+            <Link href="/documentation" className="hover:text-[var(--ink)]">Docs</Link>
+            <a href="#" className="hover:text-[var(--ink)]">GitHub</a>
+            <a href="mailto:hello@tryclean.ai" className="hover:text-[var(--ink)]">Contact</a>
+          </div>
+          <span className="text-xs text-[var(--ink-muted)]" style={{ fontFamily: "var(--font-display)" }}>
+            2026 Clean. All rights reserved.
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

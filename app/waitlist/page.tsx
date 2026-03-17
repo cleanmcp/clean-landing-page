@@ -6,9 +6,17 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
+function Spinner() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--blue-dark)] border-t-transparent" />
+    </div>
+  );
+}
+
 export default function WaitlistPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[var(--cream)]"><div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" /></div>}>
+    <Suspense fallback={<Spinner />}>
       <WaitlistContent />
     </Suspense>
   );
@@ -46,13 +54,11 @@ function WaitlistContent() {
     }
   }
 
-  return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[var(--cream)] px-5">
-      {/* Subtle background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000003_1px,transparent_1px),linear-gradient(to_bottom,#00000003_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-      </div>
+  const inputClass =
+    "w-full rounded-xl border border-[var(--blue-border)] bg-[var(--blue-faint)]/30 px-4 py-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none transition-all duration-200 focus:border-[var(--blue-dark)] focus:ring-2 focus:ring-[var(--blue-dark)]/10";
 
+  return (
+    <div className="relative flex min-h-screen items-center justify-center bg-white px-5">
       {/* Back link */}
       <Link
         href="/"
@@ -74,22 +80,22 @@ function WaitlistContent() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent)]/10"
+              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--blue-dark)]/10"
             >
-              <CheckCircle2 className="h-8 w-8 text-[var(--accent)]" />
+              <CheckCircle2 className="h-8 w-8 text-[var(--blue-dark)]" />
             </motion.div>
             <h1
-              className="mb-3 text-2xl font-normal"
+              className="mb-3 text-2xl font-normal tracking-tight text-[var(--ink)]"
               style={{ fontFamily: "var(--font-display)" }}
             >
               You&apos;re on the list!
             </h1>
-            <p className="mb-8 text-[var(--ink-light)]">
+            <p className="mb-8 text-[var(--ink-muted)]">
               We&apos;ll send you an email when your spot is ready. Keep an eye on your inbox.
             </p>
             <Link
               href="/"
-              className="text-sm font-medium text-[var(--accent)] hover:underline"
+              className="text-sm font-medium text-[var(--blue-dark)] hover:underline"
             >
               Back to homepage
             </Link>
@@ -99,81 +105,80 @@ function WaitlistContent() {
             <div className="mb-8 text-center">
               <Link
                 href="/"
-                className="mb-6 inline-block text-xl font-normal tracking-tight"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="mb-6 inline-block text-2xl font-bold tracking-tight text-[var(--ink)]"
+                style={{ fontFamily: "var(--font-jakarta)" }}
               >
-                Clean
+                clean<span className="text-[var(--blue-dark)]">.</span>
               </Link>
               <h1
-                className="mb-3 text-3xl font-normal sm:text-4xl"
+                className="mb-3 text-3xl font-normal tracking-tight text-[var(--ink)] sm:text-4xl"
                 style={{ fontFamily: "var(--font-display)" }}
               >
                 Join the waitlist
               </h1>
-              <p className="text-[var(--ink-light)]">
+              <p className="text-[var(--ink-muted)]">
                 {notApproved
                   ? "You're not on the approved list yet. Join below and we'll let you know when you're in."
                   : "Get early access to Clean and start saving tokens across all your AI agents."}
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="mb-1.5 block text-sm font-medium text-[var(--ink)]"
-                >
-                  Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  className="w-full rounded-xl border border-[var(--cream-dark)] bg-white px-4 py-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10"
-                />
-              </div>
+            {/* Card */}
+            <div className="rounded-2xl border border-[var(--blue-border)] bg-white p-8 shadow-[0_0_30px_rgba(174,216,255,0.15)]">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-[var(--ink)]">
+                    Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                    className={inputClass}
+                  />
+                </div>
 
-              <div>
-                <label
-                  htmlFor="email"
-                  className="mb-1.5 block text-sm font-medium text-[var(--ink)]"
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  className="w-full rounded-xl border border-[var(--cream-dark)] bg-white px-4 py-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10"
-                />
-              </div>
+                <div>
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-[var(--ink)]">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    className={inputClass}
+                  />
+                </div>
 
-              {status === "error" && (
-                <p className="text-sm text-red-600">{errorMsg}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={status === "loading"}
-                className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium disabled:opacity-50"
-              >
-                {status === "loading" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Join Waitlist"
+                {status === "error" && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {errorMsg}
+                  </div>
                 )}
-              </button>
-            </form>
+
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="btn-gradient flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {status === "loading" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Join Waitlist"
+                  )}
+                </button>
+              </form>
+            </div>
 
             <p className="mt-6 text-center text-xs text-[var(--ink-muted)]">
               Already have an account?{" "}
-              <Link href="/sign-in" className="font-medium text-[var(--accent)] hover:underline">
+              <Link href="/sign-in" className="font-medium text-[var(--blue-dark)] hover:underline">
                 Sign in
               </Link>
             </p>

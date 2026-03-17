@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import RotatingText from "@/components/RotatingText";
-import { CardsStackContainer, CardSticky } from "@/components/systaliko-ui/cards/cards-stack";
+import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack";
 
 /* ───────────────────────── asset paths ───────────────────────── */
 const A = "/landing";
@@ -90,7 +90,7 @@ function Navbar() {
 
       {/* Left — links */}
       <div className="relative z-10 flex items-center gap-6 text-white text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-        <Link href="/pricing" className="hover:opacity-80 transition-opacity">Pricing</Link>
+        <Link href="/pricing-plan" className="hover:opacity-80 transition-opacity">Pricing</Link>
         <Link href="/documentation" className="hover:opacity-80 transition-opacity">Docs</Link>
         <Link href="/resources" className="hover:opacity-80 transition-opacity">Resources</Link>
       </div>
@@ -284,7 +284,7 @@ function TerminalMockup({ variant }: { variant: "before" | "after" }) {
             <span className="text-[#ff6467]">Fast mode</span>
             <span className="text-[#4a5565]"> is now available · /fast to turn on</span>
           </p>
-          <p className="text-[11px] text-[#99a1af] font-mono mt-1">{isBefore ? "97k" : "70k"} tokens used</p>
+          <p className="text-[11px] text-[#99a1af] font-mono mt-1">{isBefore ? "140k" : "70k"} tokens used</p>
         </div>
       </div>
     </div>
@@ -299,13 +299,13 @@ function DifferencesSection() {
       <div className={`mx-3 rounded-[48px] overflow-hidden relative ${isBefore ? "bg-[#1c1c1c]" : "bg-[#E8F4FC]"}`} style={{ height: 705 }}>
         {/* Background */}
         {isBefore ? (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[1704px] h-[766px] overflow-hidden pointer-events-none">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute inset-0 bg-[#1c1c1c]" />
             <div className="absolute inset-0 opacity-50 overflow-hidden">
               <img
                 alt=""
                 src={`${A}/dark-bg.png`}
-                className="absolute max-w-none pointer-events-none"
+                className="absolute max-w-none pointer-events-none object-cover"
                 style={{ width: "169.65%", height: "226.58%", left: "-34.82%", top: "-126.58%" }}
               />
             </div>
@@ -322,39 +322,47 @@ function DifferencesSection() {
         {/* Watermark text */}
         {isBefore ? (
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <span className="text-[200px] font-bold tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap bg-gradient-to-b from-white to-transparent opacity-50" style={{ fontFamily: "var(--font-jakarta)" }}>
-              without clean
+            <span className="text-[200px] font-bold tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap bg-gradient-to-b from-white to-transparent opacity-50" style={{ fontFamily: "var(--font-jakarta)", wordSpacing: "0.75em" }}>
+              before clean
             </span>
           </div>
         ) : (
-          <div className="absolute top-1/2 -translate-y-1/2" style={{ left: "calc(50% - 684px)" }}>
-            <span className="text-[200px] font-bold tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, #79c0ff 0%, rgba(121,192,255,0) 82.54%)" }}>
-              after use clean
+          <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+            <span className="text-[200px] font-bold tracking-[-4px] leading-none bg-clip-text text-transparent whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, #79c0ff 0%, rgba(121,192,255,0) 82.54%)", wordSpacing: "0.95em" }}>
+              after clean
             </span>
           </div>
         )}
         {/* Toggle pill */}
-        {isBefore ? (
-          <div className="absolute left-1/2 -translate-x-1/2 top-[30px] z-20 flex items-center gap-4 backdrop-blur-sm bg-[rgba(255,255,255,0.11)] border border-[#5eb1ff] rounded-full pl-2.5 pr-6 py-2.5">
-            <button onClick={() => setTab("before")} className="btn-gradient h-[46px] px-5 py-3 rounded-3xl text-base font-semibold tracking-tight text-white relative overflow-hidden" style={{ fontFamily: "var(--font-jakarta)" }}>
+        <div className="absolute left-1/2 -translate-x-1/2 top-[30px] z-20 flex items-center p-1.5 backdrop-blur-md bg-black/40 border border-white/20 rounded-full w-[360px] h-[64px]">
+          <div className="relative flex w-full h-full items-center">
+            {/* Animated Background Highlight */}
+            <motion.div
+              className="absolute h-full rounded-full btn-gradient"
+              animate={{
+                x: isBefore ? 0 : "100%",
+                width: "50%"
+              }}
+              transition={{ type: "tween", duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            />
+
+            {/* Buttons */}
+            <button
+              onClick={() => setTab("before")}
+              className={`relative z-10 flex-1 h-full text-base font-semibold tracking-tight transition-colors duration-300 ${isBefore ? "text-white" : "text-white/60"} flex items-center justify-center cursor-pointer`}
+              style={{ fontFamily: "var(--font-jakarta)" }}
+            >
               Before Clean
-              <span className="absolute inset-0 pointer-events-none rounded-[inherit]" style={{ boxShadow: "inset 0px 10px 4px 0px rgba(255,255,255,0.25)" }} />
             </button>
-            <button onClick={() => setTab("after")} className="text-white text-base font-semibold tracking-tight bg-transparent border-none cursor-pointer" style={{ fontFamily: "var(--font-jakarta)" }}>
+            <button
+              onClick={() => setTab("after")}
+              className={`relative z-10 flex-1 h-full text-base font-semibold tracking-tight transition-colors duration-300 ${!isBefore ? "text-white" : "text-white/60"} flex items-center justify-center cursor-pointer`}
+              style={{ fontFamily: "var(--font-jakarta)" }}
+            >
               After Clean
             </button>
           </div>
-        ) : (
-          <div className="absolute left-1/2 -translate-x-1/2 top-[30px] z-20 flex items-center gap-4 backdrop-blur-sm bg-black border border-[#5eb1ff] rounded-full pl-6 pr-2.5 py-2.5">
-            <button onClick={() => setTab("before")} className="text-white text-base font-semibold tracking-tight bg-transparent border-none cursor-pointer" style={{ fontFamily: "var(--font-jakarta)" }}>
-              Before Clean
-            </button>
-            <button onClick={() => setTab("after")} className="btn-gradient h-[46px] px-5 py-3 rounded-3xl text-base font-semibold tracking-tight text-white relative overflow-hidden" style={{ fontFamily: "var(--font-jakarta)" }}>
-              After Clean
-              <span className="absolute inset-0 pointer-events-none rounded-[inherit]" style={{ boxShadow: "inset 0px 10px 4px 0px rgba(255,255,255,0.25)" }} />
-            </button>
-          </div>
-        )}
+        </div>
         {/* Terminal centered */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-[31px] z-10">
           <div className="relative">
@@ -378,7 +386,7 @@ function OrbitSection() {
     target: sectionRef,
     offset: ["start end", "center center"],
   });
-  const orbitRotate = useTransform(scrollYProgress, [0, 1], [30, 0]);
+  const orbitRotate = useTransform(scrollYProgress, [0, 1], [15, 0]);
 
   /* Icon positions from Figma, relative to section center-x.
      Figma section = 1440×800. Icons positioned absolutely within that. */
@@ -427,23 +435,23 @@ function OrbitSection() {
         {/* Agent icons — Figma top-left positions with -translate-x/y-1/2 to center on arcs */}
         {/* Windsurf — top center, outermost arc */}
         <div className={iconClass} style={{ left: 'calc(50% - 8px)', top: 385 }}>
-          <Image src={`${A}/orbit-agent-windsurf.svg`} alt="Windsurf" width={40} height={40} className="object-contain" />
+          <Image src={`${A}/claude-icon.svg`} alt="Windsurf" width={40} height={40} className="object-contain" />
         </div>
         {/* Cursor — left, 3rd arc */}
         <div className={iconClass} style={{ left: 'calc(50% - 236px)', top: 455 }}>
-          <Image src={`${A}/orbit-agent-cursor.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
+          <Image src={`${A}/cursor-icon.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
         </div>
         {/* ChatGPT — right, 3rd arc */}
         <div className={iconClass} style={{ left: 'calc(50% + 218px)', top: 456 }}>
-          <Image src={`${A}/orbit-agent-chatgpt.svg`} alt="ChatGPT" width={40} height={40} className="object-contain" />
+          <Image src={`${A}/antigravity-icon.png`} alt="ChatGPT" width={40} height={40} className="object-contain" />
         </div>
         {/* OpenAI — bottom left, outermost arc */}
         <div className={iconClass} style={{ left: 'calc(50% - 374px)', top: 643 }}>
-          <Image src={`${A}/orbit-agent-openai.svg`} alt="OpenAI" width={40} height={40} className="object-contain" />
+          <Image src={`${A}/windsurf-icon.svg`} alt="OpenAI" width={40} height={40} className="object-contain" />
         </div>
         {/* Codex — bottom right, outermost arc */}
         <div className={iconClass} style={{ left: 'calc(50% + 358px)', top: 643 }}>
-          <Image src={`${A}/orbit-agent-cursor.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
+          <Image src={`${A}/openai-icon.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
         </div>
 
         {/* Clean App Icon — center bottom of arcs */}
@@ -467,7 +475,7 @@ export default function Home() {
         <div className="absolute inset-3 rounded-[48px] overflow-hidden">
           <Image src={`${A}/hero-bg.png`} alt="" fill className="object-cover" priority />
           {/* 3D Glass logo */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-[402px] w-[962px] h-[950px]">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[420px] w-[962px] h-[950px]">
             <Image src={`${A}/glass-logo.png`} alt="" fill className="object-cover" />
           </div>
         </div>
@@ -488,7 +496,7 @@ export default function Home() {
               Sync context across
             </p>
             {/* Rotating large text */}
-            <div className="h-[145px] flex items-center justify-center">
+            <div className="h-[165px] flex items-end justify-center overflow-hidden">
               <RotatingText
                 texts={["agents", "engineers", "codebases"]}
                 mainClassName="text-[140px] font-bold tracking-[-4px] inline-flex items-center justify-center"
@@ -497,7 +505,7 @@ export default function Home() {
                 staggerFrom="last"
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
-                exit={{ y: "-120%" }}
+                exit={{ y: "-100%" }}
                 staggerDuration={0.025}
                 splitLevelClassName="overflow-hidden"
                 transition={{ type: "spring", damping: 30, stiffness: 400 }}
@@ -601,7 +609,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3 mb-8">
             <div className="flex -space-x-5">
-              {["claude-frame.svg", "cursor-icon.png", "openai-icon.svg", "codex-frame.svg", "claude-frame.svg"].map((img, i) => (
+              {["claude-icon.svg", "cursor-icon.svg", "antigravity-icon.png", "openai-icon.svg", "windsurf-icon.svg"].map((img, i) => (
                 <div key={i} className="w-20 h-20 rounded-full bg-white border-8 border-[#5eb1ff] flex items-center justify-center overflow-hidden">
                   <Image src={`${A}/${img}`} alt="" width={40} height={40} className="object-contain" />
                 </div>
@@ -680,14 +688,14 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 6-8. STEPS SECTIONS (Sticky Stack) ═══════════ */}
-      <CardsStackContainer className="pb-24">
+      <ScrollStack>
         {[
           { num: "01", label: "Connect Once", heading: "Point Clean\nat your codebase.", desc: "We index everything intelligently—structure, patterns, dependencies.", step: 1 as const },
           { num: "02", label: "Use Any Agent", heading: "Claude, Cursor, Codex", desc: "—doesn't matter. They all tap into the same pre-built", step: 2 as const },
           { num: "03", label: "Stay in Sync", heading: "With Team", desc: "Your whole team shares the same codebase understanding.\nNo more repeated explanations.", step: 3 as const },
-        ].map((s, idx) => (
-          <CardSticky key={s.num} index={idx} incrementY={20} className="w-full">
-            <div className="bg-transparent px-2 py-3">
+        ].map((s) => (
+          <ScrollStackItem key={s.num}>
+            <div className="bg-transparent py-3">
               <div className="mx-3 rounded-[48px] overflow-hidden relative bg-[#f8fbff]" style={{ height: 705 }}>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-[1280px] flex items-center justify-between">
@@ -715,9 +723,9 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </CardSticky>
+          </ScrollStackItem>
         ))}
-      </CardsStackContainer>
+      </ScrollStack>
 
       {/* ═══════════ 9. FEATURES SECTION ═══════════ */}
       <section className="relative bg-white py-24 overflow-hidden">
@@ -881,9 +889,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 11. CTA + 12. FOOTER ═══════════ */}
-      <div className="relative flex flex-col items-start pb-[279px]">
+      <div className="relative flex flex-col items-start">
         {/* CTA */}
-        <section className="relative  overflow-hidden w-full mb-[-279px] z-0" style={{ height: 1043, background: "linear-gradient(180deg, #000 0%, #666 100%)" }}>
+        <section className="relative  overflow-hidden w-full z-0" style={{ height: 950, background: "linear-gradient(180deg, #000 0%, #666 100%)" }}>
           {/* V3 dark bg layer */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2  w-full h-full pointer-events-none">
             <div className="absolute inset-0 bg-black" />
@@ -892,28 +900,28 @@ export default function Home() {
             </div> */}
           </div>
           {/* Intersect — large circular cutout shape on left */}
-          <div className="absolute left-[-741px] top-[19px] w-[1990px] h-[1990px] pointer-events-none">
+          <div className="absolute pointer-events-none" style={{ left: '-51.5%', top: '2%', width: '138%', height: '210%' }}>
             <img alt="" src={`${A}/cta-intersect.svg`} className="w-full h-full" style={{ transform: "rotate(90deg) scaleY(-1)" }} />
           </div>
           {/* Small ellipse glow under glass logo */}
-          <div className="absolute left-[161px] top-[692px] w-[379px] h-[34px] pointer-events-none">
+          <div className="absolute pointer-events-none" style={{ left: '11.2%', top: '72.8%', width: '26.3%', height: '3.6%' }}>
             <img alt="" src={`${A}/cta-ellipse-glow.svg`} className="absolute w-full h-full" style={{ transform: "scale(2.2)" }} />
           </div>
           {/* 3D Glass logo */}
-          <div className="absolute left-[-28px] top-[50px] w-[658px] h-[764px]">
+          <div className="absolute" style={{ left: '-1.9%', top: '5.3%', width: '45.7%', height: '80.4%' }}>
             <Image src={`${A}/cta-glass-logo.png`} alt="" fill className="object-contain" />
           </div>
           {/* CTA content */}
           <motion.div
-            className="absolute left-[720px] top-[276px] flex flex-col gap-8 w-[698px] z-10"
+            className="absolute flex flex-col gap-8 z-10" style={{ left: '50%', top: '29%', width: '48.5%' }}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
             <h2 className="text-[80px] text-white leading-none tracking-[-3.2px]" style={{ fontFamily: "var(--font-jakarta)" }}>
               Ready to stop{" "}
-              <em className="font-bold italic" style={{ fontFamily: "var(--font-display)" }}>burning</em>
-              {" "}tokens?
+              <em className="font-bold italic" style={{ fontFamily: "var(--font-display)", marginRight: "0.25em" }}>burning</em>
+              tokens?
             </h2>
             <p className="text-lg text-white" style={{ fontFamily: "var(--font-jakarta)" }}>Join teams saving thousands on AI agent costs every month.</p>
             <div className="flex gap-8">
@@ -924,7 +932,7 @@ export default function Home() {
         </section>
 
         {/* Footer — overlaps CTA by 279px */}
-        <footer className="relative bg-white rounded-t-[72px] overflow-hidden w-full z-10" style={{ height: 279 }}>
+        <footer className="relative bg-white rounded-t-[72px] overflow-hidden w-full h-[279px] z-10">
           {/* Subtle background — flipped gradient image */}
           <div className="absolute left-1/2 -translate-x-1/2 w-[1820px] h-[731px] opacity-50 pointer-events-none" style={{ bottom: -440, transform: "translateX(-50%) rotate(180deg) scaleY(-1)" }}>
             <Image src={`${A}/footer-subtle-bg.jpg`} alt="" fill className="object-cover" />

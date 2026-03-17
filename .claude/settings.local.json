@@ -21,7 +21,8 @@
       "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page -name *flow* -o -name *diagram* -o -name *Flow* -o -name *Diagram*)",
       "Bash(grep -r \"flow-card\\\\|step-line\\\\|feature-card\" /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/app /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/components --include=*.tsx --include=*.css)",
       "Bash(npm install:*)",
-      "Bash(npx shadcn@latest add @systaliko-ui/cards-stack)"
+      "Bash(npx shadcn@latest add @systaliko-ui/cards-stack)",
+      "Bash(npx next:*)"
     ]
   }
 }
