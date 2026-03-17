@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -49,6 +49,68 @@ function BtnJoinWaitlist({ className = "" }: { className?: string }) {
     <a href="/waitlist" className={`relative inline-flex items-center justify-center h-[52px] px-8 rounded-[26px] text-white text-[17px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)", border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.8), inset 0px -2px 6px rgba(0,50,150,0.3)" }}>
       <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>Join Waitlist</span>
     </a>
+  );
+}
+
+/* ───── Sticky Glass Navbar ───── */
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <motion.nav
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-500"
+      style={{
+        padding: scrolled ? "12px 48px" : "30px 67px 30px 67px",
+      }}
+      initial={false}
+    >
+      {/* Glass background — fades in on scroll */}
+      <motion.div
+        className="absolute inset-0 rounded-b-[24px] border-b border-white/20 pointer-events-none"
+        style={{
+          backdropFilter: scrolled ? "blur(24px) saturate(1.6)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(24px) saturate(1.6)" : "none",
+          background: scrolled
+            ? "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.25) 100%)"
+            : "transparent",
+          boxShadow: scrolled
+            ? "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.08)"
+            : "none",
+          opacity: scrolled ? 1 : 0,
+          transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      />
+
+      {/* Left — links */}
+      <div className="relative z-10 flex items-center gap-6 text-white text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+        <Link href="/pricing" className="hover:opacity-80 transition-opacity">Pricing</Link>
+        <Link href="/documentation" className="hover:opacity-80 transition-opacity">Docs</Link>
+        <Link href="/resources" className="hover:opacity-80 transition-opacity">Resources</Link>
+      </div>
+
+      {/* Center — logo */}
+      <Link href="/" className="relative z-10 flex items-center gap-0.5">
+        <Image src={`${A}/clean-icon.svg`} alt="" width={24} height={24} />
+        <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>lean.ai</span>
+      </Link>
+
+      {/* Right — actions */}
+      <div className="relative z-10 flex items-center gap-6">
+        <Link href="/sign-in" className="text-base font-semibold text-white w-[120px] text-center hover:opacity-80 transition-opacity">Sign In</Link>
+        <a href="/waitlist" className="group relative inline-flex items-center h-[46px] rounded-full text-white text-[15px] font-semibold tracking-tight pl-5 pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
+          <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
+          <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-8 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
+            <svg className="w-3.5 h-3.5 text-[#1772e7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+          </span>
+        </a>
+      </div>
+    </motion.nav>
   );
 }
 
@@ -338,9 +400,16 @@ function OrbitSection() {
         />
       </motion.div>
 
-      {/* Bottom ellipse glow — Figma: top 670, 1432×316, centered */}
-      <div className="absolute left-1/2 -translate-x-1/2 w-[1433px] h-[316px] pointer-events-none" style={{ top: 670 }}>
-        <Image src={`${A}/orbit-ellipse.svg`} alt="" fill className="object-contain" />
+      {/* Radial glow behind the rings */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-[236px] w-[994px] h-[564px] pointer-events-none">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" src={`${A}/orbit-glow.svg`} className="w-full h-full" />
+      </div>
+
+      {/* Bottom ellipse glow */}
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[1440px] h-[223px] pointer-events-none">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" src={`${A}/orbit-ellipse-glow.svg`} className="w-full h-full" />
       </div>
 
       {/* Orbit assembly — rotates 30° → 0° on scroll, pivoting from center bottom of the section */}
@@ -388,6 +457,7 @@ function OrbitSection() {
 export default function Home() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-white">
+      <Navbar />
 
       {/* ═══════════ 1. HERO SECTION ═══════════ */}
       <section className="relative h-[1024px] w-full bg-white overflow-hidden">
@@ -399,27 +469,8 @@ export default function Home() {
             <Image src={`${A}/glass-logo.png`} alt="" fill className="object-cover" />
           </div>
         </div>
-        {/* Navbar */}
-        <nav className="absolute top-[30px] left-[67px] right-[47px] flex items-center justify-between z-10">
-          <div className="flex items-center gap-6 text-white text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-            <Link href="/pricing" className="hover:opacity-80">Pricing</Link>
-            <Link href="/documentation" className="hover:opacity-80">Docs</Link>
-            <Link href="/resources" className="hover:opacity-80">Resources</Link>
-          </div>
-          <Link href="/" className="flex items-center gap-0.5">
-            <Image src={`${A}/clean-icon.svg`} alt="" width={24} height={24} />
-            <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>lean.ai</span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/sign-in" className="text-base font-semibold text-white w-[120px] text-center">Sign In</Link>
-            <a href="/waitlist" className="group relative inline-flex items-center h-[46px] rounded-full text-white text-[15px] font-semibold tracking-tight pl-5 pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
-              <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
-              <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-8 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
-                <svg className="w-3.5 h-3.5 text-[#1772e7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
-              </span>
-            </a>
-          </div>
-        </nav>
+        {/* Navbar placeholder — actual navbar is fixed/sticky, rendered outside hero */}
+        <div className="h-[76px]" />
         {/* Hero content */}
         <motion.div
           className="absolute left-1/2 -translate-x-1/2 top-[182px] flex flex-col items-center gap-6 w-[603px] z-10"
@@ -579,29 +630,45 @@ export default function Home() {
 
 
       {/* ═══════════ 5. SOLUTION SECTION ═══════════ */}
-      <section className="relative rounded-t-[48px] -mt-12 overflow-hidden bg-gradient-to-b from-[#e3f2fd] to-white" style={{ minHeight: 1466 }}>
-        {/* "clean" watermark */}
-        <div className="absolute top-[180px] left-0 right-0 flex justify-center pointer-events-none select-none">
-          <span className="watermark-text text-[460px] font-bold tracking-[-12px] leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>clean</span>
+      <section className="relative rounded-t-[48px] -mt-12 overflow-hidden bg-white" style={{ minHeight: 1466 }}>
+        {/* Subtle light background image (rotated 180°, 50% opacity) */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[-54px] w-full h-full rotate-180 opacity-50 pointer-events-none">
+          <Image src={`${A}/light-gradient-bg.png`} alt="" fill className="object-fit" />
         </div>
-        {/* Blue arc */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[480px] w-[2000px] h-[2000px] pointer-events-none">
-          <Image src={`${A}/solution-arc.svg`} alt="" fill className="object-contain" />
+        {/* "clean" watermark — glassy, visible but subtle */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[17px] pointer-events-none select-none">
+          <span className="text-[500px] font-bold tracking-[-10px] leading-none bg-clip-text text-transparent whitespace-nowrap opacity-50" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, white 0%, rgba(255,255,255,0) 100%)" }}>clean</span>
         </div>
+        {/* Glassy semicircle behind the arc */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[356px] w-full h-[880px] pointer-events-none">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" src={`${A}/solution-arc-glass.svg`} className="w-full h-full" />
+        </div>
+        {/* Blue arc ring */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[449px] w-full h-[763px] pointer-events-none">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" src={`${A}/solution-arc-ring.svg`} className="w-full h-full" />
+        </div>
+        {/* Inner edge blur — backdrop-blur clipped inside the arc, softening the inner rim */}
+        <div className="absolute left-0 right-0 top-[650px] h-[808px] pointer-events-none backdrop-blur-[50px]" style={{ maskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)" }} />
         {/* Clean app icon */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[290px] w-[180px] h-[180px] z-10 drop-shadow-[0_10px_30px_rgba(102,166,221,0.5)]">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[244px] w-[157px] h-[157px] z-10">
           <Image src={`${A}/clean-app-icon.svg`} alt="" fill className="object-contain" />
         </div>
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center pt-[500px] px-[81px] w-[1280px] mx-auto gap-6">
+        <div className="relative z-10 flex flex-col items-center pt-[563px] w-[1280px] mx-auto gap-9">
           <SectionBadge icon="ai-idea-icon.svg" label={<>The <em style={{ fontFamily: "var(--font-display)" }}>Solutions</em></>} />
-          <h2 className="text-[44px] font-semibold text-[#1c1c1c] text-center tracking-tight leading-[54px]" style={{ fontFamily: "var(--font-jakarta)" }}>
-            One <span className="gradient-text-blue">MCP server</span> that pre-indexes your<br />codebase and <span className="text-[#66a6dd]">syncs context</span> across<br />every agent your team uses
+          <h2 className="text-[48px] font-semibold text-[#1c1c1c] text-center leading-[60px] w-[894px]" style={{ fontFamily: "var(--font-jakarta)" }}>
+            One{" "}
+            <span className="text-[#66a6dd]">MCP server</span>
+            {" "}that pre-indexes your codebase and{" "}
+            <span className="text-[#66a6dd]">syncs context</span>
+            {" "}across every agent your team uses
           </h2>
-          <div className="mt-6">
+          <div>
             <FlowDiagram step={3} />
           </div>
-          <div className="flex flex-col items-center gap-1 mt-6">
+          <div className="flex flex-col items-center gap-1">
             <p className="text-lg font-semibold text-[#79c0ff] uppercase" style={{ fontFamily: "var(--font-jakarta)" }}>
               See how clean <em style={{ fontFamily: "var(--font-display)" }}>works</em>
             </p>
@@ -818,57 +885,80 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ═══════════ 11. CTA SECTION ═══════════ */}
-      <section className="relative overflow-hidden" style={{ height: 1043, background: "radial-gradient(80% 100% at 0% 50%, rgba(0, 110, 255, 0.6) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 1) 100%)" }}>
-        {/* Dark bg pattern */}
-        <div className="absolute inset-0 opacity-50 overflow-hidden">
-          <Image src={`${A}/cta-dark-bg.png`} alt="" fill className="object-cover" />
-        </div>
-        {/* 3D Glass logo */}
-        <div className="absolute left-[-28px] top-[50px] w-[658px] h-[764px]">
-          <Image src={`${A}/cta-glass-logo.png`} alt="" fill className="object-contain" />
-        </div>
-        {/* CTA content */}
-        <motion.div
-          className="absolute left-[720px] top-[276px] flex flex-col gap-8 w-[698px]"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-[80px] text-white leading-none tracking-[-3.2px]" style={{ fontFamily: "var(--font-jakarta)" }}>
-            Ready to stop <em className="not-italic font-bold" style={{ fontFamily: "var(--font-display)" }}>burning</em> tokens?
-          </h2>
-          <p className="text-lg text-white" style={{ fontFamily: "var(--font-jakarta)" }}>Join teams saving thousands on AI agent costs every month.</p>
-          <div className="flex gap-8">
-            <BtnBookDemo />
-            <BtnJoinWaitlist />
+      {/* ═══════════ 11. CTA + 12. FOOTER ═══════════ */}
+      <div className="relative flex flex-col items-start pb-[279px]">
+        {/* CTA */}
+        <section className="relative  overflow-hidden w-full mb-[-279px] z-0" style={{ height: 1043, background: "linear-gradient(180deg, #000 0%, #666 100%)" }}>
+          {/* V3 dark bg layer */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2  w-full h-full pointer-events-none">
+            <div className="absolute inset-0 bg-black" />
+            {/* <div className="absolute inset-0 opacity-50 overflow-hidden">
+              <img alt="" src={`${A}/dark-bg.png`} className="absolute max-w-none" style={{ width: "169.65%", height: "226.58%", left: "-34.82%", top: "-126.58%" }} />
+            </div> */}
           </div>
-        </motion.div>
-      </section>
+          {/* Intersect — large circular cutout shape on left */}
+          <div className="absolute left-[-741px] top-[19px] w-[1990px] h-[1990px] pointer-events-none">
+            <img alt="" src={`${A}/cta-intersect.svg`} className="w-full h-full" style={{ transform: "rotate(90deg) scaleY(-1)" }} />
+          </div>
+          {/* Small ellipse glow under glass logo */}
+          <div className="absolute left-[161px] top-[692px] w-[379px] h-[34px] pointer-events-none">
+            <img alt="" src={`${A}/cta-ellipse-glow.svg`} className="absolute w-full h-full" style={{ transform: "scale(2.2)" }} />
+          </div>
+          {/* 3D Glass logo */}
+          <div className="absolute left-[-28px] top-[50px] w-[658px] h-[764px]">
+            <Image src={`${A}/cta-glass-logo.png`} alt="" fill className="object-contain" />
+          </div>
+          {/* CTA content */}
+          <motion.div
+            className="absolute left-[720px] top-[276px] flex flex-col gap-8 w-[698px] z-10"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-[80px] text-white leading-none tracking-[-3.2px]" style={{ fontFamily: "var(--font-jakarta)" }}>
+              Ready to stop{" "}
+              <em className="font-bold italic" style={{ fontFamily: "var(--font-display)" }}>burning</em>
+              {" "}tokens?
+            </h2>
+            <p className="text-lg text-white" style={{ fontFamily: "var(--font-jakarta)" }}>Join teams saving thousands on AI agent costs every month.</p>
+            <div className="flex gap-8">
+              <BtnBookDemo />
+              <BtnJoinWaitlist />
+            </div>
+          </motion.div>
+        </section>
 
-      {/* ═══════════ 12. FOOTER ═══════════ */}
-      <footer className="relative bg-white rounded-t-[72px] overflow-hidden" style={{ height: 279 }}>
-        {/* Footer gradient bg */}
-        <div className="absolute inset-0 opacity-50 overflow-hidden" style={{ transform: "rotate(180deg)" }}>
-          <Image src={`${A}/footer-bg.png`} alt="" fill className="object-cover" />
-        </div>
-        {/* "clean" gradient text */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[45px]">
-          <span className="text-[176px] font-bold tracking-[-3.5px] bg-clip-text text-transparent leading-none" style={{
-            fontFamily: "var(--font-jakarta)",
-            backgroundImage: "radial-gradient(ellipse at center, #c7e5f3 0%, #79c0ff 32%, #118cff 77%, #063460 91%, #000 100%)"
-          }}>clean</span>
-        </div>
-        {/* Footer nav */}
-        <div className="absolute left-[57px] right-[57px] bottom-[51px] flex items-center justify-between">
-          <div className="flex gap-6 text-base text-[#1c1c1c] tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-            <Link href="/documentation" className="hover:opacity-70">Docs</Link>
-            <a href="#" className="hover:opacity-70">GitHub</a>
-            <a href="#" className="hover:opacity-70">Contact</a>
+        {/* Footer — overlaps CTA by 279px */}
+        <footer className="relative bg-white rounded-t-[72px] overflow-hidden w-full z-10" style={{ height: 279 }}>
+          {/* Subtle background — flipped gradient image */}
+          <div className="absolute left-1/2 -translate-x-1/2 w-[1820px] h-[731px] opacity-50 pointer-events-none" style={{ bottom: -440, transform: "translateX(-50%) rotate(180deg) scaleY(-1)" }}>
+            <Image src={`${A}/footer-subtle-bg.jpg`} alt="" fill className="object-cover" />
           </div>
-          <span className="text-sm text-[#1c1c1c]" style={{ fontFamily: "var(--font-display)" }}>2026 Clean. All rights reserved.</span>
-        </div>
-      </footer>
+          {/* "clean" gradient text — Figma radial gradient via inline SVG */}
+          <div className="absolute -translate-y-1/2 bg-clip-text text-transparent whitespace-nowrap" style={{
+            left: "calc(50% - 226px)",
+            top: 156,
+            fontFamily: "var(--font-jakarta)",
+            fontSize: 176,
+            fontWeight: 700,
+            letterSpacing: "-3.52px",
+            lineHeight: "normal",
+            backgroundImage: "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 452 222' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%25' width='100%25' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(32.378 0.000005485 0.065033 210.94 0.000025164 111)'><stop stop-color='rgba(199,229,243,1)' offset='0'/><stop stop-color='rgba(160,211,249,1)' offset='0.15816'/><stop stop-color='rgba(121,192,255,1)' offset='0.31633'/><stop stop-color='rgba(108,185,255,1)' offset='0.64774'/><stop stop-color='rgba(62,162,255,1)' offset='0.7076'/><stop stop-color='rgba(39,151,255,1)' offset='0.73753'/><stop stop-color='rgba(17,140,255,1)' offset='0.76746'/><stop stop-color='rgba(12,105,191,1)' offset='0.8256'/><stop stop-color='rgba(8,70,128,1)' offset='0.88373'/><stop stop-color='rgba(6,52,96,1)' offset='0.9128'/><stop stop-color='rgba(4,35,64,1)' offset='0.94187'/><stop stop-color='rgba(2,17,32,1)' offset='0.97093'/><stop stop-color='rgba(1,9,16,1)' offset='0.98547'/><stop stop-color='rgba(0,0,0,1)' offset='1'/></radialGradient></defs></svg>\")",
+            backgroundSize: "100% 100%",
+          }}>
+            clean
+          </div>
+          {/* Footer nav */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-[207px] flex items-center justify-between w-[1326px]">
+            <div className="flex gap-6 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
+              <Link href="/documentation" className="hover:opacity-70">Docs</Link>
+              <a href="#" className="hover:opacity-70">GitHub</a>
+              <a href="#" className="hover:opacity-70">Contact</a>
+            </div>
+            <span className="text-sm text-[#1c1c1c] leading-5" style={{ fontFamily: "var(--font-display)" }}>2026 Clean. All rights reserved.</span>
+          </div>
+        </footer>
+      </div>
 
     </div>
   );
