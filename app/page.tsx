@@ -562,7 +562,7 @@ export default function Home() {
             <div className="w-full max-w-[1280px] flex flex-col lg:flex-row items-center lg:justify-between gap-10 lg:gap-8">
               {/* Left text */}
               <motion.div
-                className="flex flex-col items-start gap-6 md:max-w-[550px] lg:max-w-[630px]"
+                className="flex flex-col items-start gap-6 md:max-w-[550px] lg:max-w-[600px] xl:max-w-[690px]"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
