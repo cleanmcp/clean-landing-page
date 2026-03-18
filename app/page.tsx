@@ -39,7 +39,7 @@ function BtnBookDemo({ className = "" }: { className?: string }) {
 
 function BtnTryClean() {
   return (
-    <a href="/waitlist" className="relative inline-flex items-center justify-center h-[56px] px-10 rounded-full text-white text-[20px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #60B3F8 100%)", border: "4px solid #DCEFF8", boxShadow: "inset 0px 4px 10px rgba(255,255,255,0.8), inset 0px -3px 6px rgba(20,100,200,0.3)" }}>
+    <a href="/waitlist" className="relative inline-flex items-center justify-center h-[44px] md:h-[48px] lg:h-[56px] px-6 md:px-8 lg:px-10 rounded-full text-white text-[15px] md:text-[17px] lg:text-[20px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] whitespace-nowrap" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #60B3F8 100%)", border: "4px solid #DCEFF8", boxShadow: "inset 0px 4px 10px rgba(255,255,255,0.8), inset 0px -3px 6px rgba(20,100,200,0.3)" }}>
       <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(20,100,200,0.4)" }}>Try Clean Now</span>
     </a>
   );
@@ -419,23 +419,13 @@ function OrbitSection() {
   });
   const orbitRotate = useTransform(scrollYProgress, [0, 1], [15, 0]);
 
-  /* Icon positions from Figma, relative to section center-x.
-     Figma section = 1440×800. Icons positioned absolutely within that. */
   const iconClass = "absolute z-10 w-[80px] h-[80px] bg-white border-[8px] border-[#5eb1ff] rounded-full flex items-center justify-center -translate-x-1/2";
 
-  const agentIcons = [
-    { src: "claude-icon.svg", alt: "Claude" },
-    { src: "cursor-icon.svg", alt: "Cursor" },
-    { src: "antigravity-icon.png", alt: "ChatGPT" },
-    { src: "windsurf-icon.svg", alt: "Windsurf" },
-    { src: "openai-icon.svg", alt: "OpenAI" },
-  ];
-
   return (
-    <section ref={sectionRef} className="relative bg-black rounded-t-[24px] sm:rounded-t-[36px] lg:rounded-t-[48px] overflow-hidden sm:h-[680px] lg:h-[800px]">
-      {/* Text */}
+    <section ref={sectionRef} className="relative bg-black rounded-t-[24px] sm:rounded-t-[36px] lg:rounded-t-[48px] overflow-hidden h-[500px] sm:h-[600px] lg:h-[800px]">
+      {/* Text — lives outside the scale wrapper so it sizes independently */}
       <motion.div
-        className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-auto sm:top-[70px] lg:top-[140px] w-full max-w-[1280px] px-5 pt-12 sm:py-0 text-center z-10 mx-auto"
+        className="absolute left-1/2 -translate-x-1/2 top-[40px] sm:top-[60px] lg:top-[140px] w-full max-w-[1280px] px-5 text-center z-10"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -444,84 +434,61 @@ function OrbitSection() {
           text="Enable your coding agents to collaborate seamlessly with a shared context."
           baseOverlayColor="rgba(255, 255, 255, 0.3)"
           activeColor="#ffffff"
-          className="text-[24px] sm:text-[36px] lg:text-[56px] font-semibold text-center tracking-[-1.12px] leading-[normal] max-w-full sm:max-w-[800px] mx-auto justify-center"
+          className="text-[24px] sm:text-[36px] lg:text-[56px] font-semibold text-center tracking-[-1.12px] leading-[1.2] sm:leading-[normal] max-w-[340px] sm:max-w-[600px] lg:max-w-[800px] mx-auto justify-center"
           style={{ fontFamily: "var(--font-jakarta)" }}
         />
       </motion.div>
 
-      {/* ── Mobile: agent icons hub visual ── */}
-      <div className="relative sm:hidden flex flex-col items-center gap-6 pb-14 pt-10 px-5">
-        {/* Agent icons row */}
-        <div className="flex items-center justify-center gap-3">
-          {agentIcons.map((icon, i) => (
-            <motion.div
-              key={icon.alt}
-              className="w-[48px] h-[48px] bg-white border-[4px] border-[#5eb1ff] rounded-full flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.5 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.4 }}
-            >
-              <Image src={`${A}/${icon.src}`} alt={icon.alt} width={24} height={24} className="object-contain" />
-            </motion.div>
-          ))}
-        </div>
-        {/* Connecting lines to center */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-px h-6 bg-gradient-to-b from-[#5eb1ff] to-[#79c0ff]" />
-          <div className="w-[56px] h-[56px] rounded-full bg-[#79c0ff] border-[4px] border-[#5eb1ff] flex items-center justify-center shadow-[0_0_30px_rgba(94,177,255,0.5)]">
-            <Image src={`${A}/orbit-clean.svg`} alt="Clean" width={32} height={32} className="object-contain" />
-          </div>
-          <span className="text-xs font-semibold text-[#79c0ff] uppercase tracking-wider mt-1" style={{ fontFamily: "var(--font-jakarta)" }}>Shared Context</span>
-        </div>
-      </div>
-
-      {/* ── Desktop: orbit assembly ── */}
-      {/* Radial glow behind the rings */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[236px] w-[994px] h-[564px] pointer-events-none hidden sm:block">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img alt="" src={`${A}/orbit-glow.svg`} className="w-full h-full" />
-      </div>
-
-      {/* Bottom ellipse glow */}
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[1440px] h-[223px] pointer-events-none hidden sm:block">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img alt="" src={`${A}/orbit-ellipse-glow.svg`} className="w-full h-full" />
-      </div>
-
-      {/* Orbit assembly — tablet/desktop only */}
+      {/* Orbit visuals — scale wrapper only around the orbit, not the text */}
       <div
-        className="absolute inset-0 hidden sm:block sm:scale-[0.75] lg:scale-100"
-        style={{ transformOrigin: "50% 40%" }}
+        className="absolute bottom-[8px] left-1/2 -translate-x-1/2 w-[1440px] h-[800px] scale-[0.65] sm:scale-[0.8] lg:scale-100"
+        style={{ transformOrigin: "50% 100%" }}
       >
-      <motion.div
-        className="absolute inset-0"
-        style={{ rotate: orbitRotate, transformOrigin: "50% 80%" }}
-      >
-        <div className="absolute left-1/2 -translate-x-1/2 w-[786px] h-[690px]" style={{ top: 425 }}>
-          <Image src={`${A}/orbit-rings.svg`} alt="" fill className="object-contain" />
+        {/* Radial glow behind the rings */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[236px] w-[994px] h-[564px] pointer-events-none">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" src={`${A}/orbit-glow.svg`} className="w-full h-full" />
         </div>
 
-        <div className={iconClass} style={{ left: 'calc(50% - 8px)', top: 385 }}>
-          <Image src={`${A}/claude-icon.svg`} alt="Windsurf" width={40} height={40} className="object-contain" />
-        </div>
-        <div className={iconClass} style={{ left: 'calc(50% - 236px)', top: 455 }}>
-          <Image src={`${A}/cursor-icon.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
-        </div>
-        <div className={iconClass} style={{ left: 'calc(50% + 218px)', top: 456 }}>
-          <Image src={`${A}/antigravity-icon.png`} alt="ChatGPT" width={40} height={40} className="object-contain" />
-        </div>
-        <div className={iconClass} style={{ left: 'calc(50% - 374px)', top: 643 }}>
-          <Image src={`${A}/windsurf-icon.svg`} alt="OpenAI" width={40} height={40} className="object-contain" />
-        </div>
-        <div className={iconClass} style={{ left: 'calc(50% + 358px)', top: 643 }}>
-          <Image src={`${A}/openai-icon.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
+        {/* Bottom ellipse glow */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[1440px] h-[223px] pointer-events-none">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" src={`${A}/orbit-ellipse-glow.svg`} className="w-full h-full" />
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 z-20 w-[90px] h-[90px]" style={{ top: 641 }}>
-          <Image src={`${A}/orbit-clean.svg`} alt="Clean" fill className="object-contain" />
-        </div>
-      </motion.div>
+        {/* Orbit assembly */}
+        <motion.div
+          className="absolute inset-0"
+          style={{ rotate: orbitRotate, transformOrigin: "50% 80%" }}
+        >
+          <div className="absolute left-1/2 -translate-x-1/2 w-[786px] h-[690px]" style={{ top: 425 }}>
+            <Image src={`${A}/orbit-rings.svg`} alt="" fill className="object-contain" />
+          </div>
+
+          <div className={iconClass} style={{ left: 'calc(50% - 8px)', top: 385 }}>
+            <Image src={`${A}/claude-icon.svg`} alt="Claude" width={40} height={40} className="object-contain" />
+          </div>
+          <div className={iconClass} style={{ left: 'calc(50% - 236px)', top: 455 }}>
+            <Image src={`${A}/cursor-icon.svg`} alt="Cursor" width={40} height={40} className="object-contain" />
+          </div>
+          <div className={iconClass} style={{ left: 'calc(50% + 218px)', top: 456 }}>
+            <Image src={`${A}/antigravity-icon.png`} alt="ChatGPT" width={40} height={40} className="object-contain" />
+          </div>
+          <div className={iconClass} style={{ left: 'calc(50% - 374px)', top: 643 }}>
+            <Image src={`${A}/windsurf-icon.svg`} alt="Windsurf" width={40} height={40} className="object-contain" />
+          </div>
+          <div className={iconClass} style={{ left: 'calc(50% + 358px)', top: 643 }}>
+            <Image src={`${A}/openai-icon.svg`} alt="OpenAI" width={40} height={40} className="object-contain" />
+          </div>
+
+          <div className="absolute left-1/2 -translate-x-1/2 z-20 w-[90px] h-[90px]" style={{ top: 641 }}>
+            <Image src={`${A}/orbit-clean.svg`} alt="Clean" fill className="object-contain" />
+          </div>
+
+          <div className="absolute left-1/2 -translate-x-1/2 z-20 flex flex-col items-center" style={{ top: 745 }}>
+            <span className="text-[14px] font-bold text-[#79c0ff] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-jakarta)" }}>Shared Context</span>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -758,30 +725,30 @@ export default function Home() {
           { num: "01", label: "Connect Once", heading: "Point Clean\nat your codebase.", desc: "We index everything intelligently—structure, patterns, dependencies.", step: 1 as const },
           { num: "02", label: "Use Any Agent", heading: "Claude, Cursor, Codex", desc: "—doesn't matter. They all tap into the same pre-built", step: 2 as const },
           { num: "03", label: "Stay in Sync", heading: "With Team", desc: "Your whole team shares the same codebase understanding.\nNo more repeated explanations.", step: 3 as const },
-        ].map((s) => (
+        ].map((s, i, arr) => (
           <ScrollStackItem key={s.num}>
             <div className="bg-transparent py-3">
-              <div className="mx-2 sm:mx-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden relative bg-[#f8fbff] min-h-[500px] sm:min-h-[600px] lg:min-h-[705px] h-auto">
-                <div className="flex items-center justify-center py-12 lg:py-0 lg:absolute lg:inset-0 px-5 sm:px-10">
-                  <div className="w-full max-w-[1280px] flex flex-col lg:flex-row items-start lg:items-center lg:justify-between gap-8">
+              <div className="mx-2 sm:mx-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden relative bg-[#f8fbff] min-h-[500px] sm:min-h-[600px] md:min-h-[705px] lg:min-h-[705px] h-auto">
+                <div className="flex items-center justify-center py-12 md:py-0 md:absolute md:inset-0 px-5 sm:px-10">
+                  <div className="w-full max-w-[1280px] flex flex-col md:flex-row items-start md:items-center md:justify-between gap-8">
                     {/* Left — step content */}
                     <div className="flex gap-6 sm:gap-12 items-stretch">
                       {/* Step number + line */}
                       <div className="flex flex-col items-center gap-1 py-6 sm:py-12">
                         <span className="text-lg font-semibold text-[#66a6dd] uppercase">{s.num}</span>
                         <div className="step-line flex-1 w-[3px] rounded-full" />
-                        <span className="text-lg text-[#1c1c1c] opacity-10 uppercase">03</span>
+                        <span className="text-lg text-[#1c1c1c] opacity-10 uppercase">{arr[i + 1]?.num ?? s.num}</span>
                       </div>
                       {/* Text */}
                       <div className="flex flex-col gap-4 sm:gap-6 justify-center py-6 sm:py-12 max-w-[531px]">
-                        <span className="gradient-text-blue text-xl font-bold uppercase" style={{ fontFamily: "var(--font-display)" }}>{s.label}</span>
+                        <span className="gradient-text-blue text-xl font-bold uppercase whitespace-nowrap" style={{ fontFamily: "var(--font-display)" }}>{s.label}</span>
                         <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1c1c1c] leading-[1.25] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.heading}</h3>
                         <p className="text-base sm:text-lg text-[#8b949e] tracking-tight leading-[29px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.desc}</p>
                         <BtnTryClean />
                       </div>
                     </div>
                     {/* Right — flow diagram (hidden on mobile) */}
-                    <div className="hidden md:block">
+                    <div className="hidden md:block md:scale-[0.7] md:origin-right lg:scale-100">
                       <FlowDiagram step={s.step} />
                     </div>
                   </div>
