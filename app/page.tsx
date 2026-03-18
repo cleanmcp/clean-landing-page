@@ -939,15 +939,15 @@ export default function Home() {
           viewport={{ once: true }}
         >
           <div className="stat-card flex-1 bg-[#1772e7] h-[160px] sm:h-[300px] lg:h-[506px] text-white flex flex-col justify-between">
-            <span className="stat-number block text-[48px] sm:text-[100px] lg:text-[164px] font-bold leading-none tracking-[-3px] sm:tracking-[-8px] lg:tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>50%</span>
+            <span className="stat-number block text-[48px] sm:text-[66px] lg:text-[120px] font-bold leading-none tracking-[-3px] sm:tracking-[-8px] lg:tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>50%</span>
             <span className="text-sm sm:text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>less token spend</span>
           </div>
           <div className="stat-card flex-1 bg-[#66a6dd] h-[160px] sm:h-[300px] lg:h-[506px] text-white flex flex-col justify-between">
-            <span className="stat-number block text-[48px] sm:text-[100px] lg:text-[164px] font-bold leading-none tracking-[-3px] sm:tracking-[-8px] lg:tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>3x</span>
+            <span className="stat-number block text-[48px] sm:text-[66px] lg:text-[120px] font-bold leading-none tracking-[-3px] sm:tracking-[-8px] lg:tracking-[-13px]" style={{ fontFamily: "var(--font-jakarta)" }}>3x</span>
             <span className="text-sm sm:text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>faster sessions</span>
           </div>
           <div className="stat-card flex-1 bg-white border border-[#5eb1ff] h-[160px] sm:h-[300px] lg:h-[506px] text-[#1772e7] flex flex-col justify-between">
-            <span className="stat-number block text-[48px] sm:text-[100px] lg:text-[164px] font-bold leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>1</span>
+            <span className="stat-number block text-[48px] sm:text-[66px] lg:text-[120px] font-bold leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>1</span>
             <span className="text-sm sm:text-xl" style={{ fontFamily: "var(--font-jakarta)" }}>MCP to rule them all</span>
           </div>
         </motion.div>
