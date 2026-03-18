@@ -56,7 +56,6 @@ function BtnJoinWaitlist({ className = "" }: { className?: string }) {
 /* ───── Sticky Glass Navbar ───── */
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -93,28 +92,6 @@ function Navbar() {
           }}
         />
 
-        {/* Left — links (hidden on mobile) */}
-        <div className="relative z-10 hidden md:flex items-center gap-6 text-white text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-          <Link href="/pricing-plan" className="hover:opacity-80 transition-opacity">Pricing</Link>
-          <Link href="https://docs.tryclean.ai" className="hover:opacity-80 transition-opacity">Docs</Link>
-          <Link href="/resources" className="hover:opacity-80 transition-opacity">Resources</Link>
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          className="relative z-10 flex md:hidden items-center justify-center w-10 h-10 text-white"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            {mobileMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
-
         {/* Center — logo */}
         <Link href="/" className="relative z-10 flex items-center gap-0.5">
           <Image src={`${A}/clean-icon.svg`} alt="" width={24} height={24} />
@@ -123,7 +100,7 @@ function Navbar() {
 
         {/* Right — actions */}
         <div className="relative z-10 flex items-center gap-4 sm:gap-6">
-          <Link href="/sign-in" className="hidden sm:block text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
+          <Link href="/sign-in" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
           <a href="/waitlist" className="group relative inline-flex items-center h-[40px] sm:h-[46px] rounded-full text-white text-[13px] sm:text-[15px] font-semibold tracking-tight pl-4 sm:pl-5 pr-10 sm:pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
             <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
             <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-7 sm:size-8 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
@@ -132,16 +109,6 @@ function Navbar() {
           </a>
         </div>
       </motion.nav>
-
-      {/* Mobile menu overlay */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center gap-8 md:hidden">
-          <Link href="/pricing-plan" className="text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
-          <Link href="/documentation" className="text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>Docs</Link>
-          <Link href="/resources" className="text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>Resources</Link>
-          <Link href="/sign-in" className="text-xl font-semibold text-white/70" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-        </div>
-      )}
     </>
   );
 }
