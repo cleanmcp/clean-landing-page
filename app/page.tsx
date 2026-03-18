@@ -945,7 +945,6 @@ export default function Home() {
           {/* Footer nav */}
           <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:top-[207px] flex flex-col sm:flex-row items-center sm:justify-between w-full max-w-[1326px] px-5 gap-4 sm:gap-0 mx-auto">
             <div className="flex gap-6 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
-              <Link href="/documentation" className="hover:opacity-70">Docs</Link>
               <a href="https://www.linkedin.com/company/cleanailabs" target="_blank" rel="noopener noreferrer" className="hover:opacity-70">LinkedIn</a>
               <Link href="/contact" className="hover:opacity-70">Contact</Link>
             </div>

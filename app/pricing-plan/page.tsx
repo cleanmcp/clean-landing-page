@@ -322,7 +322,6 @@ export default function PricingPlanPage() {
       <footer className="relative z-10 border-t border-white/8 px-8 py-8 sm:px-12">
         <div className="mx-auto flex max-w-6xl flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex gap-6 text-sm text-white/30" style={{ fontFamily: "var(--font-display)" }}>
-            <Link href="/documentation" className="hover:text-white/60 transition-colors">Docs</Link>
             <a href="https://www.linkedin.com/company/cleanailabs" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">LinkedIn</a>
             <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
           </div>
