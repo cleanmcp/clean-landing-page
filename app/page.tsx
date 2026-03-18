@@ -506,7 +506,7 @@ export default function Home() {
         <div className="absolute inset-2 sm:inset-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden">
           <Image src={`${A}/hero-bg.png`} alt="" fill className="object-cover" priority />
           {/* 3D Glass logo */}
-          <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 top-[420px] w-[962px] h-[950px]">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[320px] sm:top-[420px] w-[500px] h-[500px] sm:w-[962px] sm:h-[950px]">
             <Image src={`${A}/glass-logo.png`} alt="" fill className="object-cover" />
           </div>
         </div>
@@ -895,7 +895,7 @@ export default function Home() {
           <Image src={`${A}/stats-bg.png`} alt="" fill className="object-cover" />
         </div>
         {/* "impact" watermark */}
-        <div className="absolute left-[20px] sm:left-[50px] top-[-16px]">
+        <div className="absolute left-[20px] sm:left-[50px] top-[16px]">
           <span className="watermark-text text-[100px] sm:text-[250px] lg:text-[400px] font-bold tracking-[-4px] sm:tracking-[-8px] leading-none" style={{ fontFamily: "var(--font-jakarta)" }}>impact</span>
         </div>
         {/* Stat cards */}
