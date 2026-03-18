@@ -722,11 +722,11 @@ export default function Home() {
         {/* Inner edge blur — backdrop-blur clipped inside the arc, softening the inner rim */}
         <div className="absolute left-0 right-0 top-[650px] h-[808px] pointer-events-none backdrop-blur-[50px] hidden sm:block" style={{ maskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)" }} />
         {/* Clean app icon */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[60px] sm:top-[200px] lg:top-[244px] w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[157px] lg:h-[157px] z-10">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[100px] sm:top-[200px] lg:top-[244px] w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[157px] lg:h-[157px] z-10">
           <Image src={`${A}/clean-app-icon.svg`} alt="" fill className="object-contain" />
         </div>
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center pt-[120px] sm:pt-[400px] lg:pt-[563px] w-full max-w-[1280px] mx-auto px-5 gap-6 sm:gap-9">
+        <div className="relative z-10 flex flex-col items-center pt-[200px] sm:pt-[400px] lg:pt-[563px] w-full max-w-[1280px] mx-auto px-5 gap-6 sm:gap-9">
           <SectionBadge icon="ai-idea-icon.svg" label={<>The <em style={{ fontFamily: "var(--font-display)" }}>Solutions</em></>} />
           <h2 className="text-[24px] sm:text-[36px] lg:text-[48px] font-semibold text-[#1c1c1c] text-center leading-[1.25] w-full max-w-[894px]" style={{ fontFamily: "var(--font-jakarta)" }}>
             One{" "}
