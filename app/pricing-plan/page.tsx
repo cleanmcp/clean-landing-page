@@ -177,14 +177,14 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
 
       {/* Price */}
       <div className="mb-6 border-b border-white/8 pb-6">
-        <div className="flex items-end gap-2">
+        <div className="flex flex-col gap-1">
           <span
-            className="text-4xl font-bold tracking-tight text-white sm:text-5xl"
+            className="text-4xl font-bold tracking-tight text-white sm:text-5xl leading-tight"
             style={{ fontFamily: "var(--font-display)" }}
           >
             {plan.price}
           </span>
-          <span className="mb-1.5 text-sm text-white/35" style={{ fontFamily: "var(--font-jakarta)" }}>
+          <span className="text-sm text-white/35 whitespace-normal" style={{ fontFamily: "var(--font-jakarta)" }}>
             {plan.period}
           </span>
         </div>
@@ -323,8 +323,8 @@ export default function PricingPlanPage() {
         <div className="mx-auto flex max-w-6xl flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex gap-6 text-sm text-white/30" style={{ fontFamily: "var(--font-display)" }}>
             <Link href="/documentation" className="hover:text-white/60 transition-colors">Docs</Link>
-            <a href="#" className="hover:text-white/60 transition-colors">GitHub</a>
-            <a href="mailto:hello@tryclean.ai" className="hover:text-white/60 transition-colors">Contact</a>
+            <a href="https://www.linkedin.com/company/cleanailabs" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">LinkedIn</a>
+            <Link href="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
           </div>
           <span className="text-xs text-white/25" style={{ fontFamily: "var(--font-display)" }}>
             2026 Clean. All rights reserved.

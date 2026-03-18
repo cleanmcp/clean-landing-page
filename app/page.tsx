@@ -965,7 +965,7 @@ export default function Home() {
             <Image src={`${A}/footer-subtle-bg.jpg`} alt="" fill className="object-cover" />
           </div>
           {/* "clean" gradient text — hidden on mobile, visible on sm+ */}
-          <div className="hidden sm:block absolute -translate-y-1/2 bg-clip-text text-transparent whitespace-nowrap" style={{
+          <div className="hidden sm:block absolute -translate-y-1/2 bg-clip-text text-transparent whitespace-nowrap pointer-events-none" style={{
             left: "calc(50% - 226px)",
             top: 156,
             fontFamily: "var(--font-jakarta)",
@@ -982,8 +982,8 @@ export default function Home() {
           <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:top-[207px] flex flex-col sm:flex-row items-center sm:justify-between w-full max-w-[1326px] px-5 gap-4 sm:gap-0 mx-auto">
             <div className="flex gap-6 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
               <Link href="/documentation" className="hover:opacity-70">Docs</Link>
-              <a href="#" className="hover:opacity-70">GitHub</a>
-              <a href="#" className="hover:opacity-70">Contact</a>
+              <a href="https://www.linkedin.com/company/cleanailabs" target="_blank" rel="noopener noreferrer" className="hover:opacity-70">LinkedIn</a>
+              <Link href="/contact" className="hover:opacity-70">Contact</Link>
             </div>
             <span className="text-sm text-[#1c1c1c] leading-5" style={{ fontFamily: "var(--font-display)" }}>2026 Clean. All rights reserved.</span>
           </div>
