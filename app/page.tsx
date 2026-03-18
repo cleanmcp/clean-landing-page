@@ -485,9 +485,6 @@ function OrbitSection() {
             <Image src={`${A}/orbit-clean.svg`} alt="Clean" fill className="object-contain" />
           </div>
 
-          <div className="absolute left-1/2 -translate-x-1/2 z-20 flex flex-col items-center" style={{ top: 745 }}>
-            <span className="text-[14px] font-bold text-[#79c0ff] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-jakarta)" }}>Shared Context</span>
-          </div>
         </motion.div>
       </div>
     </section>
