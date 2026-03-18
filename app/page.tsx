@@ -432,10 +432,10 @@ function OrbitSection() {
   ];
 
   return (
-    <section ref={sectionRef} className="relative bg-black rounded-t-[24px] sm:rounded-t-[36px] lg:rounded-t-[48px] overflow-hidden sm:h-[650px] lg:h-[800px]">
+    <section ref={sectionRef} className="relative bg-black rounded-t-[24px] sm:rounded-t-[36px] lg:rounded-t-[48px] overflow-hidden sm:h-[680px] lg:h-[800px]">
       {/* Text */}
       <motion.div
-        className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-auto sm:top-[110px] lg:top-[140px] w-full max-w-[1280px] px-5 pt-12 sm:py-0 text-center z-10 mx-auto"
+        className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-auto sm:top-[70px] lg:top-[140px] w-full max-w-[1280px] px-5 pt-12 sm:py-0 text-center z-10 mx-auto"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -490,9 +490,13 @@ function OrbitSection() {
       </div>
 
       {/* Orbit assembly — tablet/desktop only */}
+      <div
+        className="absolute inset-0 hidden sm:block sm:scale-[0.75] lg:scale-100"
+        style={{ transformOrigin: "50% 40%" }}
+      >
       <motion.div
-        className="absolute inset-0 hidden sm:block sm:scale-[0.7] lg:scale-100 origin-bottom"
-        style={{ rotate: orbitRotate, transformOrigin: "50% 100%" }}
+        className="absolute inset-0"
+        style={{ rotate: orbitRotate, transformOrigin: "50% 80%" }}
       >
         <div className="absolute left-1/2 -translate-x-1/2 w-[786px] h-[690px]" style={{ top: 425 }}>
           <Image src={`${A}/orbit-rings.svg`} alt="" fill className="object-contain" />
@@ -518,6 +522,7 @@ function OrbitSection() {
           <Image src={`${A}/orbit-clean.svg`} alt="Clean" fill className="object-contain" />
         </div>
       </motion.div>
+      </div>
     </section>
   );
 }
@@ -590,7 +595,7 @@ export default function Home() {
             <div className="w-full max-w-[1280px] flex flex-col lg:flex-row items-center lg:justify-between gap-10 lg:gap-8">
               {/* Left text */}
               <motion.div
-                className="flex flex-col gap-6 max-w-[667px]"
+                className="flex flex-col items-start gap-6 max-w-[667px]"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -612,7 +617,7 @@ export default function Home() {
                 <div className="relative">
                   <div className="absolute inset-0 blur-[50px] mix-blend-plus-lighter" style={{ backgroundImage: "radial-gradient(circle, white 10%, #bce0ff 15%, #79c0ff 20%, #5eb1ff 30%, #3b92f3 45%, #2982ed 53%, #1772e7 60%)" }} />
                   <div className="relative bg-white/20 border border-white/10 rounded-[20px] p-2.5 overflow-hidden">
-                    <div className="bg-[#1a1a1a] rounded-2xl w-full sm:w-[448px] h-auto sm:h-[408px] p-6 sm:p-8 overflow-hidden">
+                    <div className="bg-[#1a1a1a] rounded-2xl w-full h-auto p-6 sm:p-8 overflow-hidden">
                       <p className="text-[12px] text-white uppercase tracking-[0.6px] mb-6" style={{ fontFamily: "var(--font-jakarta)" }}>Avg. tokens burned per coding session</p>
                       {[
                         { label: "Claude Code", tokens: 250, pct: 100 },
@@ -710,25 +715,25 @@ export default function Home() {
           <span className="text-[120px] sm:text-[300px] lg:text-[500px] font-bold tracking-[-4px] sm:tracking-[-10px] leading-none bg-clip-text text-transparent whitespace-nowrap opacity-50" style={{ fontFamily: "var(--font-jakarta)", backgroundImage: "linear-gradient(180deg, white 0%, rgba(255,255,255,0) 100%)" }}>clean</span>
         </div>
         {/* Glassy semicircle behind the arc */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[200px] sm:top-[280px] lg:top-[356px] w-full h-[880px] pointer-events-none hidden sm:block">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[200px] sm:top-[30px] md:top-[57px] lg:top-[356px] w-full h-[880px] pointer-events-none hidden sm:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" src={`${A}/solution-arc-glass.svg`} className="w-full h-full" />
         </div>
         {/* Blue arc ring */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[280px] sm:top-[360px] lg:top-[449px] w-full h-[763px] pointer-events-none hidden sm:block">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[280px] sm:top-[100px] md:top-[150px] lg:top-[449px] w-full h-[763px] pointer-events-none hidden sm:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" src={`${A}/solution-arc-ring.svg`} className="w-full h-full" />
         </div>
         {/* Inner edge blur — backdrop-blur clipped inside the arc, softening the inner rim */}
-        <div className="absolute left-0 right-0 top-[650px] h-[808px] pointer-events-none backdrop-blur-[50px] hidden sm:block" style={{ maskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)" }} />
+        <div className="absolute left-0 right-0 top-[650px] sm:top-[300px] md:top-[350px] lg:top-[650px] h-[808px] pointer-events-none backdrop-blur-[50px] hidden sm:block" style={{ maskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%, black 85%, transparent 100%)" }} />
         {/* Clean app icon */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[100px] sm:top-[200px] lg:top-[244px] w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[157px] lg:h-[157px] z-10">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[100px] md:top-[250px] sm:top-[200px] lg:top-[244px] w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[157px] lg:h-[157px] z-10">
           <Image src={`${A}/clean-app-icon.svg`} alt="" fill className="object-contain" />
         </div>
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center pt-[200px] sm:pt-[400px] lg:pt-[563px] w-full max-w-[1280px] mx-auto px-5 gap-6 sm:gap-9">
+        <div className="relative z-10 flex flex-col items-center md:pt-[400px] pt-[200px] sm:pt-[400px] lg:pt-[563px] w-full max-w-[1280px] mx-auto px-5 gap-6 sm:gap-9">
           <SectionBadge icon="ai-idea-icon.svg" label={<>The <em style={{ fontFamily: "var(--font-display)" }}>Solutions</em></>} />
-          <h2 className="text-[24px] sm:text-[36px] lg:text-[48px] font-semibold text-[#1c1c1c] text-center leading-[1.25] w-full max-w-[894px]" style={{ fontFamily: "var(--font-jakarta)" }}>
+          <h2 className="text-[24px] sm:text-[36px] md:text-[38px] lg:text-[48px] font-semibold text-[#1c1c1c] text-center leading-[1.25] w-full max-w-[894px]" style={{ fontFamily: "var(--font-jakarta)" }}>
             One{" "}
             <span className="text-[#66a6dd]">MCP server</span>
             {" "}that pre-indexes your codebase and{" "}
