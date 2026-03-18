@@ -562,14 +562,14 @@ export default function Home() {
             <div className="w-full max-w-[1280px] flex flex-col lg:flex-row items-center lg:justify-between gap-10 lg:gap-8">
               {/* Left text */}
               <motion.div
-                className="flex flex-col items-start gap-6 max-w-[667px]"
+                className="flex flex-col items-start gap-6 md:max-w-[550px] lg:max-w-[630px]"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
                 <SectionBadge icon="question-icon.svg" label={<>The <em style={{ fontFamily: "var(--font-display)" }}>Problem</em></>} variant="dark" />
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white leading-[1.25] tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+                <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-semibold text-white leading-[1.25] tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
                   Every agent <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>re-reads</em> your{"\n"}entire codebase. <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>Every time</em>.
                 </h2>
               </motion.div>
