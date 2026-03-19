@@ -1,14 +1,9 @@
 "use client";
 
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-
-const navItems = [
-  { label: "Pricing", href: "/pricing-plan" },
-  { label: "Docs", href: "/documentation" },
-  { label: "Resources", href: "#resources" },
-];
 
 export default function Navbar() {
   const [condensed, setCondensed] = useState(false);
@@ -60,7 +55,7 @@ export default function Navbar() {
       transition={spring}
     >
       <motion.nav
-        className="pointer-events-auto relative flex items-center justify-between w-full"
+        className="pointer-events-auto relative flex items-center justify-between w-full bg-white"
         initial={false}
         animate={{
           maxWidth: condensed ? 540 : 2000,
@@ -74,58 +69,25 @@ export default function Navbar() {
             : "0 0px 0px rgba(0,0,0,0)",
         }}
         transition={spring}
-        style={{ background: "var(--cream)" }}
       >
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2">
+        <Link href="/" className="group flex items-center gap-1">
+          <Image src="/landing/clean-icon.svg" alt="" width={20} height={20} />
           <motion.span
-            className="font-normal tracking-tight transition-colors duration-300 group-hover:text-[var(--accent)]"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="font-bold tracking-tight text-[var(--ink)] transition-colors duration-300 group-hover:text-[var(--blue-dark)]"
+            style={{ fontFamily: "var(--font-jakarta)" }}
             initial={false}
-            animate={{ fontSize: condensed ? "1.15rem" : "1.5rem" }}
+            animate={{ fontSize: condensed ? "1.05rem" : "1.25rem" }}
             transition={spring}
           >
-            Clean
+            lean.ai
           </motion.span>
         </Link>
-
-        {/* Nav Links — absolutely centered */}
-        <motion.div
-          className="pointer-events-auto absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex items-center gap-8"
-          initial={false}
-          animate={{
-            opacity: condensed ? 0 : 1,
-          }}
-          transition={{ opacity: { duration: 0.2 } }}
-          style={{ pointerEvents: condensed ? "none" : "auto" }}
-        >
-          {navItems.map((item) => (
-            item.href.startsWith("#") ? (
-              <a
-                key={item.href}
-                href={item.href}
-                className="group relative text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)]"
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--accent)] transition-all duration-300 group-hover:w-full" />
-              </a>
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group relative text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)]"
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--accent)] transition-all duration-300 group-hover:w-full" />
-              </Link>
-            )
-          ))}
-        </motion.div>
 
         {/* CTA */}
         <div className="flex items-center gap-4">
           <motion.div
-            className="hidden text-sm font-medium text-[var(--ink-light)] transition-colors duration-300 hover:text-[var(--ink)] sm:block"
+            className="hidden text-sm font-medium text-[var(--ink-muted)] transition-colors duration-300 hover:text-[var(--ink)] sm:block"
             initial={false}
             animate={{
               opacity: condensed ? 0 : 1,
@@ -139,7 +101,7 @@ export default function Navbar() {
           </motion.div>
           <Link
             href="/waitlist"
-            className="btn-primary rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
+            className="btn-gradient rounded-full px-5 py-2 text-sm font-semibold text-white transition-all duration-300 hover:scale-105"
           >
             Join Waitlist
           </Link>

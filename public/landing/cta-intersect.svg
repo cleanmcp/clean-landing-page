@@ -1,0 +1,20 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 2190.19 2190.19" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Intersect" filter="url(#filter0_f_0_18)">
+<path d="M1095.09 100C1644.67 100 2090.19 545.52 2090.19 1095.09C2090.19 1644.67 1644.67 2090.19 1095.09 2090.19C545.52 2090.19 100 1644.67 100 1095.09C100 545.519 545.519 100 1095.09 100Z" fill="url(#paint0_radial_0_18)"/>
+</g>
+<defs>
+<filter id="filter0_f_0_18" x="0" y="0" width="2190.19" height="2190.19" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="50" result="effect1_foregroundBlur_0_18"/>
+</filter>
+<radialGradient id="paint0_radial_0_18" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1096.23 776.3) rotate(90.0094) scale(1027.78 1026.6)">
+<stop stop-color="white"/>
+<stop offset="0.270734" stop-color="#C7E5F3"/>
+<stop offset="0.481821" stop-color="#79C0FF"/>
+<stop offset="0.647745" stop-color="#6CB9FF"/>
+<stop offset="0.767464" stop-color="#118CFF"/>
+<stop offset="1"/>
+</radialGradient>
+</defs>
+</svg>

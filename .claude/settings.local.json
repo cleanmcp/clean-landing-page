@@ -5,7 +5,24 @@
       "mcp__Neon__list_projects",
       "mcp__Neon__get_database_tables",
       "mcp__Neon__run_sql",
-      "mcp__Neon__list_shared_projects"
+      "mcp__Neon__list_shared_projects",
+      "mcp__plugin_figma_figma__get_metadata",
+      "mcp__plugin_figma_figma__get_screenshot",
+      "mcp__plugin_figma_figma__whoami",
+      "mcp__plugin_figma_figma__get_design_context",
+      "Bash(curl:*)",
+      "WebFetch(domain:21st.dev)",
+      "Bash(npm ls:*)",
+      "WebFetch(domain:api.fontsource.org)",
+      "WebFetch(domain:api.fontshare.com)",
+      "Bash(cd:*)",
+      "Bash(xxd:*)",
+      "Bash(cp:*)",
+      "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page -name *flow* -o -name *diagram* -o -name *Flow* -o -name *Diagram*)",
+      "Bash(grep -r \"flow-card\\\\|step-line\\\\|feature-card\" /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/app /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/components --include=*.tsx --include=*.css)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest add @systaliko-ui/cards-stack)",
+      "Bash(npx next:*)"
     ]
   }
 }
