@@ -83,6 +83,42 @@ export async function getInstallationToken(installationId: number): Promise<stri
   return data.token;
 }
 
+/**
+ * Get a repo-scoped, read-only installation token.
+ * Restricted to a single repository with only `contents: read` permission.
+ * If the repo isn't covered by this installation, GitHub returns 422.
+ */
+export async function getRepoScopedInstallationToken(
+  installationId: number,
+  repoName: string,
+): Promise<string> {
+  const jwt = await generateAppJwt();
+  const res = await fetch(
+    `https://api.github.com/app/installations/${installationId}/access_tokens`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        repositories: [repoName],
+        permissions: { contents: "read" },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to get repo-scoped token: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  return data.token;
+}
+
 // ---------------------------------------------------------------------------
 // Installation Info
 // ---------------------------------------------------------------------------
