@@ -47,6 +47,7 @@ export async function POST(req: Request) {
     const session = await createCheckoutSession({
       orgId,
       orgName: org?.name || "Unknown",
+      userId: ctx.userId,
       email: user.email,
       priceId,
       quantity: seatCount,
