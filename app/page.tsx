@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import RotatingText from "@/components/RotatingText";
 import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack";
 
@@ -183,7 +183,7 @@ function ScrollRevealText({
   );
 }
 
-function Word({ children, progress, range, baseColor, activeColor }: any) {
+function Word({ children, progress, range, baseColor, activeColor }: { children: string; progress: MotionValue<number>; range: [number, number]; baseColor: string; activeColor: string }) {
   const characters = children.split("");
   const amount = range[1] - range[0];
   const step = amount / children.length;
@@ -205,7 +205,7 @@ function Word({ children, progress, range, baseColor, activeColor }: any) {
   );
 }
 
-function Character({ children, progress, range, activeColor }: any) {
+function Character({ children, progress, range, activeColor }: { children: string; progress: MotionValue<number>; range: [number, number]; activeColor: string }) {
   const opacity = useTransform(progress, range, [0, 1]);
   return (
     <motion.span className="inline-block relative z-10" style={{ opacity, color: activeColor }}>
