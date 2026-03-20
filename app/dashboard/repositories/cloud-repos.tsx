@@ -33,7 +33,7 @@ import { UpgradeModal } from "@/components/upgrade-modal";
 
 interface JobProgress {
   phase: string;
-  progress: number;
+  phase_progress: number;
   files_processed: number;
   files_total: number;
   entities_found: number;
@@ -50,6 +50,8 @@ interface CloudRepo {
   lastIndexedAt: string | null;
   error: string | null;
   createdAt: string;
+  description?: string | null;
+  source?: "github" | "mcp";
   job?: JobProgress | null;
 }
 
@@ -231,6 +233,8 @@ export default function CloudReposPage() {
         return <WifiOff className="h-5 w-5 text-[#f59e0b]" />;
       case "paused":
         return <PauseCircle className="h-5 w-5 text-[#f59e0b]" />;
+      case "not_indexed":
+        return <Clock className="h-5 w-5 text-[var(--dash-text-muted)]" />;
       case "cloning":
       case "indexing":
       case "pending":
@@ -248,6 +252,7 @@ export default function CloudReposPage() {
       case "error": return "Failed";
       case "disconnected": return "Disconnected";
       case "paused": return "Paused";
+      case "not_indexed": return "Not indexed";
       case "cloning": return "Cloning...";
       case "indexing": return "Indexing...";
       case "pending": return "Pending...";
@@ -263,7 +268,9 @@ export default function CloudReposPage() {
         ? "bg-[#ef4444]/10 text-[#ef4444]"
         : status === "disconnected" || status === "paused"
           ? "bg-[#f59e0b]/10 text-[#f59e0b]"
-          : "bg-[#1772E7]/10 text-[var(--dash-accent-light)]";
+          : status === "not_indexed"
+            ? "bg-[var(--dash-text-muted)]/10 text-[var(--dash-text-muted)]"
+            : "bg-[#1772E7]/10 text-[var(--dash-accent-light)]";
     return (
       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${style}`}>
         {text}
@@ -284,7 +291,7 @@ export default function CloudReposPage() {
             Repositories
           </h1>
           <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
-            Manage your indexed GitHub repositories
+            Manage your indexed repositories
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -418,10 +425,12 @@ export default function CloudReposPage() {
                       <p className="font-medium font-mono text-[var(--dash-text)]">
                         {repo.fullName}
                       </p>
-                      {repo.private ? (
-                        <Lock className="h-3 w-3 text-[var(--dash-text-muted)]" />
-                      ) : (
-                        <Globe className="h-3 w-3 text-[var(--dash-text-muted)]" />
+                      {repo.source !== "mcp" && (
+                        repo.private ? (
+                          <Lock className="h-3 w-3 text-[var(--dash-text-muted)]" />
+                        ) : (
+                          <Globe className="h-3 w-3 text-[var(--dash-text-muted)]" />
+                        )
                       )}
                       {repo.language && (
                         <div className="flex items-center gap-1">
@@ -439,25 +448,27 @@ export default function CloudReposPage() {
                       )}
                     </div>
                     <p className="text-sm text-[var(--dash-text-muted)]">
-                      {repo.status === "ready" && repo.entityCount !== null
-                        ? `${repo.entityCount.toLocaleString()} entities`
-                        : repo.error
-                          ? repo.error
-                          : repo.job
-                            ? `${repo.job.phase === "cloning" ? "Cloning" : "Indexing"}${repo.job.files_total > 0 ? ` · ${repo.job.files_processed}/${repo.job.files_total} files` : ""}${repo.job.entities_found > 0 ? ` · ${repo.job.entities_found} entities found` : ""}`
-                            : getStatusText(repo.status)}
+                      {repo.status === "not_indexed"
+                        ? "Saved but not yet indexed"
+                        : repo.status === "ready" && repo.entityCount !== null
+                          ? `${repo.entityCount.toLocaleString()} entities`
+                          : repo.error
+                            ? repo.error
+                            : repo.job
+                              ? `${repo.job.phase === "cloning" ? "Cloning" : "Indexing"}${repo.job.files_total > 0 ? ` · ${repo.job.files_processed}/${repo.job.files_total} files` : ""}${repo.job.entities_found > 0 ? ` · ${repo.job.entities_found} entities found` : ""}`
+                              : getStatusText(repo.status)}
                       {repo.lastIndexedAt && repo.status === "ready" && (
                         <span className="ml-2">
                           · Last indexed {formatDate(repo.lastIndexedAt)}
                         </span>
                       )}
                     </p>
-                    {repo.job && repo.job.progress > 0 && (
+                    {repo.job && (repo.job.phase_progress ?? 0) > 0 && (
                       <div className="mt-1.5 h-1.5 w-48 overflow-hidden rounded-full bg-[var(--dash-bg)]">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
-                            width: `${Math.min(repo.job.progress, 100)}%`,
+                            width: `${Math.min(repo.job.phase_progress ?? 0, 100)}%`,
                             background: "linear-gradient(90deg, #1772E7, #5EB1FF)",
                           }}
                         />
@@ -467,7 +478,17 @@ export default function CloudReposPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Re-index button */}
+                  {/* Index / Re-index button */}
+                  {repo.status === "not_indexed" && (
+                    <button
+                      onClick={() => handleReindex(repo)}
+                      disabled={actionInProgress === repo.id}
+                      className="inline-flex items-center gap-1 rounded-lg bg-[#1772E7] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Index
+                    </button>
+                  )}
                   {(repo.status === "ready" || repo.status === "error") && (
                     <button
                       onClick={() => handleReindex(repo)}

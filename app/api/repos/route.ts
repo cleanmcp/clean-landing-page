@@ -1,3 +1,4 @@
+// Self-hosted mode only. Cloud mode uses /api/cloud-repos.
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { engineFetch } from "@/lib/engine";

@@ -15,9 +15,10 @@ import { getInstallationToken } from "@/lib/github-app";
 /**
  * GET /api/cloud-repos — List cloud repos for the current org.
  *
- * Syncs live status from the Engine for any repos that are still in progress.
- * The Engine tracks real clone/index status in its own metadata DB — we pull
- * that status and update our PostgreSQL records so the frontend sees progress.
+ * Engine is the single source of truth for repo status / progress.
+ * cloudRepos (Postgres) is a lightweight bookmark with GitHub metadata.
+ * We merge both: engine-only repos (MCP-indexed) appear without GitHub
+ * metadata, cloudRepos-only bookmarks appear as "not_indexed".
  */
 export async function GET() {
   try {
@@ -26,116 +27,153 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [repos, [org]] = await Promise.all([
+    // Fetch engine repos + cloudRepos bookmarks + org tier in parallel
+    const [engineResult, bookmarks, [org]] = await Promise.all([
+      engineFetch(ctx.orgId, "/repos", { signal: AbortSignal.timeout(5_000) })
+        .then(async (res) => {
+          if (!res.ok) return [];
+          const data = await res.json();
+          return (data.repos ?? []) as Array<{
+            project_id: string;
+            repo: string;
+            branch: string;
+            status: string;
+            entity_count: number | null;
+            last_indexed_at: string | null;
+            error: string | null;
+            description?: string | null;
+            primary_language?: string | null;
+            tags?: string[] | null;
+            job?: {
+              phase: string;
+              phase_progress: number | null;
+              files_processed: number;
+              files_total: number;
+              entities_found: number;
+            } | null;
+          }>;
+        })
+        .catch(() => [] as Array<{
+          project_id: string;
+          repo: string;
+          branch: string;
+          status: string;
+          entity_count: number | null;
+          last_indexed_at: string | null;
+          error: string | null;
+          description?: string | null;
+          primary_language?: string | null;
+          tags?: string[] | null;
+          job?: {
+            phase: string;
+            phase_progress: number | null;
+            files_processed: number;
+            files_total: number;
+            entities_found: number;
+          } | null;
+        }>),
       db.select().from(cloudRepos).where(eq(cloudRepos.orgId, ctx.orgId)),
       db.select({ tier: organizations.tier }).from(organizations).where(eq(organizations.id, ctx.orgId)).limit(1),
     ]);
 
     const limits = getCloudTierLimits(org?.tier ?? "free");
 
-    // If any repos are in-progress, poll the Engine for live status
-    const inProgress = repos.some((r) =>
-      ["pending", "cloning", "indexing"].includes(r.status)
-    );
+    // Build lookups
+    const bookmarkMap = new Map(bookmarks.map((b) => [b.fullName, b]));
+    const engineMap = new Map(engineResult.map((e) => [e.repo, e]));
 
-    if (inProgress) {
-      try {
-        const engineRes = await engineFetch(ctx.orgId, "/repos", {
-          signal: AbortSignal.timeout(5_000),
-        });
+    // Collect all unique repo names from both sources
+    const allRepoNames = new Set([
+      ...engineResult.map((e) => e.repo),
+      ...bookmarks.map((b) => b.fullName),
+    ]);
 
-        if (engineRes.ok) {
-          const engineData = await engineRes.json();
-          const engineRepos: Array<{
-            repo: string;
-            status: string;
-            entity_count: number | null;
-            last_indexed_at: string | null;
-            error: string | null;
-            job?: {
-              phase: string;
-              progress: number;
-              files_processed: number;
-              files_total: number;
-              entities_found: number;
-            } | null;
-          }> = engineData.repos ?? [];
+    const merged = Array.from(allRepoNames).map((fullName) => {
+      const engine = engineMap.get(fullName);
+      const bookmark = bookmarkMap.get(fullName);
 
-          // Build lookup by repo full name
-          const engineMap = new Map(engineRepos.map((r) => [r.repo, r]));
-
-          // Sync engine status → PostgreSQL for in-progress repos
-          for (const repo of repos) {
-            if (!["pending", "cloning", "indexing"].includes(repo.status)) continue;
-
-            const engine = engineMap.get(repo.fullName);
-            if (!engine) continue;
-
-            // Map engine status to our status enum
-            const newStatus = engine.status === "ready"
-              ? "ready"
-              : engine.status === "error"
-                ? "error"
-                : engine.status === "indexing"
-                  ? "indexing"
-                  : engine.status === "cloning"
-                    ? "cloning"
-                    : repo.status;
-
-            // Only update if status actually changed
-            if (newStatus !== repo.status || engine.entity_count !== repo.entityCount) {
-              await db
-                .update(cloudRepos)
-                .set({
-                  status: newStatus as typeof repo.status,
-                  entityCount: engine.entity_count ?? repo.entityCount,
-                  lastIndexedAt: engine.last_indexed_at ? new Date(engine.last_indexed_at) : repo.lastIndexedAt,
-                  error: engine.error ?? null,
-                  updatedAt: new Date(),
-                })
-                .where(eq(cloudRepos.id, repo.id));
-
-              // Update the in-memory object for the response
-              repo.status = newStatus as typeof repo.status;
-              repo.entityCount = engine.entity_count ?? repo.entityCount;
-              repo.lastIndexedAt = engine.last_indexed_at ? new Date(engine.last_indexed_at) : repo.lastIndexedAt;
-              repo.error = engine.error ?? null;
-            }
-
-            // Stash job progress for the response (not persisted in DB)
-            if (engine.job) {
-              (repo as Record<string, unknown>)._job = engine.job;
-            }
-          }
-        }
-      } catch {
-        // Engine unreachable — return stale data, don't fail the request
+      if (engine && bookmark) {
+        // Both exist — engine is primary, bookmark supplements with GitHub metadata
+        return {
+          id: bookmark.id,
+          fullName,
+          defaultBranch: engine.branch ?? bookmark.defaultBranch,
+          language: bookmark.language ?? engine.primary_language ?? null,
+          private: bookmark.private,
+          status: engine.status,
+          entityCount: engine.entity_count,
+          lastIndexedAt: engine.last_indexed_at ?? null,
+          error: engine.error ?? null,
+          createdAt: bookmark.createdAt.toISOString(),
+          description: engine.description ?? null,
+          source: "github" as const,
+          ...(engine.job ? {
+            job: {
+              phase: engine.job.phase,
+              phase_progress: engine.job.phase_progress ?? 0,
+              files_processed: engine.job.files_processed,
+              files_total: engine.job.files_total,
+              entities_found: engine.job.entities_found,
+            },
+          } : {}),
+        };
       }
-    }
+
+      if (engine) {
+        // Engine-only (indexed via MCP/API, no GitHub bookmark)
+        return {
+          id: engine.project_id,
+          fullName,
+          defaultBranch: engine.branch,
+          language: engine.primary_language ?? null,
+          private: false,
+          status: engine.status,
+          entityCount: engine.entity_count,
+          lastIndexedAt: engine.last_indexed_at ?? null,
+          error: engine.error ?? null,
+          createdAt: engine.last_indexed_at ?? new Date().toISOString(),
+          description: engine.description ?? null,
+          source: "mcp" as const,
+          ...(engine.job ? {
+            job: {
+              phase: engine.job.phase,
+              phase_progress: engine.job.phase_progress ?? 0,
+              files_processed: engine.job.files_processed,
+              files_total: engine.job.files_total,
+              entities_found: engine.job.entities_found,
+            },
+          } : {}),
+        };
+      }
+
+      // Bookmark-only (saved in dashboard but not yet in engine)
+      return {
+        id: bookmark!.id,
+        fullName,
+        defaultBranch: bookmark!.defaultBranch,
+        language: bookmark!.language ?? null,
+        private: bookmark!.private,
+        status: "not_indexed",
+        entityCount: null,
+        lastIndexedAt: null,
+        error: null,
+        createdAt: bookmark!.createdAt.toISOString(),
+        description: null,
+        source: "github" as const,
+      };
+    });
+
+    // Sort: in-progress first, then ready, then not_indexed, then error
+    const statusOrder: Record<string, number> = {
+      cloning: 0, indexing: 0, pending: 0,
+      ready: 1,
+      not_indexed: 2,
+      error: 3,
+    };
+    merged.sort((a, b) => (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4));
 
     return NextResponse.json({
-      repos: repos.map((r) => {
-        const job = (r as Record<string, unknown>)._job as {
-          phase: string;
-          progress: number;
-          files_processed: number;
-          files_total: number;
-          entities_found: number;
-        } | undefined;
-        return {
-          id: r.id,
-          fullName: r.fullName,
-          defaultBranch: r.defaultBranch,
-          language: r.language,
-          private: r.private,
-          status: r.status,
-          entityCount: r.entityCount,
-          lastIndexedAt: r.lastIndexedAt?.toISOString() ?? null,
-          error: r.error,
-          createdAt: r.createdAt.toISOString(),
-          ...(job ? { job } : {}),
-        };
-      }),
+      repos: merged,
       repoLimit: limits.repos === Infinity ? null : limits.repos,
     });
   } catch (error) {
@@ -302,10 +340,7 @@ export async function POST(request: NextRequest) {
             throw new Error(`Engine returned ${engineRes.status}: ${errBody}`);
           }
 
-          await db
-            .update(cloudRepos)
-            .set({ status: "cloning", updatedAt: new Date() })
-            .where(eq(cloudRepos.id, repo.id));
+          // Engine owns status — no need to sync status back to cloudRepos bookmark
 
           audit({
             orgId: ctx.orgId,
