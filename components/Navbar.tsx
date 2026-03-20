@@ -5,12 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-const navItems = [
-  { label: "Pricing", href: "/pricing-plan" },
-  { label: "Docs", href: "/documentation" },
-  { label: "Resources", href: "#resources" },
-];
-
 export default function Navbar() {
   const [condensed, setCondensed] = useState(false);
   const { scrollY } = useScroll();
@@ -89,39 +83,6 @@ export default function Navbar() {
             lean.ai
           </motion.span>
         </Link>
-
-        {/* Nav Links — absolutely centered */}
-        <motion.div
-          className="pointer-events-auto absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex items-center gap-8"
-          initial={false}
-          animate={{
-            opacity: condensed ? 0 : 1,
-          }}
-          transition={{ opacity: { duration: 0.2 } }}
-          style={{ pointerEvents: condensed ? "none" : "auto" }}
-        >
-          {navItems.map((item) =>
-            item.href.startsWith("#") ? (
-              <a
-                key={item.href}
-                href={item.href}
-                className="group relative text-sm font-medium text-[var(--ink-muted)] transition-colors duration-300 hover:text-[var(--ink)]"
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--blue-dark)] transition-all duration-300 group-hover:w-full" />
-              </a>
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group relative text-sm font-medium text-[var(--ink-muted)] transition-colors duration-300 hover:text-[var(--ink)]"
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--blue-dark)] transition-all duration-300 group-hover:w-full" />
-              </Link>
-            )
-          )}
-        </motion.div>
 
         {/* CTA */}
         <div className="flex items-center gap-4">

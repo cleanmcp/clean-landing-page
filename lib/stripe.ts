@@ -15,6 +15,7 @@ export function getStripe() {
 export async function createCheckoutSession({
   orgId,
   orgName,
+  userId,
   email,
   priceId,
   successUrl,
@@ -23,6 +24,7 @@ export async function createCheckoutSession({
 }: {
   orgId: string;
   orgName: string;
+  userId: string;
   email: string;
   priceId: string;
   successUrl: string;
@@ -38,7 +40,7 @@ export async function createCheckoutSession({
     cancel_url: cancelUrl,
     metadata: { orgId, orgName },
     subscription_data: {
-      metadata: { orgId, orgName },
+      metadata: { orgId, orgName, userId },
     },
   });
 
