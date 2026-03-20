@@ -422,10 +422,12 @@ export default function Sidebar() {
   const [plan, setPlan] = useState<PlanInfo | null>(null);
   const pathname = usePathname();
 
-  // Close mobile drawer on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  // Close mobile drawer on route change — derive from pathname, no effect needed
+  const prevPathRef = useRef(pathname);
+  if (prevPathRef.current !== pathname) {
+    prevPathRef.current = pathname;
+    if (mobileOpen) setMobileOpen(false);
+  }
 
   // Cmd+K shortcut
   useEffect(() => {

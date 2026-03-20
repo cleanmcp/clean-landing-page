@@ -67,7 +67,7 @@ export function PlanPickerDialog({
 
   async function handleSelect(plan: PlanOption) {
     if (plan.id === "enterprise") {
-      window.location.href = "mailto:hello@tryclean.ai";
+      window.open("mailto:hello@tryclean.ai", "_self");
       return;
     }
 
@@ -93,7 +93,7 @@ export function PlanPickerDialog({
       });
       if (res.ok) {
         const { url } = await res.json();
-        window.location.href = url;
+        window.open(url, "_self");
       } else {
         const json = await res.json().catch(() => ({}));
         setError(json.error || "Failed to start checkout");
