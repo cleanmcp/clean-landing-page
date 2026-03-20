@@ -95,12 +95,12 @@ function Navbar() {
         {/* Center — logo */}
         <Link href="/" className="relative z-10 flex items-center gap-0.5">
           <Image src={`${A}/clean-icon.svg`} alt="" width={24} height={24} />
-          <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>lean.ai</span>
+          <span className="text-lg sm:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>lean.ai</span>
         </Link>
 
         {/* Right — actions */}
-        <div className="relative z-10 flex items-center gap-4 sm:gap-6">
-          <Link href="/sign-in" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
+        <div className="relative z-10 flex items-center gap-2 sm:gap-6">
+          <Link href="/sign-in" className="text-sm sm:text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
           <a href="/waitlist" className="group relative inline-flex items-center h-[40px] sm:h-[46px] rounded-full text-white text-[13px] sm:text-[15px] font-semibold tracking-tight pl-4 sm:pl-5 pr-10 sm:pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
             <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
             <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-7 sm:size-8 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
