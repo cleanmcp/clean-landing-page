@@ -36,17 +36,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Parse request body
-    const body = await request.json();
-    const tier = body.tier ?? "pro";
-    const months = body.months ?? 12;
+    // 3. Derive tier from org's current paid subscription — not user input
+    const [orgForTier] = await db
+      .select({ tier: organizations.tier })
+      .from(organizations)
+      .where(eq(organizations.id, ctx.orgId))
+      .limit(1);
 
-    if (!["free", "pro", "enterprise"].includes(tier)) {
-      return NextResponse.json(
-        { error: "Invalid tier — must be free, pro, or enterprise" },
-        { status: 400 }
-      );
-    }
+    const tier = orgForTier?.tier ?? "free";
+    const months = 12; // Fixed duration — not user-controllable
 
     // 4. Look up org
     const [org] = await db
