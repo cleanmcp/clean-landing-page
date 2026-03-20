@@ -422,12 +422,7 @@ export default function Sidebar() {
   const [plan, setPlan] = useState<PlanInfo | null>(null);
   const pathname = usePathname();
 
-  // Close mobile drawer on route change — derive from pathname, no effect needed
-  const prevPathRef = useRef(pathname);
-  if (prevPathRef.current !== pathname) {
-    prevPathRef.current = pathname;
-    if (mobileOpen) setMobileOpen(false);
-  }
+  // Mobile drawer closes via onNavClick prop on SidebarContent
 
   // Cmd+K shortcut
   useEffect(() => {
