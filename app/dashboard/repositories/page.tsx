@@ -29,7 +29,7 @@ import CloudReposPage from "./cloud-repos";
 
 interface JobInfo {
   current_phase: string | null;
-  phase_progress: number;
+  phase_progress: number | null;
   files_processed: number;
   files_total: number;
   entities_found: number;
@@ -93,32 +93,6 @@ const POLL_ACTIVE = 3000;
 const POLL_IDLE = 30000;
 
 export default function ReposPage() {
-  const [tier, setTier] = useState<string | null>(null);
-  const [tierLoading, setTierLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/org")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        setTier(data?.org?.tier ?? "free");
-      })
-      .catch(() => setTier("free"))
-      .finally(() => setTierLoading(false));
-  }, []);
-
-  if (tierLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--dash-text-muted)]" />
-      </div>
-    );
-  }
-
-  // Enterprise orgs may use a self-hosted engine; everyone else uses cloud.
-  if (tier === "enterprise") {
-    return <SelfHostedReposPage />;
-  }
-
   return <CloudReposPage />;
 }
 
@@ -433,9 +407,9 @@ function SelfHostedReposPage() {
             <span>{job.entities_found.toLocaleString()} entities found</span>
           )}
         </div>
-        <Progress value={job.phase_progress} className="h-2" />
+        <Progress value={job.phase_progress ?? 0} className="h-2" />
         <div className="text-right text-xs text-[var(--dash-text-muted)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
-          {Math.round(job.phase_progress)}%
+          {Math.round(job.phase_progress ?? 0)}%
         </div>
       </div>
     );
