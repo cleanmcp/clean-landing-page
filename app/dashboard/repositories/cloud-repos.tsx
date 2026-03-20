@@ -172,7 +172,7 @@ export default function CloudReposPage() {
   async function handleDelete(repoId: string, fullName: string) {
     setActionInProgress(repoId);
     try {
-      const res = await fetch(`/api/cloud-repos?id=${encodeURIComponent(repoId)}`, {
+      const res = await fetch(`/api/cloud-repos?id=${encodeURIComponent(repoId)}&fullName=${encodeURIComponent(fullName)}`, {
         method: "DELETE",
       });
       if (res.ok) {

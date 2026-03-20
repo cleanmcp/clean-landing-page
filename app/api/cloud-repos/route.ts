@@ -400,19 +400,24 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verify ownership
-    const [repo] = await db
+    // Try cloudRepos bookmark first (GitHub App repos have a UUID here)
+    const [bookmark] = await db
       .select()
       .from(cloudRepos)
       .where(and(eq(cloudRepos.id, repoId), eq(cloudRepos.orgId, ctx.orgId)))
       .limit(1);
 
-    if (!repo) {
+    // Also accept fullName param for MCP-indexed repos (no cloudRepos row)
+    const fullName = bookmark?.fullName ?? searchParams.get("fullName");
+
+    if (!bookmark && !fullName) {
       return NextResponse.json({ error: "Repo not found" }, { status: 404 });
     }
 
-    // Delete from engine
-    const parts = repo.fullName.split("/");
+    const repoName = fullName ?? bookmark?.fullName;
+
+    // Delete from engine (org-scoped — safe)
+    const parts = repoName!.split("/");
     if (parts.length === 2) {
       try {
         await engineFetch(ctx.orgId, `/repos/${parts[0]}/${parts[1]}`, {
@@ -423,15 +428,18 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    await db.delete(cloudRepos).where(eq(cloudRepos.id, repoId));
+    // Delete cloudRepos bookmark if it exists
+    if (bookmark) {
+      await db.delete(cloudRepos).where(eq(cloudRepos.id, bookmark.id));
+    }
 
     audit({
       orgId: ctx.orgId,
       userId: ctx.userId,
       action: "repo.deleted",
       resourceType: "repository",
-      resourceId: repo.fullName,
-      metadata: { repo: repo.fullName, mode: "cloud" },
+      resourceId: repoName!,
+      metadata: { repo: repoName!, mode: "cloud" },
     });
 
     return NextResponse.json({ status: "deleted" });
