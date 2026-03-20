@@ -1,29 +1,11 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import { Toaster } from "sonner";
-import {
-  LayoutDashboard,
-  FolderGit2,
-  Users,
-  FileText,
-  Key,
-  CreditCard,
-  LogOut,
-  Settings,
-  ChevronDown,
-} from "lucide-react";
-
-const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Overview", exact: true },
-  { href: "/dashboard/repositories", icon: FolderGit2, label: "Repositories" },
-  { href: "/dashboard/team", icon: Users, label: "Team" },
-  { href: "/dashboard/keys", icon: Key, label: "Keys" },
-  { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
-];
+import { Menu } from "lucide-react";
+import Sidebar from "@/components/dashboard/sidebar";
 
 export default function ClientLayout({
   children,
@@ -32,20 +14,7 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
-  const { signOut, openUserProfile } = useClerk();
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   useEffect(() => {
@@ -57,7 +26,6 @@ export default function ClientLayout({
   // Redirect users who haven't completed the initial onboarding form
   useEffect(() => {
     if (!isLoaded || !user) return;
-    // Don't check if we're already on the onboarding sub-page
     if (pathname.startsWith("/dashboard/onboarding")) return;
 
     fetch("/api/onboarding")
@@ -72,111 +40,53 @@ export default function ClientLayout({
       .catch(() => setOnboardingChecked(true));
   }, [isLoaded, user, pathname, router]);
 
-  if (!isLoaded || !user || (!onboardingChecked && !pathname.startsWith("/dashboard/onboarding"))) {
+  if (
+    !isLoaded ||
+    !user ||
+    (!onboardingChecked && !pathname.startsWith("/dashboard/onboarding"))
+  ) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[var(--cream)]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--ink)] border-t-transparent" />
+      <div className="dark flex h-screen items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen flex-col bg-[var(--cream)]">
-        <Toaster position="top-right" />
-        {/* Header */}
-      <header className="flex items-center justify-between bg-[var(--accent)] px-6 py-4">
-        <h1
-          className="text-2xl font-normal text-white"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Clean
-        </h1>
-        <div className="relative" ref={menuRef}>
+    <div className="dark min-h-screen bg-background text-foreground">
+      <Toaster
+        position="top-right"
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: "hsl(var(--card))",
+            border: "1px solid hsl(var(--border))",
+            color: "hsl(var(--card-foreground))",
+          },
+        }}
+      />
+
+      {/* Sidebar (desktop: fixed, mobile: drawer) */}
+      <Sidebar />
+
+      {/* Content area */}
+      <div className="min-h-screen md:ml-[260px]">
+        {/* Mobile top bar */}
+        <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-md md:hidden">
           <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-full px-3 py-1 transition-colors duration-200 hover:bg-white/10"
+            onClick={() => window.dispatchEvent(new Event("dash-sidebar-toggle"))}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            aria-label="Open menu"
           >
-            <span className="text-sm text-white/80">
-              {user.primaryEmailAddress?.emailAddress ?? user.fullName}
-            </span>
-            {user.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt={user.fullName ?? "User"}
-                className="h-9 w-9 rounded-full border-2 border-white/20 object-cover"
-              />
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-medium text-white">
-                {(user.fullName ?? user.primaryEmailAddress?.emailAddress ?? "U").charAt(0).toUpperCase()}
-              </div>
-            )}
-            <ChevronDown className={`h-4 w-4 text-white/60 transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
+            <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
-
-          {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-[var(--cream-dark)] bg-[var(--cream)] shadow-lg">
-              <div className="border-b border-[var(--cream-dark)] px-4 py-3">
-                <p className="text-xs font-medium text-[var(--ink)]">{user.fullName ?? "Account"}</p>
-                <p className="truncate text-xs text-[var(--ink-light)]">{user.primaryEmailAddress?.emailAddress}</p>
-              </div>
-              <button
-                onClick={() => { setMenuOpen(false); openUserProfile(); }}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </button>
-              <button
-                onClick={() => signOut({ redirectUrl: "/" })}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign out
-              </button>
-            </div>
-          )}
+          <span className="text-sm font-semibold text-foreground tracking-tight">
+            Clean
+          </span>
         </div>
-      </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="group flex w-16 flex-col items-center gap-4 border-r border-[var(--cream-dark)] bg-[var(--cream)] py-6 transition-all duration-300 hover:w-48">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = (item as { exact?: boolean }).exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 group-hover:w-40 group-hover:justify-start group-hover:gap-3 group-hover:px-3 ${
-                  isActive
-                    ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-                    : "text-[var(--ink)] hover:bg-[var(--cream-dark)]"
-                }`}
-              >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                <span className="hidden whitespace-nowrap text-sm font-medium group-hover:inline">
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-          <Link
-            href="https://docs.tryclean.ai"
-            target="_blank"
-            className="mt-2 flex h-10 w-10 items-center justify-center rounded-lg text-[var(--ink)] transition-all duration-300 hover:bg-[var(--cream-dark)] group-hover:w-40 group-hover:justify-start group-hover:gap-3 group-hover:px-3"
-          >
-            <FileText className="h-5 w-5 flex-shrink-0" />
-            <span className="hidden whitespace-nowrap text-sm font-medium group-hover:inline">
-              Documentation
-            </span>
-          </Link>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 min-w-0 overflow-auto bg-[var(--cream)] p-8">
+        {/* Page content */}
+        <main className="p-6 md:p-8 lg:p-10">
           {children}
         </main>
       </div>

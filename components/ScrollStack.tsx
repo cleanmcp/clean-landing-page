@@ -50,7 +50,7 @@ export default function ScrollStack({
 }: {
   children: ReactNode;
   className?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -66,7 +66,7 @@ export default function ScrollStack({
       <div className="flex flex-col w-full relative">
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
-            return React.cloneElement(child as React.ReactElement<any>, { 
+            return React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
               index, 
               total: count,
               progress: scrollYProgress

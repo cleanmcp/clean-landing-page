@@ -2,20 +2,20 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--cream)]">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0a0a] text-[#fafafa]">
       <h1
         className="mb-2 text-4xl font-normal"
         style={{ fontFamily: "var(--font-display)" }}
       >
         404
       </h1>
-      <p className="mb-6 text-sm" style={{ color: "var(--ink-muted)" }}>
+      <p className="mb-6 text-sm text-[#a1a1aa]">
         This page doesn&apos;t exist.
       </p>
       <Link
         href="/"
-        className="rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.01] hover:shadow-md"
-        style={{ background: "var(--accent)", color: "var(--cream)" }}
+        className="rounded-xl px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.01] hover:shadow-md"
+        style={{ background: "#1772E7" }}
       >
         Go home
       </Link>

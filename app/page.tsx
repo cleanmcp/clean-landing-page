@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import RotatingText from "@/components/RotatingText";
 import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack";
 
@@ -150,7 +150,7 @@ function ScrollRevealText({
   );
 }
 
-function Word({ children, progress, range, baseColor, activeColor }: any) {
+function Word({ children, progress, range, baseColor, activeColor }: { children: string; progress: MotionValue<number>; range: [number, number]; baseColor: string; activeColor: string }) {
   const characters = children.split("");
   const amount = range[1] - range[0];
   const step = amount / children.length;
@@ -172,7 +172,7 @@ function Word({ children, progress, range, baseColor, activeColor }: any) {
   );
 }
 
-function Character({ children, progress, range, activeColor }: any) {
+function Character({ children, progress, range, activeColor }: { children: string; progress: MotionValue<number>; range: [number, number]; activeColor: string }) {
   const opacity = useTransform(progress, range, [0, 1]);
   return (
     <motion.span className="inline-block relative z-10" style={{ opacity, color: activeColor }}>
@@ -784,7 +784,7 @@ export default function Home() {
                 <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(121,192,255,0.5)] w-full max-w-[416px] h-[140px] overflow-hidden p-4 relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent mix-blend-screen" />
                   <p className="text-xs font-semibold text-black/70 tracking-wide mb-3">Choose any agent</p>
-                  <span className="absolute top-4 right-4 bg-[#09463f]/10 border border-black/10 rounded-full px-3 py-1 text-[10px] font-semibold text-[#09463f]">MCP</span>
+                  <span className="absolute top-4 right-4 bg-[#1772E7]/10 border border-black/10 rounded-full px-3 py-1 text-[10px] font-semibold text-[#1772E7]">MCP</span>
                   <div className="flex gap-6 my-3">
                     {[`${A}/claude-icon.svg`, `${A}/feature-cursor.png`, `${A}/feature-codex.png`, `${A}/windsurf-icon.svg`].map((ic, i) => (
                       <div key={i} className="w-[38px] h-[38px] rounded-[14px] bg-white/85 border border-black/8 shadow-lg flex items-center justify-center">

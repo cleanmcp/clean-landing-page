@@ -175,7 +175,7 @@ export default function AddReposPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push("/dashboard/repositories")}
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
         >
           <ArrowLeft className="h-4 w-4" />
           Repositories
@@ -183,23 +183,23 @@ export default function AddReposPage() {
       </div>
 
       <div>
-        <h2 className="text-2xl font-medium text-[var(--ink)]">Add Repositories</h2>
-        <p className="mt-1 text-sm text-[var(--ink-muted)]">
+        <h2 className="text-3xl font-bold text-[var(--dash-text)]">Add Repositories</h2>
+        <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
           Select repos from your GitHub account to index.
         </p>
       </div>
 
       {/* Not connected — install GitHub App */}
       {!loading && !connected && (
-        <div className="rounded-xl border-2 border-dashed border-[var(--cream-dark)] bg-white p-8 text-center">
-          <Github className="mx-auto h-10 w-10 text-[var(--ink-muted)]" />
-          <h3 className="mt-3 font-semibold text-[var(--ink)]">Install the Clean GitHub App</h3>
-          <p className="mt-1 text-sm text-[var(--ink-muted)]">
+        <div className="rounded-xl border-2 border-dashed border-[var(--dash-border)] bg-[var(--dash-surface)] p-8 text-center">
+          <Github className="mx-auto h-10 w-10 text-[var(--dash-text-muted)]" />
+          <h3 className="mt-3 text-base font-semibold text-[var(--dash-text)]">Install the Clean GitHub App</h3>
+          <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
             Grant read-only access so Clean can index your repositories.
           </p>
           <button
             onClick={handleInstallGitHubApp}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
           >
             <Github className="h-4 w-4" />
             Install GitHub App
@@ -211,7 +211,7 @@ export default function AddReposPage() {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--ink-muted)]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--dash-text-muted)]" />
         </div>
       )}
 
@@ -220,12 +220,12 @@ export default function AddReposPage() {
         <>
           {/* Connected accounts */}
           {installations.length > 0 && (
-            <div className="flex items-center gap-3 text-sm text-[var(--ink-muted)]">
+            <div className="flex items-center gap-3 text-sm text-[var(--dash-text-muted)]">
               <span>Connected:</span>
               {installations.map((inst) => (
                 <span
                   key={inst.id}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)]"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-[var(--dash-surface)] px-3 py-1 text-xs font-medium text-[var(--dash-text)]"
                 >
                   {inst.accountAvatarUrl && (
                     <img src={inst.accountAvatarUrl} alt="" className="h-4 w-4 rounded-full" />
@@ -235,20 +235,20 @@ export default function AddReposPage() {
               ))}
               <a
                 href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
-                className="text-xs text-[var(--accent)] hover:underline"
+                className="text-xs text-[#1772E7] hover:underline"
               >
                 + Add another account
               </a>
             </div>
           )}
 
-          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
-            <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+            <div className="flex items-center justify-between border-b border-[var(--dash-border)] px-5 py-4">
               <div>
-                <p className="text-sm font-medium text-[var(--ink)]">
+                <p className="text-sm font-medium text-[var(--dash-text)]">
                   {selected.size} selected
                   {repoLimit !== Infinity && (
-                    <span className="ml-2 text-[var(--ink-muted)]">
+                    <span className="ml-2 text-[var(--dash-text-muted)]">
                       · {slotsLeft} slot{slotsLeft !== 1 ? "s" : ""} remaining on your plan
                     </span>
                   )}
@@ -256,29 +256,29 @@ export default function AddReposPage() {
               </div>
               <button
                 onClick={fetchData}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-xs font-medium text-[var(--dash-text)] hover:bg-[var(--dash-surface-hover)]"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Refresh
               </button>
             </div>
 
-            <div className="border-b border-[var(--cream-dark)] px-5 py-3">
+            <div className="border-b border-[var(--dash-border)] px-5 py-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
                 <input
                   type="text"
                   placeholder="Search repositories..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  className="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] py-2 pl-9 pr-3 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#1772E7]"
                 />
               </div>
             </div>
 
             <div className="max-h-[28rem] overflow-y-auto">
               {filtered.length === 0 ? (
-                <p className="py-10 text-center text-sm text-[var(--ink-muted)]">
+                <p className="py-10 text-center text-sm text-[var(--dash-text-muted)]">
                   {repos.length === 0 ? "No repositories found." : "No repos match your search."}
                 </p>
               ) : (
@@ -291,21 +291,21 @@ export default function AddReposPage() {
                       key={repo.id}
                       onClick={() => !alreadyAdded && !atLimit && toggle(repo.fullName)}
                       disabled={alreadyAdded || atLimit}
-                      className={`flex w-full items-center gap-3 border-b border-[var(--cream-dark)] px-5 py-3 text-left transition-colors last:border-b-0 ${
+                      className={`flex w-full items-center gap-3 border-b border-[var(--dash-border)] px-5 py-3 text-left transition-colors last:border-b-0 ${
                         alreadyAdded
                           ? "cursor-default opacity-60"
                           : isSelected
-                            ? "bg-[var(--accent)]/5"
+                            ? "bg-[#1772E7]/5"
                             : atLimit
                               ? "cursor-not-allowed opacity-40"
-                              : "hover:bg-[var(--cream)]"
+                              : "hover:bg-[var(--dash-surface-hover)]"
                       }`}
                     >
                       <div
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
                           isSelected
-                            ? "border-[var(--accent)] bg-[var(--accent)]"
-                            : "border-[var(--cream-dark)]"
+                            ? "border-[#1772E7] bg-[#1772E7]"
+                            : "border-[var(--dash-border)]"
                         }`}
                       >
                         {isSelected && <Check className="h-3 w-3 text-white" />}
@@ -313,17 +313,17 @@ export default function AddReposPage() {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="truncate text-sm font-medium text-[var(--ink)]">
+                          <span className="truncate text-sm font-medium text-[var(--dash-text)]">
                             {repo.fullName}
                           </span>
                           {repo.private ? (
-                            <Lock className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
+                            <Lock className="h-3 w-3 shrink-0 text-[var(--dash-text-muted)]" />
                           ) : (
-                            <Globe className="h-3 w-3 shrink-0 text-[var(--ink-muted)]" />
+                            <Globe className="h-3 w-3 shrink-0 text-[var(--dash-text-muted)]" />
                           )}
                         </div>
                         {repo.description && (
-                          <p className="mt-0.5 truncate text-xs text-[var(--ink-muted)]">
+                          <p className="mt-0.5 truncate text-sm text-[var(--dash-text-muted)]">
                             {repo.description}
                           </p>
                         )}
@@ -335,7 +335,7 @@ export default function AddReposPage() {
                             className="h-2.5 w-2.5 rounded-full"
                             style={{ backgroundColor: LANG_COLORS[repo.language] || "#888" }}
                           />
-                          <span className="text-xs text-[var(--ink-muted)]">{repo.language}</span>
+                          <span className="text-xs text-[var(--dash-text-muted)]">{repo.language}</span>
                         </div>
                       )}
                     </button>
@@ -369,14 +369,14 @@ export default function AddReposPage() {
         <div className="flex items-center justify-end gap-3">
           <button
             onClick={() => router.push("/dashboard/repositories")}
-            className="rounded-lg border border-[var(--cream-dark)] px-4 py-2 text-sm font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
+            className="rounded-lg border border-[var(--dash-border)] px-4 py-2 text-sm font-medium text-[var(--dash-text)] hover:bg-[var(--dash-surface-hover)]"
           >
             Cancel
           </button>
           <button
             onClick={handleAdd}
             disabled={selected.size === 0 || submitting}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

@@ -24,6 +24,7 @@ import {
   StopCircle,
   AlertTriangle,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import CloudReposPage from "./cloud-repos";
 
 interface JobInfo {
@@ -108,7 +109,7 @@ export default function ReposPage() {
   if (tierLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--ink-muted)]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--dash-text-muted)]" />
       </div>
     );
   }
@@ -347,32 +348,31 @@ function SelfHostedReposPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "ready":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-[#05DF72]" />;
       case "error":
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-[#ef4444]" />;
       case "cloning":
       case "indexing":
         return (
-          <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+          <Loader2 className="h-5 w-5 animate-spin text-[var(--dash-accent-light)]" />
         );
       default:
-        return <Clock className="h-5 w-5 text-[var(--ink-muted)]" />;
+        return <Clock className="h-5 w-5 text-[var(--dash-text-muted)]" />;
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "ready":
-        return "Indexed";
-      case "error":
-        return "Failed";
-      case "cloning":
-        return "Cloning...";
-      case "indexing":
-        return "Indexing...";
-      default:
-        return status;
-    }
+  const getStatusBadge = (status: string) => {
+    const text = status === "ready" ? "Indexed" : status === "error" ? "Failed" : status === "cloning" ? "Cloning..." : status === "indexing" ? "Indexing..." : status;
+    const style = status === "ready"
+      ? "bg-[#05DF72]/10 text-[#05DF72]"
+      : status === "error"
+        ? "bg-[#ef4444]/10 text-[#ef4444]"
+        : "bg-[#1772E7]/10 text-[var(--dash-accent-light)]";
+    return (
+      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${style}`}>
+        {text}
+      </span>
+    );
   };
 
   const renderProgress = (repo: Repo) => {
@@ -417,14 +417,14 @@ function SelfHostedReposPage() {
 
     return (
       <div className="mt-3 space-y-2">
-        <div className="flex items-center justify-between text-sm text-[var(--ink-muted)]">
+        <div className="flex items-center justify-between text-sm text-[var(--dash-text-muted)]">
           <span>
             {formatPhase(job.current_phase)}
             {fileProgressText && ` (${fileProgressText})`}
             {speedText && ` — ${speedText}`}
           </span>
         </div>
-        <div className="flex items-center justify-between text-xs text-[var(--ink-muted)]">
+        <div className="flex items-center justify-between text-xs text-[var(--dash-text-muted)]">
           <span>
             {durationText && `Elapsed: ${durationText}`}
             {etaText && ` · ${etaText}`}
@@ -434,7 +434,7 @@ function SelfHostedReposPage() {
           )}
         </div>
         <Progress value={job.phase_progress} className="h-2" />
-        <div className="text-right text-xs text-[var(--ink-muted)]">
+        <div className="text-right text-xs text-[var(--dash-text-muted)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
           {Math.round(job.phase_progress)}%
         </div>
       </div>
@@ -442,25 +442,30 @@ function SelfHostedReposPage() {
   };
 
   return (
-    <div className="max-w-6xl space-y-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="w-full max-w-none space-y-8"
+    >
       <div>
-        <h2 className="text-2xl font-medium text-[var(--ink)]">
+        <h1 className="text-3xl font-bold text-[var(--dash-text)]">
           Repositories
-        </h2>
-        <p className="mt-1 text-sm text-[var(--ink-muted)]">
+        </h1>
+        <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
           Index GitHub repositories for semantic code search
         </p>
       </div>
 
       {/* Error banner */}
       {backendError && (
-        <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-red-500" />
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--dash-error)]/30 bg-[var(--dash-error)]/10 p-4">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-[var(--dash-error)]" />
           <div>
-            <p className="text-sm font-medium text-red-800">
+            <p className="text-sm font-medium text-[var(--dash-error)]">
               Cannot connect to indexing server
             </p>
-            <p className="text-xs text-red-600">
+            <p className="text-sm text-[var(--dash-error)]/70">
               {backendError} — is the backend running?
             </p>
           </div>
@@ -468,21 +473,19 @@ function SelfHostedReposPage() {
       )}
 
       {/* Add Repository */}
-      <div className="rounded-xl border border-[var(--cream-dark)] bg-white py-6">
-        <div className="px-6">
-          <h3 className="font-semibold text-[var(--ink)]">Add Repository</h3>
-          <p className="mt-1 text-sm text-[var(--ink-muted)]">
-            Enter a public GitHub repository to index (e.g., facebook/react)
-          </p>
-        </div>
-        <div className="mt-4 px-6">
+      <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)] p-6">
+        <h3 className="text-base font-semibold text-[var(--dash-text)]">Add Repository</h3>
+        <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
+          Enter a public GitHub repository to index (e.g., facebook/react)
+        </p>
+        <div className="mt-4">
           <form onSubmit={handleSubmit} className="flex gap-3">
             <input
               type="text"
               placeholder="owner/repo"
               value={repoInput}
               onChange={(e) => setRepoInput(e.target.value)}
-              className="max-w-sm flex-1 rounded-lg border border-[var(--cream-dark)] bg-white px-3.5 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="max-w-sm flex-1 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3.5 py-2.5 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:border-[#1772E7] focus:outline-none focus:ring-1 focus:ring-[#1772E7]/20"
               disabled={submitting}
             />
             <input
@@ -490,13 +493,13 @@ function SelfHostedReposPage() {
               placeholder="branch (optional)"
               value={branchInput}
               onChange={(e) => setBranchInput(e.target.value)}
-              className="w-44 rounded-lg border border-[var(--cream-dark)] bg-white px-3.5 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-44 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3.5 py-2.5 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:border-[#1772E7] focus:outline-none focus:ring-1 focus:ring-[#1772E7]/20"
               disabled={submitting}
             />
             <button
               type="submit"
               disabled={submitting || !repoInput.trim()}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? (
                 <>
@@ -513,7 +516,7 @@ function SelfHostedReposPage() {
           </form>
           {message && (
             <p
-              className={`mt-4 text-sm ${message.type === "error" ? "text-red-500" : "text-green-600"}`}
+              className={`mt-4 text-sm ${message.type === "error" ? "text-[var(--dash-error)]" : "text-[var(--dash-success)]"}`}
             >
               {message.text}
             </p>
@@ -522,13 +525,13 @@ function SelfHostedReposPage() {
       </div>
 
       {/* Indexed Repositories */}
-      <div className="rounded-xl border border-[var(--cream-dark)] bg-white py-6">
-        <div className="flex items-center justify-between px-6">
+      <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--dash-border)] px-6 py-4">
           <div>
-            <h3 className="font-semibold text-[var(--ink)]">
+            <h3 className="text-base font-semibold text-[var(--dash-text)]">
               Indexed Repositories
             </h3>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">
+            <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
               {repos.length}{" "}
               {repos.length === 1 ? "repository" : "repositories"} total
             </p>
@@ -536,7 +539,7 @@ function SelfHostedReposPage() {
           <button
             onClick={fetchRepos}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] transition-colors hover:border-[var(--dash-border-strong)] hover:bg-[var(--dash-surface-hover)]"
           >
             <RefreshCw
               className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
@@ -544,13 +547,13 @@ function SelfHostedReposPage() {
             Refresh
           </button>
         </div>
-        <div className="mt-4 px-6">
+        <div className="p-6">
           {loading && repos.length === 0 ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-[var(--ink-muted)]" />
+              <Loader2 className="h-8 w-8 animate-spin text-[var(--dash-text-muted)]" />
             </div>
           ) : repos.length === 0 ? (
-            <div className="py-8 text-center text-[var(--ink-muted)]">
+            <div className="py-8 text-center text-[var(--dash-text-muted)]">
               No repositories indexed yet. Add one above to get started.
             </div>
           ) : (
@@ -558,29 +561,29 @@ function SelfHostedReposPage() {
               {repos.map((repo) => (
                 <div
                   key={`${repo.repo}@${repo.branch ?? ""}`}
-                  className="rounded-lg border border-[var(--cream-dark)] p-4"
+                  className="rounded-xl border border-[var(--dash-border)] p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {getStatusIcon(repo.status)}
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-[var(--ink)]">
+                          <p className="font-medium font-mono text-[var(--dash-text)]">
                             {repo.repo}
                           </p>
                           {repo.branch && (
-                            <span className="rounded-full bg-[var(--cream-dark)] px-2 py-0.5 font-mono text-xs text-[var(--ink-muted)]">
+                            <span className="rounded-full bg-[var(--dash-surface-hover)] px-2 py-0.5 font-mono text-xs text-[var(--dash-text-muted)]">
                               {repo.branch}
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-[var(--ink-muted)]">
+                        <p className="text-sm text-[var(--dash-text-muted)]">
                           {repo.status === "ready" &&
                           repo.entity_count !== null
                             ? `${repo.entity_count.toLocaleString()} functions indexed`
                             : repo.error
                               ? repo.error
-                              : getStatusText(repo.status)}
+                              : repo.status === "cloning" ? "Cloning..." : repo.status === "indexing" ? "Indexing..." : repo.status}
                         </p>
                       </div>
                     </div>
@@ -591,7 +594,7 @@ function SelfHostedReposPage() {
                         <button
                           onClick={() => handleCancel(repo.repo, repo.branch)}
                           disabled={actionInProgress === repo.repo}
-                          className="inline-flex items-center gap-1 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)] disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] transition-colors hover:border-[var(--dash-border-strong)] hover:bg-[var(--dash-surface-hover)] disabled:opacity-50"
                         >
                           {actionInProgress === repo.repo ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -608,20 +611,20 @@ function SelfHostedReposPage() {
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <button
-                            className="inline-flex items-center justify-center rounded-lg border border-[var(--cream-dark)] p-1.5 text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50"
+                            className="inline-flex items-center justify-center rounded-lg border border-[var(--dash-border)] p-1.5 text-[var(--dash-text-muted)] transition-colors hover:bg-[#ef4444]/10 hover:text-[#ef4444] disabled:opacity-50"
                             disabled={actionInProgress === repo.repo}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="border-[var(--dash-border)] bg-[var(--dash-surface)]">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>
+                            <AlertDialogTitle className="text-[var(--dash-text)]">
                               Delete Repository?
                             </AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogDescription className="text-[var(--dash-text-muted)]">
                               This will remove{" "}
-                              <strong>
+                              <strong className="text-[var(--dash-text)]">
                                 {repo.repo}
                                 {repo.branch ? ` (${repo.branch})` : ""}
                               </strong>{" "}
@@ -630,10 +633,10 @@ function SelfHostedReposPage() {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel className="border-[var(--dash-border)] bg-[var(--dash-surface)] text-[var(--dash-text)] hover:bg-[var(--dash-surface-hover)]">Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDelete(repo.repo, repo.branch)}
-                              className="bg-red-600 text-white hover:bg-red-700"
+                              className="bg-[#ef4444] text-white hover:bg-[#dc2626]"
                             >
                               Delete
                             </AlertDialogAction>
@@ -641,17 +644,7 @@ function SelfHostedReposPage() {
                         </AlertDialogContent>
                       </AlertDialog>
 
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          repo.status === "ready"
-                            ? "bg-green-100 text-green-700"
-                            : repo.status === "error"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {getStatusText(repo.status)}
-                      </span>
+                      {getStatusBadge(repo.status)}
                     </div>
                   </div>
                   {renderProgress(repo)}
@@ -661,6 +654,6 @@ function SelfHostedReposPage() {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

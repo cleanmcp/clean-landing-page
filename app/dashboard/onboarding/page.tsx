@@ -155,7 +155,7 @@ export default function CloudOnboardingPage() {
     <Suspense
       fallback={
         <div className="flex h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#1772E7]" />
         </div>
       }
     >
@@ -472,7 +472,7 @@ function CloudOnboardingContent() {
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#1772E7]" />
       </div>
     );
   }
@@ -500,10 +500,10 @@ function CloudOnboardingContent() {
     <div className="mx-auto max-w-3xl space-y-8">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-medium text-[var(--ink)]">
+        <h2 className="text-3xl font-bold text-[var(--dash-text)]">
           Set up Cloud Search
         </h2>
-        <p className="mt-1 text-sm text-[var(--ink-muted)]">
+        <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
           Connect your GitHub repos and get searching in minutes
         </p>
       </div>
@@ -517,8 +517,8 @@ function CloudOnboardingContent() {
                 i < currentStepIdx
                   ? "bg-green-100 text-green-700"
                   : i === currentStepIdx
-                    ? "bg-[var(--accent)] text-white"
-                    : "bg-[var(--cream-dark)] text-[var(--ink-muted)]"
+                    ? "bg-[#1772E7] text-white"
+                    : "bg-[var(--dash-border)] text-[var(--dash-text-muted)]"
               }`}
             >
               {i < currentStepIdx ? (
@@ -530,8 +530,8 @@ function CloudOnboardingContent() {
             <span
               className={`text-xs font-medium ${
                 i <= currentStepIdx
-                  ? "text-[var(--ink)]"
-                  : "text-[var(--ink-muted)]"
+                  ? "text-[var(--dash-text)]"
+                  : "text-[var(--dash-text-muted)]"
               }`}
             >
               {s.label}
@@ -541,7 +541,7 @@ function CloudOnboardingContent() {
                 className={`h-px w-8 ${
                   i < currentStepIdx
                     ? "bg-green-300"
-                    : "bg-[var(--cream-dark)]"
+                    : "bg-[var(--dash-border)]"
                 }`}
               />
             )}
@@ -551,26 +551,26 @@ function CloudOnboardingContent() {
 
       {/* ── Step 1: Install GitHub App ── */}
       {step === "connect-github" && (
-        <div className="rounded-xl border-2 border-[var(--cream-dark)] bg-white p-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--ink)]">
+        <div className="rounded-xl border-2 border-[var(--dash-border)] bg-[var(--dash-surface)] p-8 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1772E7]">
             <Github className="h-8 w-8 text-white" />
           </div>
-          <h3 className="mt-5 text-lg font-semibold text-[var(--ink)]">
+          <h3 className="mt-5 text-xl font-semibold text-[var(--dash-text)]">
             Install the Clean GitHub App
           </h3>
-          <p className="mt-2 text-sm text-[var(--ink-muted)]">
+          <p className="mt-2 text-sm text-[var(--dash-text-muted)]">
             Grant read-only access to your repositories.
             You choose exactly which repos to share.
           </p>
           <button
             onClick={handleInstallGitHubApp}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
           >
             <Github className="h-4 w-4" />
             Install GitHub App
             <ExternalLink className="h-3.5 w-3.5" />
           </button>
-          <p className="mt-4 text-xs text-[var(--ink-muted)]">
+          <p className="mt-4 text-sm text-[var(--dash-text-muted)]">
             We only read code — never write or modify your repos.
             Works with personal accounts and organizations.
           </p>
@@ -582,12 +582,12 @@ function CloudOnboardingContent() {
         <div className="space-y-4">
           {/* Connected accounts */}
           {installations.length > 0 && (
-            <div className="flex items-center gap-3 text-sm text-[var(--ink-muted)]">
+            <div className="flex items-center gap-3 text-sm text-[var(--dash-text-muted)]">
               <span>Connected:</span>
               {installations.map((inst) => (
                 <span
                   key={inst.id}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)]"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-[var(--dash-surface)] px-3 py-1 text-xs font-medium text-[var(--dash-text)]"
                 >
                   {inst.accountAvatarUrl && (
                     <img src={inst.accountAvatarUrl} alt="" className="h-4 w-4 rounded-full" />
@@ -597,20 +597,20 @@ function CloudOnboardingContent() {
               ))}
               <a
                 href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
-                className="text-xs text-[var(--accent)] hover:underline"
+                className="text-xs text-[#1772E7] hover:underline"
               >
                 + Add another account
               </a>
             </div>
           )}
 
-          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
-            <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+            <div className="flex items-center justify-between border-b border-[var(--dash-border)] px-5 py-4">
               <div>
-                <h3 className="font-semibold text-[var(--ink)]">
+                <h3 className="text-base font-semibold text-[var(--dash-text)]">
                   Select repositories to index
                 </h3>
-                <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
                   {selectedRepos.size}/{repoLimit === Infinity ? "\u221E" : repoLimit} repos selected
                   {repoLimit !== Infinity && selectedRepos.size >= repoLimit && (
                     <span className="ml-2 text-amber-600">
@@ -622,7 +622,7 @@ function CloudOnboardingContent() {
               <button
                 onClick={fetchGitHubRepos}
                 disabled={reposLoading}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:bg-[var(--cream)]"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-xs font-medium text-[var(--dash-text)] hover:bg-[var(--dash-surface-hover)]"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${reposLoading ? "animate-spin" : ""}`}
@@ -632,15 +632,15 @@ function CloudOnboardingContent() {
             </div>
 
             {/* Search */}
-            <div className="border-b border-[var(--cream-dark)] px-5 py-3">
+            <div className="border-b border-[var(--dash-border)] px-5 py-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
                 <input
                   type="text"
                   placeholder="Search repositories..."
                   value={repoSearch}
                   onChange={(e) => setRepoSearch(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  className="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] py-2 pl-9 pr-3 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#1772E7]"
                 />
               </div>
             </div>
@@ -649,10 +649,10 @@ function CloudOnboardingContent() {
             <div className="max-h-96 overflow-y-auto">
               {reposLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-[var(--accent)]" />
+                  <Loader2 className="h-6 w-6 animate-spin text-[#1772E7]" />
                 </div>
               ) : filteredRepos.length === 0 ? (
-                <div className="py-12 text-center text-sm text-[var(--ink-muted)]">
+                <div className="py-12 text-center text-sm text-[var(--dash-text-muted)]">
                   {githubRepos.length === 0
                     ? "No repositories found. Make sure you granted access to at least one repo when installing the app."
                     : "No repos match your search."}
@@ -668,19 +668,19 @@ function CloudOnboardingContent() {
                       key={repo.id}
                       onClick={() => !isDisabled && toggleRepo(repo.fullName)}
                       disabled={isDisabled}
-                      className={`flex w-full items-center gap-3 border-b border-[var(--cream-dark)] px-5 py-3 text-left transition-colors last:border-b-0 ${
+                      className={`flex w-full items-center gap-3 border-b border-[var(--dash-border)] px-5 py-3 text-left transition-colors last:border-b-0 ${
                         isSelected
-                          ? "bg-[var(--accent)]/5"
+                          ? "bg-[#1772E7]/5"
                           : isDisabled
                             ? "cursor-not-allowed opacity-50"
-                            : "hover:bg-[var(--cream)]"
+                            : "hover:bg-[var(--dash-surface-hover)]"
                       }`}
                     >
                       <div
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
                           isSelected
-                            ? "border-[var(--accent)] bg-[var(--accent)]"
-                            : "border-[var(--cream-dark)]"
+                            ? "border-[#1772E7] bg-[#1772E7]"
+                            : "border-[var(--dash-border)]"
                         }`}
                       >
                         {isSelected && (
@@ -690,17 +690,17 @@ function CloudOnboardingContent() {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="truncate text-sm font-medium text-[var(--ink)]">
+                          <span className="truncate text-sm font-medium text-[var(--dash-text)]">
                             {repo.fullName}
                           </span>
                           {repo.private ? (
-                            <Lock className="h-3 w-3 text-[var(--ink-muted)]" />
+                            <Lock className="h-3 w-3 text-[var(--dash-text-muted)]" />
                           ) : (
-                            <Globe className="h-3 w-3 text-[var(--ink-muted)]" />
+                            <Globe className="h-3 w-3 text-[var(--dash-text-muted)]" />
                           )}
                         </div>
                         {repo.description && (
-                          <p className="mt-0.5 truncate text-xs text-[var(--ink-muted)]">
+                          <p className="mt-0.5 truncate text-xs text-[var(--dash-text-muted)]">
                             {repo.description}
                           </p>
                         )}
@@ -715,7 +715,7 @@ function CloudOnboardingContent() {
                                 LANG_COLORS[repo.language] || "#888",
                             }}
                           />
-                          <span className="text-xs text-[var(--ink-muted)]">
+                          <span className="text-xs text-[var(--dash-text-muted)]">
                             {repo.language}
                           </span>
                         </div>
@@ -739,13 +739,13 @@ function CloudOnboardingContent() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                className="text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
               >
                 Skip for now
               </button>
               <a
                 href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
-                className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                className="text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
               >
                 Add more repos on GitHub
               </a>
@@ -753,7 +753,7 @@ function CloudOnboardingContent() {
             <button
               onClick={handleStartIndexing}
               disabled={selectedRepos.size === 0 || submitting}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-50"
             >
               {submitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -785,17 +785,17 @@ function CloudOnboardingContent() {
       {/* ── Step 3: Indexing Progress ── */}
       {step === "indexing" && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
-            <div className="border-b border-[var(--cream-dark)] px-5 py-4">
-              <h3 className="font-semibold text-[var(--ink)]">
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+            <div className="border-b border-[var(--dash-border)] px-5 py-4">
+              <h3 className="text-base font-semibold text-[var(--dash-text)]">
                 Indexing your repositories
               </h3>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+              <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
                 This usually takes 1-5 minutes per repo depending on size
               </p>
             </div>
 
-            <div className="divide-y divide-[var(--cream-dark)]">
+            <div className="divide-y divide-[var(--dash-border)]">
               {cloudRepos.map((repo) => (
                 <div key={repo.id} className="px-5 py-4">
                   <div className="flex items-center justify-between">
@@ -807,13 +807,13 @@ function CloudOnboardingContent() {
                           <div className="h-full w-full rounded-full bg-red-500" />
                         </div>
                       ) : (
-                        <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+                        <Loader2 className="h-5 w-5 animate-spin text-[#1772E7]" />
                       )}
                       <div>
-                        <p className="text-sm font-medium text-[var(--ink)]">
+                        <p className="text-sm font-medium text-[var(--dash-text)]">
                           {repo.fullName}
                         </p>
-                        <p className="text-xs text-[var(--ink-muted)]">
+                        <p className="text-xs text-[var(--dash-text-muted)]">
                           {repo.status === "ready"
                             ? `${repo.entityCount?.toLocaleString() ?? 0} entities indexed`
                             : repo.status === "error"
@@ -856,7 +856,7 @@ function CloudOnboardingContent() {
             cloudRepos.some((r) => r.status === "ready") && (
               <button
                 onClick={() => setStep("mcp-config")}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
               >
                 Continue to MCP Config
                 <ArrowRight className="h-4 w-4" />
@@ -908,23 +908,23 @@ function CloudOnboardingContent() {
 
           {/* API Key */}
           {apiKey && (
-            <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
-              <div className="border-b border-[var(--cream-dark)] px-5 py-3">
-                <h3 className="text-sm font-semibold text-[var(--ink)]">
+            <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+              <div className="border-b border-[var(--dash-border)] px-5 py-3">
+                <h3 className="text-base font-semibold text-[var(--dash-text)]">
                   Your API Key
                 </h3>
-                <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
                   Store this securely — it won&apos;t be shown again
                 </p>
               </div>
               <div className="p-5">
-                <div className="flex items-center gap-2 rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] px-3 py-2.5">
-                  <code className="flex-1 break-all font-mono text-xs text-[var(--ink)]">
+                <div className="flex items-center gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2.5">
+                  <code className="flex-1 break-all font-mono text-xs text-[var(--dash-text)]">
                     {apiKey}
                   </code>
                   <button
                     onClick={() => copyToClipboard(apiKey, "key")}
-                    className="shrink-0 text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                    className="shrink-0 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
                   >
                     {copied === "key" ? (
                       <Check className="h-4 w-4 text-green-500" />
@@ -938,15 +938,15 @@ function CloudOnboardingContent() {
           )}
 
           {/* MCP Config */}
-          <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
-            <div className="border-b border-[var(--cream-dark)] px-5 py-3">
-              <h3 className="text-sm font-semibold text-[var(--ink)]">
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+            <div className="border-b border-[var(--dash-border)] px-5 py-3">
+              <h3 className="text-base font-semibold text-[var(--dash-text)]">
                 MCP Configuration
               </h3>
             </div>
 
             {/* Tabs */}
-            <div className="flex flex-wrap border-b border-[var(--cream-dark)]">
+            <div className="flex flex-wrap border-b border-[var(--dash-border)]">
               {(
                 [
                   { id: "claude-code", label: "Claude Code" },
@@ -961,8 +961,8 @@ function CloudOnboardingContent() {
                   onClick={() => setConfigTab(tab.id)}
                   className={`px-4 py-2.5 text-sm font-medium transition-colors ${
                     configTab === tab.id
-                      ? "border-b-2 border-[var(--accent)] text-[var(--accent)]"
-                      : "text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                      ? "border-b-2 border-[#1772E7] text-[#1772E7]"
+                      : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
                   }`}
                 >
                   {tab.label}
@@ -971,7 +971,7 @@ function CloudOnboardingContent() {
             </div>
 
             <div className="p-5">
-              <p className="mb-3 text-xs text-[var(--ink-muted)]">
+              <p className="mb-3 text-xs text-[var(--dash-text-muted)]">
                 {configTab === "claude-code"
                   ? "Add to your Claude Code MCP settings:"
                   : configTab === "cursor"
@@ -982,8 +982,8 @@ function CloudOnboardingContent() {
                         ? "Add to ~/.codex/config.toml:"
                         : "Add to your Claude Desktop config:"}
               </p>
-              <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)]">
-                <pre className="overflow-x-auto bg-[var(--cream)] p-4 font-mono text-[12px] leading-relaxed text-[var(--ink)]">
+              <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
+                <pre className="overflow-x-auto bg-[var(--dash-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--dash-text)]">
                   {formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org")}
                 </pre>
               </div>
@@ -997,7 +997,7 @@ function CloudOnboardingContent() {
                 className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                   copied === "config"
                     ? "border border-green-200 bg-green-50 text-green-700"
-                    : "border border-[var(--cream-dark)] bg-white text-[var(--ink)] hover:bg-[var(--cream)]"
+                    : "border border-[var(--dash-border)] bg-[var(--dash-surface)] text-[var(--dash-text)] hover:bg-[var(--dash-surface-hover)]"
                 }`}
               >
                 {copied === "config" ? (
@@ -1013,7 +1013,7 @@ function CloudOnboardingContent() {
           {/* Done button */}
           <button
             onClick={() => router.push("/dashboard")}
-            className="w-full rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+            className="w-full rounded-lg bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
           >
             Go to Dashboard
           </button>
