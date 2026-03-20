@@ -65,23 +65,23 @@ export function UpgradeModal({ open, onClose, feature, currentTier }: UpgradeMod
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="relative mx-4 w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--cream-dark)] bg-white shadow-2xl"
+            className="relative mx-4 w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-bg)] shadow-2xl"
           >
             {/* Header */}
-            <div className="relative border-b border-[var(--cream-dark)] bg-gradient-to-r from-[var(--cream)] to-[var(--cream-light)] px-8 py-6">
+            <div className="relative border-b border-[var(--dash-border)] bg-[var(--dash-surface)] px-8 py-6">
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 rounded-lg p-1.5 text-[var(--ink-muted)] transition-colors hover:bg-[var(--cream-dark)]"
+                className="absolute right-4 top-4 rounded-lg p-1.5 text-[var(--dash-text-muted)] transition-colors hover:bg-[var(--dash-surface-hover)]"
               >
                 <X className="h-5 w-5" />
               </button>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--dash-accent)] text-white">
                   <Zap className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-[var(--ink)]">{copy.title}</h2>
-                  <p className="text-sm text-[var(--ink-muted)]">{copy.description}</p>
+                  <h2 className="text-lg font-semibold text-[var(--dash-text)]">{copy.title}</h2>
+                  <p className="text-sm text-[var(--dash-text-muted)]">{copy.description}</p>
                 </div>
               </div>
             </div>
@@ -95,32 +95,32 @@ export function UpgradeModal({ open, onClose, feature, currentTier }: UpgradeMod
                     key={plan.name}
                     className={`relative rounded-xl border-2 p-6 transition-all ${
                       plan.accent
-                        ? "border-[var(--accent)] shadow-lg shadow-[var(--accent)]/10"
-                        : "border-[var(--cream-dark)]"
+                        ? "border-[var(--dash-accent)] shadow-lg shadow-[var(--dash-accent)]/10"
+                        : "border-[var(--dash-border)]"
                     }`}
                   >
                     {plan.accent && (
-                      <div className="absolute -top-3 left-4 rounded-full bg-[var(--accent)] px-3 py-0.5 text-xs font-semibold text-white">
+                      <div className="absolute -top-3 left-4 rounded-full bg-[var(--dash-accent)] px-3 py-0.5 text-xs font-semibold text-white">
                         Most popular
                       </div>
                     )}
                     <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-[var(--ink)]">{plan.name}</h3>
+                      <h3 className="text-lg font-semibold text-[var(--dash-text)]">{plan.name}</h3>
                       <div className="mt-1 flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-[var(--ink)]">{plan.price}</span>
-                        <span className="text-sm text-[var(--ink-muted)]">{plan.period}</span>
+                        <span className="text-3xl font-bold text-[var(--dash-text)]">{plan.price}</span>
+                        <span className="text-sm text-[var(--dash-text-muted)]">{plan.period}</span>
                       </div>
                     </div>
                     <ul className="mb-6 space-y-2.5">
                       {plan.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-sm text-[var(--ink-light)]">
-                          <Check className="h-4 w-4 flex-shrink-0 text-[var(--accent)]" />
+                        <li key={f} className="flex items-center gap-2 text-sm text-[var(--dash-text-muted)]">
+                          <Check className="h-4 w-4 flex-shrink-0 text-[var(--dash-accent)]" />
                           {f}
                         </li>
                       ))}
                     </ul>
                     {isCurrent ? (
-                      <div className="rounded-xl bg-[var(--cream)] px-4 py-2.5 text-center text-sm font-medium text-[var(--ink-muted)]">
+                      <div className="rounded-xl bg-[var(--dash-bg)] px-4 py-2.5 text-center text-sm font-medium text-[var(--dash-text-muted)]">
                         Current plan
                       </div>
                     ) : (
@@ -128,7 +128,7 @@ export function UpgradeModal({ open, onClose, feature, currentTier }: UpgradeMod
                         href="/dashboard/billing"
                         className={`block rounded-xl px-4 py-2.5 text-center text-sm font-medium transition-all hover:scale-[1.02] hover:shadow-md ${
                           plan.accent
-                            ? "bg-[var(--accent)] text-white"
+                            ? "bg-[var(--dash-accent)] text-white"
                             : "border border-[var(--ink)] bg-[var(--ink)] text-white"
                         }`}
                       >
@@ -141,7 +141,7 @@ export function UpgradeModal({ open, onClose, feature, currentTier }: UpgradeMod
             </div>
 
             {/* Footer */}
-            <div className="border-t border-[var(--cream-dark)] bg-[var(--cream)] px-8 py-4 text-center text-xs text-[var(--ink-muted)]">
+            <div className="border-t border-[var(--dash-border)] bg-[var(--dash-bg)] px-8 py-4 text-center text-xs text-[var(--dash-text-muted)]">
               All plans include a 14-day free trial. Cancel anytime.
             </div>
           </motion.div>

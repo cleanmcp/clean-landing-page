@@ -50,32 +50,32 @@ export default function InvitePage() {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--accent)]" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--dash-accent)]" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-[var(--cream-dark)] bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#171717] p-8 shadow-sm">
         <div className="mb-6 flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)]/10">
-            <Users className="h-6 w-6 text-[var(--accent)]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--dash-accent)]/10">
+            <Users className="h-6 w-6 text-[var(--dash-accent)]" />
           </div>
         </div>
 
-        <h1 className="mb-2 text-center text-xl font-semibold text-[var(--ink)]">
+        <h1 className="mb-2 text-center text-xl font-semibold text-[#fafafa]">
           Team Invite
         </h1>
 
         {status === "accepted" ? (
           <div className="text-center">
             <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-green-500" />
-            <p className="text-sm text-[var(--ink)]">
+            <p className="text-sm text-[#fafafa]">
               You&apos;ve joined <strong>{orgName}</strong>
             </p>
-            <p className="mt-1 text-xs text-[var(--ink-muted)]">
+            <p className="mt-1 text-xs text-[#a1a1aa]">
               Redirecting to dashboard...
             </p>
           </div>
@@ -85,34 +85,34 @@ export default function InvitePage() {
             <p className="text-sm text-red-600">{error}</p>
             <button
               onClick={() => setStatus("ready")}
-              className="mt-4 text-sm font-medium text-[var(--accent)] hover:underline"
+              className="mt-4 text-sm font-medium text-[var(--dash-accent)] hover:underline"
             >
               Try again
             </button>
           </div>
         ) : !isSignedIn ? (
           <div className="text-center">
-            <p className="mb-4 text-sm text-[var(--ink-muted)]">
+            <p className="mb-4 text-sm text-[#a1a1aa]">
               Sign in to accept this invite and join the team.
             </p>
             <SignInButton
               mode="redirect"
               forceRedirectUrl={`/invite/${token}`}
             >
-              <button className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]">
+              <button className="w-full rounded-xl bg-[var(--dash-accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d8]">
                 Sign in to continue
               </button>
             </SignInButton>
           </div>
         ) : (
           <div className="text-center">
-            <p className="mb-4 text-sm text-[var(--ink-muted)]">
+            <p className="mb-4 text-sm text-[#a1a1aa]">
               You&apos;ve been invited to join a team on Clean.
             </p>
             <button
               onClick={handleAccept}
               disabled={status === "accepting"}
-              className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+              className="w-full rounded-xl bg-[var(--dash-accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d8] disabled:opacity-50"
             >
               {status === "accepting" ? (
                 <Loader2 className="mx-auto h-4 w-4 animate-spin" />

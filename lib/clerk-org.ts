@@ -54,10 +54,6 @@ export async function ensureClerkOrg(
   if (!org) throw new Error(`Organization ${neonOrgId} not found`);
   if (org.clerkOrgId) return org.clerkOrgId;
 
-  console.log(
-    `[clerk-org] Creating Clerk org for "${org.name}" (slug: ${org.slug}, creator: ${creatorClerkUserId})`
-  );
-
   // Create Clerk Organization
   let slug = org.slug;
   let clerkOrg;
@@ -105,8 +101,6 @@ export async function ensureClerkOrg(
       throw err;
     }
   }
-
-  console.log(`[clerk-org] Created Clerk org: ${clerkOrg.id}`);
 
   // Store the Clerk org ID back in NeonDB
   await db

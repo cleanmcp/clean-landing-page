@@ -20,7 +20,7 @@ export function GlowCard({ children, className = "" }: GlowCardProps) {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       setGlowStyle({
-        background: `radial-gradient(320px circle at ${x}px ${y}px, var(--accent-glow), transparent 60%)`,
+        background: `radial-gradient(320px circle at ${x}px ${y}px, var(--dash-accent-glow), transparent 60%)`,
       });
     },
     []

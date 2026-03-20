@@ -129,14 +129,14 @@ export default function OnboardingPage() {
 
   if (checkingStep) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--ink-muted)]" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
+        <Loader2 className="h-6 w-6 animate-spin text-[#a1a1aa]" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--cream)]">
+    <div className="flex min-h-screen flex-col bg-[#0a0a0a]">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5">
         <span
@@ -145,15 +145,15 @@ export default function OnboardingPage() {
         >
           Clean
         </span>
-        <span className="text-sm text-[var(--ink-muted)]">
+        <span className="text-sm text-[#a1a1aa]">
           Step {currentStep + 1} of {STEPS.length}
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="mx-6 h-1 overflow-hidden rounded-full bg-[var(--cream-dark)]">
+      <div className="mx-6 h-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.1)]">
         <motion.div
-          className="h-full rounded-full bg-[var(--accent)]"
+          className="h-full rounded-full bg-[var(--dash-accent)]"
           initial={false}
           animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
           transition={{ duration: 0.3, ease: "easeOut" }}
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
               >
                 {step.title}
               </h1>
-              <p className="mb-8 text-[var(--ink-light)]">{step.subtitle}</p>
+              <p className="mb-8 text-[#a1a1aa]">{step.subtitle}</p>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {step.options.map((option) => {
@@ -188,20 +188,20 @@ export default function OnboardingPage() {
                       onClick={() => selectOption(option.value)}
                       className={`group relative flex flex-col rounded-xl border px-5 py-4 text-left transition-all duration-200 ${
                         isSelected
-                          ? "border-[var(--accent)] bg-[var(--accent)]/5 ring-2 ring-[var(--accent)]/20"
-                          : "border-[var(--cream-dark)] bg-white hover:border-[var(--ink-muted)]/30"
+                          ? "border-[var(--dash-accent)] bg-[var(--dash-accent)]/5 ring-2 ring-[var(--dash-accent)]/20"
+                          : "border-[rgba(255,255,255,0.1)] bg-[#171717] hover:border-[var(--ink-muted)]/30"
                       }`}
                     >
                       {isSelected && (
-                        <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)]">
+                        <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--dash-accent)]">
                           <Check className="h-3 w-3 text-white" />
                         </div>
                       )}
-                      <span className="text-sm font-medium text-[var(--ink)]">
+                      <span className="text-sm font-medium text-[#fafafa]">
                         {option.label}
                       </span>
                       {option.desc && (
-                        <span className="mt-0.5 text-xs text-[var(--ink-muted)]">
+                        <span className="mt-0.5 text-xs text-[#a1a1aa]">
                           {option.desc}
                         </span>
                       )}
@@ -217,7 +217,7 @@ export default function OnboardingPage() {
             <button
               onClick={back}
               disabled={currentStep === 0}
-              className="flex items-center gap-1.5 text-sm font-medium text-[var(--ink-muted)] transition-colors hover:text-[var(--ink)] disabled:invisible"
+              className="flex items-center gap-1.5 text-sm font-medium text-[#a1a1aa] transition-colors hover:text-[#fafafa] disabled:invisible"
             >
               <ArrowLeft className="h-4 w-4" />
               Back

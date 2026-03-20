@@ -4,15 +4,24 @@ import { db } from "@/lib/db";
 import { searchLogs } from "@/lib/db/schema";
 import { eq, sql, and, gte } from "drizzle-orm";
 
+export interface DailyDataPoint {
+  date: string; // YYYY-MM-DD
+  searches: number;
+  tokensSaved: number;
+  charsSaved: number;
+  jsonChars: number;
+  toonChars: number;
+}
+
 export interface TokenSavingsStats {
   totalSearches: number;
   totalJsonChars: number;
   totalToonChars: number;
   totalCharsSaved: number;
   totalTokensSaved: number;
-  // These may be null if the columns don't exist yet or have no data
   totalSourceFileChars: number | null;
   totalSnippetChars: number | null;
+  daily: DailyDataPoint[];
   period: "7d" | "30d" | "all";
 }
 
@@ -119,7 +128,30 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const stats: TokenSavingsStats = { ...result, period };
+    const dailyRows = await db
+      .select({
+        date: sql<string>`to_char(${searchLogs.createdAt}::date, 'YYYY-MM-DD')`,
+        searches: sql<number>`count(*)::int`,
+        tokensSaved: sql<number>`coalesce(sum(${searchLogs.tokensSavedEst}), 0)::int`,
+        charsSaved: sql<number>`coalesce(sum(${searchLogs.charsSaved}), 0)::int`,
+        jsonChars: sql<number>`coalesce(sum(${searchLogs.jsonChars}), 0)::int`,
+        toonChars: sql<number>`coalesce(sum(${searchLogs.toonChars}), 0)::int`,
+      })
+      .from(searchLogs)
+      .where(whereClause)
+      .groupBy(sql`${searchLogs.createdAt}::date`)
+      .orderBy(sql`${searchLogs.createdAt}::date`);
+
+    const daily: DailyDataPoint[] = dailyRows.map((r) => ({
+      date: r.date,
+      searches: r.searches,
+      tokensSaved: r.tokensSaved,
+      charsSaved: r.charsSaved,
+      jsonChars: r.jsonChars,
+      toonChars: r.toonChars,
+    }));
+
+    const stats: TokenSavingsStats = { ...result, daily, period };
     return NextResponse.json(stats);
   } catch (error) {
     console.error("Failed to fetch dashboard stats:", error);

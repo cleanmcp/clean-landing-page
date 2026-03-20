@@ -60,14 +60,14 @@ export default function TokenCounter({
             >
               <motion.span
                 className="font-mono text-5xl font-bold tracking-tight sm:text-6xl md:text-8xl"
-                style={{ color: "var(--ink)" }}
+                style={{ color: "var(--dash-text)" }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
                 {display}
               </motion.span>
-              <span className="text-xl font-medium text-[var(--ink-muted)] sm:text-2xl md:text-3xl">
+              <span className="text-xl font-medium text-[var(--dash-text-muted)] sm:text-2xl md:text-3xl">
                 tokens
               </span>
             </motion.div>
@@ -82,7 +82,7 @@ export default function TokenCounter({
               {/* Labels row */}
               <div className="flex items-end justify-center gap-2 md:gap-6">
                 <motion.span
-                  className="min-w-0 flex-shrink text-center text-xs font-medium uppercase tracking-wider text-[var(--ink-muted)]"
+                  className="min-w-0 flex-shrink text-center text-xs font-medium uppercase tracking-wider text-[var(--dash-text-muted)]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
@@ -92,7 +92,7 @@ export default function TokenCounter({
                 {/* spacer for arrow */}
                 <span className="w-6 md:w-8" />
                 <motion.span
-                  className="min-w-0 flex-shrink text-center text-xs font-medium uppercase tracking-wider text-[var(--accent)]"
+                  className="min-w-0 flex-shrink text-center text-xs font-medium uppercase tracking-wider text-[var(--dash-accent)]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.4 }}
@@ -104,7 +104,7 @@ export default function TokenCounter({
               {/* Numbers row */}
               <div className="flex items-center justify-center gap-2 md:gap-6">
                 <motion.span
-                  className="min-w-0 flex-shrink text-center font-mono text-2xl font-bold tracking-tight text-[var(--ink-muted)] line-through decoration-[var(--accent)] decoration-2 sm:text-3xl md:text-5xl"
+                  className="min-w-0 flex-shrink text-center font-mono text-2xl font-bold tracking-tight text-[var(--dash-text-muted)] line-through decoration-[var(--dash-accent)] decoration-2 sm:text-3xl md:text-5xl"
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
@@ -119,7 +119,7 @@ export default function TokenCounter({
                   className="flex flex-shrink-0 items-center self-center"
                 >
                   <svg
-                    className="h-5 w-5 text-[var(--accent)] md:h-8 md:w-8"
+                    className="h-5 w-5 text-[var(--dash-accent)] md:h-8 md:w-8"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -133,7 +133,7 @@ export default function TokenCounter({
                 </motion.div>
 
                 <motion.span
-                  className="min-w-0 flex-shrink text-center font-mono text-3xl font-bold tracking-tight text-[var(--ink)] sm:text-4xl md:text-6xl"
+                  className="min-w-0 flex-shrink text-center font-mono text-3xl font-bold tracking-tight text-[var(--dash-text)] sm:text-4xl md:text-6xl"
                   initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
@@ -142,7 +142,7 @@ export default function TokenCounter({
                 </motion.span>
 
                 <motion.span
-                  className="flex-shrink-0 text-base font-medium text-[var(--ink-muted)] md:text-2xl"
+                  className="flex-shrink-0 text-base font-medium text-[var(--dash-text-muted)] md:text-2xl"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.6 }}
@@ -158,7 +158,7 @@ export default function TokenCounter({
       <AnimatePresence>
         {showComparison && (
           <motion.p
-            className="text-lg text-[var(--ink-light)]"
+            className="text-lg text-[var(--dash-text-muted)]"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.4 }}
