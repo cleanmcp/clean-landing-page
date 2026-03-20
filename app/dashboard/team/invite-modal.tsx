@@ -114,46 +114,46 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative mx-4 w-full max-w-lg rounded-xl border border-[var(--cream-dark)] bg-white p-6 shadow-lg">
+      <div className="relative mx-4 w-full max-w-lg rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)] p-6 shadow-lg">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-[var(--ink)]">
+          <h3 className="text-lg font-semibold text-[var(--dash-text)]">
             Invite members
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-[var(--ink-muted)] transition-colors hover:bg-[var(--cream-dark)]"
+            className="rounded-lg p-1 text-[var(--dash-text-muted)] transition-colors hover:bg-[var(--dash-surface-hover)]"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Generate new invite */}
-        <div className="mb-6 rounded-lg border border-[var(--cream-dark)] bg-[var(--cream)] p-4">
+        <div className="mb-6 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-4">
           <div className="mb-3 flex items-center gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--ink-muted)]">
+              <label className="mb-1 block text-xs font-medium text-[var(--dash-text-muted)]">
                 Role
               </label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as "MEMBER" | "ADMIN")}
-                className="rounded-lg border border-[var(--cream-dark)] bg-white px-3 py-1.5 text-sm text-[var(--ink)]"
+                className="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface)] px-3 py-1.5 text-sm text-[var(--dash-text)]"
               >
                 <option value="MEMBER">Member</option>
                 {isOwner && <option value="ADMIN">Admin</option>}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--ink-muted)]">
+              <label className="mb-1 block text-xs font-medium text-[var(--dash-text-muted)]">
                 Expires
               </label>
               <select
                 value={expiresInDays}
                 onChange={(e) => setExpiresInDays(e.target.value)}
-                className="rounded-lg border border-[var(--cream-dark)] bg-white px-3 py-1.5 text-sm text-[var(--ink)]"
+                className="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface)] px-3 py-1.5 text-sm text-[var(--dash-text)]"
               >
                 <option value="7">7 days</option>
                 <option value="30">30 days</option>
@@ -167,11 +167,15 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
               <input
                 readOnly
                 value={generatedUrl}
-                className="flex-1 rounded-lg border border-[var(--cream-dark)] bg-white px-3 py-2 text-sm text-[var(--ink)]"
+                className="flex-1 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface)] px-3 py-2 text-sm text-[var(--dash-text)]"
               />
               <button
                 onClick={() => handleCopy(generatedUrl)}
-                className="rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  copied
+                    ? "border border-[#05DF72]/30 bg-[#05DF72]/10 text-[#05DF72]"
+                    : "bg-[#1772E7] text-white hover:bg-[#1565d0]"
+                }`}
               >
                 {copied ? (
                   <Check className="h-4 w-4" />
@@ -184,7 +188,7 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-50"
             >
               <Link className="h-4 w-4" />
               {generating ? "Generating..." : "Generate invite link"}
@@ -194,15 +198,15 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
 
         {/* Existing invites */}
         <div>
-          <h4 className="mb-2 text-sm font-medium text-[var(--ink)]">
+          <h4 className="mb-2 text-sm font-medium text-[var(--dash-text)]">
             Active invites
           </h4>
           {loadingInvites ? (
             <div className="flex justify-center py-4">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--dash-accent)] border-t-transparent" />
             </div>
           ) : existingInvites.length === 0 ? (
-            <p className="py-4 text-center text-sm text-[var(--ink-muted)]">
+            <p className="py-4 text-center text-sm text-[var(--dash-text-muted)]">
               No active invites
             </p>
           ) : (
@@ -210,24 +214,24 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
               {existingInvites.map((inv) => (
                 <div
                   key={inv.id}
-                  className="flex items-center justify-between rounded-lg border border-[var(--cream-dark)] px-3 py-2"
+                  className="flex items-center justify-between rounded-lg border border-[var(--dash-border)] px-3 py-2"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-xs font-mono text-[var(--ink-muted)]">
+                      <span className="truncate text-xs font-mono text-[var(--dash-text-muted)]">
                         ...{inv.token.slice(-8)}
                       </span>
-                      <span className="rounded bg-[var(--cream-dark)] px-1.5 py-0.5 text-xs font-medium text-[var(--ink-muted)]">
+                      <span className="rounded bg-[var(--dash-surface-hover)] px-1.5 py-0.5 text-xs font-medium text-[var(--dash-text-muted)]">
                         {inv.role}
                       </span>
                       {inv.maxUses && (
-                        <span className="text-xs text-[var(--ink-muted)]">
+                        <span className="text-xs text-[var(--dash-text-muted)]">
                           {inv.useCount}/{inv.maxUses} uses
                         </span>
                       )}
                     </div>
                     {inv.expiresAt && (
-                      <p className="text-xs text-[var(--ink-muted)]">
+                      <p className="text-xs text-[var(--dash-text-muted)]">
                         Expires{" "}
                         {new Date(inv.expiresAt).toLocaleDateString()}
                       </p>
@@ -236,14 +240,14 @@ export function InviteModal({ open, onClose, isOwner }: InviteModalProps) {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleCopy(inv.inviteUrl)}
-                      className="rounded p-1 text-[var(--ink-muted)] transition-colors hover:bg-[var(--cream-dark)]"
+                      className="rounded p-1 text-[var(--dash-text-muted)] transition-colors hover:bg-[var(--dash-surface-hover)]"
                       title="Copy link"
                     >
                       <Copy className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => handleRevoke(inv.id)}
-                      className="rounded p-1 text-red-400 transition-colors hover:bg-red-50"
+                      className="rounded p-1 text-[#ef4444] transition-colors hover:bg-[#ef4444]/10"
                       title="Revoke"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

@@ -16,8 +16,8 @@ export default function ForgotPasswordPage() {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--cream)" }}>
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--ink) border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#1772E7] border-t-transparent" />
       </div>
     );
   }
@@ -75,17 +75,16 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "var(--cream)" }}>
+      <div className="flex min-h-screen items-center justify-center px-4 bg-[#0a0a0a]">
         <div className="w-full max-w-md text-center">
-          <div className="rounded-2xl border p-8" style={{ background: "var(--cream-light)", borderColor: "var(--cream-dark)" }}>
-            <h1 className="mb-2 text-xl font-semibold" style={{ color: "var(--ink)" }}>Password reset</h1>
-            <p className="mb-6 text-sm" style={{ color: "var(--ink-muted)" }}>
+          <div className="rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#171717] p-8">
+            <h1 className="mb-2 text-xl font-semibold text-[#fafafa]">Password reset</h1>
+            <p className="mb-6 text-sm text-[#a1a1aa]">
               Your password has been updated successfully.
             </p>
             <Link
               href="/sign-in"
-              className="inline-block rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.01] hover:shadow-md"
-              style={{ background: "var(--accent)", color: "var(--cream)" }}
+              className="inline-block rounded-xl bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.01] hover:shadow-md"
             >
               Sign in
             </Link>
@@ -96,33 +95,33 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "var(--cream)" }}>
+    <div className="flex min-h-screen items-center justify-center px-4 bg-[#0a0a0a]">
       <div className="w-full max-w-md">
         <Link href="/" className="mb-8 block text-center">
-          <span className="text-3xl font-normal tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+          <span className="text-3xl font-normal tracking-tight text-[#fafafa]" style={{ fontFamily: "var(--font-display)" }}>
             Clean
           </span>
         </Link>
 
-        <div className="rounded-2xl border p-8" style={{ background: "var(--cream-light)", borderColor: "var(--cream-dark)" }}>
-          <h1 className="mb-1 text-xl font-semibold" style={{ color: "var(--ink)" }}>
+        <div className="rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#171717] p-8">
+          <h1 className="mb-1 text-xl font-semibold text-[#fafafa]">
             Reset password
           </h1>
-          <p className="mb-6 text-sm" style={{ color: "var(--ink-muted)" }}>
+          <p className="mb-6 text-sm text-[#a1a1aa]">
             {step === "email"
               ? "Enter your email to receive a reset code."
               : "Enter the code sent to your email and your new password."}
           </p>
 
           {error && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
               {error}
             </div>
           )}
 
           {step === "email" ? (
             <form onSubmit={handleSendCode}>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-medium" style={{ color: "var(--ink-light)" }}>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-[#a1a1aa]">
                 Email address
               </label>
               <input
@@ -132,21 +131,19 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="mb-4 w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-2"
-                style={{ background: "var(--cream)", borderColor: "var(--cream-dark)", color: "var(--ink)" }}
+                className="mb-4 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[#0a0a0a] px-4 py-3 text-sm text-[#fafafa] outline-none transition-all duration-200 focus:ring-2 focus:ring-[#1772E7]"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-60"
-                style={{ background: "var(--accent)", color: "var(--cream)" }}
+                className="w-full rounded-xl bg-[#1772E7] px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-60"
               >
                 {loading ? "Sending…" : "Send reset code"}
               </button>
             </form>
           ) : (
             <form onSubmit={handleReset}>
-              <label htmlFor="code" className="mb-1.5 block text-sm font-medium" style={{ color: "var(--ink-light)" }}>
+              <label htmlFor="code" className="mb-1.5 block text-sm font-medium text-[#a1a1aa]">
                 Reset code
               </label>
               <input
@@ -156,10 +153,9 @@ export default function ForgotPasswordPage() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Enter 6-digit code"
-                className="mb-4 w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-2"
-                style={{ background: "var(--cream)", borderColor: "var(--cream-dark)", color: "var(--ink)" }}
+                className="mb-4 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[#0a0a0a] px-4 py-3 text-sm text-[#fafafa] outline-none transition-all duration-200 focus:ring-2 focus:ring-[#1772E7]"
               />
-              <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium" style={{ color: "var(--ink-light)" }}>
+              <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium text-[#a1a1aa]">
                 New password
               </label>
               <input
@@ -169,14 +165,12 @@ export default function ForgotPasswordPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="mb-4 w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-2"
-                style={{ background: "var(--cream)", borderColor: "var(--cream-dark)", color: "var(--ink)" }}
+                className="mb-4 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[#0a0a0a] px-4 py-3 text-sm text-[#fafafa] outline-none transition-all duration-200 focus:ring-2 focus:ring-[#1772E7]"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-60"
-                style={{ background: "var(--accent)", color: "var(--cream)" }}
+                className="w-full rounded-xl bg-[#1772E7] px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.01] hover:shadow-md disabled:opacity-60"
               >
                 {loading ? "Resetting…" : "Reset password"}
               </button>
@@ -184,12 +178,11 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-sm" style={{ color: "var(--ink-muted)" }}>
+        <p className="mt-6 text-center text-sm text-[#a1a1aa]">
           Remember your password?{" "}
           <Link
             href="/sign-in"
-            className="font-medium underline underline-offset-2 transition-colors duration-200 hover:text-(--ink)"
-            style={{ color: "var(--accent)" }}
+            className="font-medium text-[#1772E7] underline underline-offset-2 transition-colors duration-200 hover:text-[#5EB1FF]"
           >
             Sign in
           </Link>

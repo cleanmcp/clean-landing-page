@@ -17,6 +17,16 @@ export async function POST(req: Request) {
     return Response.json({ error: "priceId is required" }, { status: 400 });
   }
 
+  // Server-side allowlist: only accept known Stripe price IDs
+  const allowedPriceIds = [
+    process.env.STRIPE_PRO_PRICE_ID,
+    process.env.STRIPE_MAX_PRICE_ID,
+  ].filter(Boolean);
+
+  if (!allowedPriceIds.includes(priceId)) {
+    return Response.json({ error: "Invalid plan selected" }, { status: 400 });
+  }
+
   // Get user info
   const [user] = await db
     .select({ email: users.email })

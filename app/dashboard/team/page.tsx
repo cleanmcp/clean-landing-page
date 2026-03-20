@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Users, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { InviteModal } from "./invite-modal";
 
@@ -26,6 +27,12 @@ interface OrgData {
   apiKeyCount: number;
   members: OrgMember[];
 }
+
+const ROLE_BADGES: Record<string, string> = {
+  OWNER: "bg-[#1772E7]/15 text-[#5EB1FF]",
+  ADMIN: "bg-[#8B5CF6]/15 text-[#A78BFA]",
+  MEMBER: "bg-[var(--dash-surface-hover)] text-[var(--dash-text-muted)]",
+};
 
 export default function TeamPage() {
   const { user: clerkUser } = useUser();
@@ -124,16 +131,23 @@ export default function TeamPage() {
   }
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="w-full max-w-none"
+    >
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-medium text-[var(--ink)]">Team</h2>
-        <div className="flex items-center gap-4">
-          <button className="rounded-lg border border-[var(--cream-dark)] bg-white px-4 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]">
-            Docs
-          </button>
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--dash-text)]">Team</h1>
+          <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
+            Manage team members and invitations
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
           {isAdminOrOwner && (
             <button
-              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+              className="rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
               onClick={() => setInviteModalOpen(true)}
             >
               Invite member
@@ -144,33 +158,33 @@ export default function TeamPage() {
 
       <div className="mb-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
           <input
             type="text"
             placeholder="Filter members"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full max-w-xs rounded-lg border border-[var(--cream-dark)] bg-white py-2 pl-10 pr-4 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="w-full max-w-xs rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] py-2 pl-10 pr-4 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:border-[#1772E7] focus:outline-none focus:ring-1 focus:ring-[#1772E7]/20"
           />
         </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--dash-accent)] border-t-transparent" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-[var(--cream-dark)] bg-white">
+        <div className="overflow-hidden rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
           <table className="w-full">
-            <thead className="border-b border-[var(--cream-dark)] bg-[var(--cream)]">
+            <thead className="border-b border-[var(--dash-border)] bg-[var(--dash-bg)]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--ink-muted)]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-[var(--dash-text-muted)]">
                   User
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--ink-muted)]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-[var(--dash-text-muted)]">
                   Role
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--ink-muted)]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-[var(--dash-text-muted)]">
                   Joined
                 </th>
                 <th className="px-4 py-3"></th>
@@ -188,7 +202,9 @@ export default function TeamPage() {
                 return (
                   <tr
                     key={member.userId}
-                    className="border-b border-[var(--cream-dark)]"
+                    className={`border-b border-[var(--dash-border)] transition-colors ${
+                      isSelf ? "bg-[var(--dash-accent-glow)]" : "hover:bg-[var(--dash-surface-hover)]"
+                    }`}
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -196,27 +212,27 @@ export default function TeamPage() {
                           <img
                             src={member.user.image}
                             alt={member.user.name ?? ""}
-                            className="h-7 w-7 rounded-full object-cover"
+                            className="h-8 w-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--cream-dark)]">
-                            <Users className="h-3.5 w-3.5 text-[var(--ink-muted)]" />
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1772E7]/20">
+                            <Users className="h-3.5 w-3.5 text-[#5EB1FF]" />
                           </div>
                         )}
                         <div>
-                          <span className="text-sm font-medium text-[var(--ink)]">
+                          <span className="text-sm font-medium text-[var(--dash-text)]">
                             {member.user.name ||
                               member.user.email ||
                               "Unknown"}
                           </span>
                           {member.user.email && member.user.name && (
-                            <p className="text-xs text-[var(--ink-muted)]">
+                            <p className="text-sm text-[var(--dash-text-muted)]">
                               {member.user.email}
                             </p>
                           )}
                         </div>
                         {isSelf && (
-                          <span className="rounded bg-[var(--cream-dark)] px-1.5 py-0.5 text-xs font-medium text-[var(--ink-muted)]">
+                          <span className="rounded bg-[var(--dash-surface-hover)] px-1.5 py-0.5 text-xs font-medium text-[var(--dash-text-muted)]">
                             YOU
                           </span>
                         )}
@@ -232,7 +248,7 @@ export default function TeamPage() {
                               e.target.value
                             )
                           }
-                          className="rounded-lg border border-[var(--cream-dark)] bg-white px-2 py-1 text-sm text-[var(--ink)]"
+                          className="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
                         >
                           {roleOptions.map((r) => (
                             <option key={r} value={r}>
@@ -241,12 +257,12 @@ export default function TeamPage() {
                           ))}
                         </select>
                       ) : (
-                        <span className="text-sm text-[var(--ink)]">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_BADGES[member.role] ?? ROLE_BADGES.MEMBER}`}>
                           {member.role}
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-[var(--ink-muted)]">
+                    <td className="px-4 py-3 text-sm text-[var(--dash-text-muted)]">
                       {new Date(member.joinedAt).toLocaleDateString(
                         "en-US",
                         {
@@ -265,7 +281,7 @@ export default function TeamPage() {
                               member.user.name || "yourself"
                             )
                           }
-                          className="rounded-lg border border-[var(--cream-dark)] px-3 py-1 text-xs font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+                          className="rounded-lg border border-[var(--dash-border)] px-3 py-1 text-xs font-medium text-[var(--dash-text)] transition-colors hover:border-[var(--dash-border-strong)] hover:bg-[var(--dash-surface-hover)]"
                         >
                           Leave team
                         </button>
@@ -277,7 +293,7 @@ export default function TeamPage() {
                               member.user.name || "this member"
                             )
                           }
-                          className="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                          className="rounded-lg bg-[#ef4444]/10 px-3 py-1 text-xs font-medium text-[#ef4444] transition-colors hover:bg-[#ef4444]/20"
                         >
                           Remove
                         </button>
@@ -288,16 +304,16 @@ export default function TeamPage() {
               })}
             </tbody>
           </table>
-          <div className="flex items-center justify-between border-t border-[var(--cream-dark)] px-4 py-3">
-            <span className="text-sm text-[var(--ink-muted)]">
+          <div className="flex items-center justify-between border-t border-[var(--dash-border)] px-4 py-3">
+            <span className="text-sm text-[var(--dash-text-muted)]">
               {filteredMembers.length}{" "}
               {filteredMembers.length === 1 ? "user" : "users"}
             </span>
             <div className="flex items-center gap-2">
-              <button className="rounded p-1 text-[var(--ink-muted)] hover:bg-[var(--cream-dark)]">
+              <button className="rounded p-1 text-[var(--dash-text-muted)] hover:bg-[var(--dash-surface-hover)]">
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <button className="rounded p-1 text-[var(--ink-muted)] hover:bg-[var(--cream-dark)]">
+              <button className="rounded p-1 text-[var(--dash-text-muted)] hover:bg-[var(--dash-surface-hover)]">
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
@@ -310,6 +326,6 @@ export default function TeamPage() {
         onClose={() => setInviteModalOpen(false)}
         isOwner={currentRole === "OWNER"}
       />
-    </div>
+    </motion.div>
   );
 }

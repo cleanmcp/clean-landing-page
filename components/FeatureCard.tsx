@@ -15,7 +15,7 @@ interface FeatureCardProps {
 
 function FeaturePreview({ variant }: { variant: FeaturePreviewVariant }) {
   return (
-    <div className="feature-preview mt-5 overflow-hidden rounded-xl border border-black/10 bg-[var(--cream-light)]">
+    <div className="feature-preview mt-5 overflow-hidden rounded-xl border border-black/10 bg-[var(--dash-bg)]">
       <div className="feature-preview__topbar flex items-center gap-1.5 border-b border-black/10 bg-white/40 px-3 py-2">
         <span className="h-2 w-2 rounded-full bg-black/15" />
         <span className="h-2 w-2 rounded-full bg-black/10" />
@@ -44,12 +44,12 @@ function FeaturePreview({ variant }: { variant: FeaturePreviewVariant }) {
         )}
 
         {variant === "plugins" && (
-          <div className="relative h-[140px] overflow-hidden rounded-xl bg-white/70 p-4 text-[var(--ink)]">
+          <div className="relative h-[140px] overflow-hidden rounded-xl bg-white/70 p-4 text-[var(--dash-text)]">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-semibold tracking-wide text-black/70">
                 Choose any agent
               </span>
-              <span className="rounded-full border border-black/10 bg-[var(--accent)]/10 px-2.5 py-1 text-[10px] font-semibold text-[var(--accent)]">
+              <span className="rounded-full border border-black/10 bg-[var(--dash-accent)]/10 px-2.5 py-1 text-[10px] font-semibold text-[var(--dash-accent)]">
                 MCP
               </span>
             </div>
@@ -124,7 +124,7 @@ function FeaturePreview({ variant }: { variant: FeaturePreviewVariant }) {
         )}
 
         {variant === "sync" && (
-          <div className="relative h-[140px] overflow-hidden rounded-xl bg-[var(--ink)] p-4 text-white">
+          <div className="relative h-[140px] overflow-hidden rounded-xl bg-[var(--dash-text)] p-4 text-white">
             <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-white/60">
               <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1">
                 shared context
@@ -187,12 +187,12 @@ function FeaturePreview({ variant }: { variant: FeaturePreviewVariant }) {
         {variant === "setup" && (
           <div className="relative h-[140px] overflow-hidden rounded-xl bg-white/60 p-4">
             <div className="mb-3 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-md bg-[var(--accent)]/15" />
+              <div className="h-6 w-6 rounded-md bg-[var(--dash-accent)]/15" />
               <div className="flex-1">
                 <div className="h-2 w-32 rounded bg-black/20" />
                 <div className="mt-1 h-2 w-24 rounded bg-black/10" />
               </div>
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--dash-accent)]">
                 Clean
               </span>
             </div>
@@ -202,7 +202,7 @@ function FeaturePreview({ variant }: { variant: FeaturePreviewVariant }) {
               <div className="h-2 w-36 rounded bg-black/10" />
             </div>
             <div className="mt-4 h-2 w-full overflow-hidden rounded bg-black/10">
-              <div className="feature-preview__progress h-full w-1/2 rounded bg-[var(--accent)]/70" />
+              <div className="feature-preview__progress h-full w-1/2 rounded bg-[var(--dash-accent)]/70" />
             </div>
           </div>
         )}
@@ -232,15 +232,15 @@ export default function FeatureCard({
 
   return (
     <motion.div
-      className="group rounded-xl border border-[var(--cream-dark)] bg-[var(--cream)] p-6 transition-all hover:border-[var(--accent)]"
+      className="group rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg)] p-6 transition-all hover:border-[var(--dash-accent)]"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.7, delay: index * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
     >
  
-      <h3 className="mb-2 text-lg font-semibold text-[var(--ink)]">{title}</h3>
-      <p className="text-sm leading-relaxed text-[var(--ink-light)]">
+      <h3 className="mb-2 text-lg font-semibold text-[var(--dash-text)]">{title}</h3>
+      <p className="text-sm leading-relaxed text-[var(--dash-text-muted)]">
         {description}
       </p>
 

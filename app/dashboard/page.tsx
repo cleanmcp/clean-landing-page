@@ -3,9 +3,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { Key, GitBranch, Zap, Search, Activity, Rocket, Check, ArrowRight, Loader2 } from "lucide-react";
-import { GlowCard } from "@/components/dashboard/glow-card";
-import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
+import {
+  Key,
+  GitBranch,
+  Zap,
+  Search,
+  Activity,
+  Rocket,
+  Check,
+  ArrowRight,
+  Loader2,
+  Plus,
+  Clock,
+} from "lucide-react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ActivityItem } from "@/app/api/dashboard/activity/route";
 import type { TokenSavingsStats } from "@/app/api/dashboard/stats/route";
 
@@ -36,7 +73,6 @@ interface OrgData {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Relative timestamp: "just now", "2m ago", "1h ago", "3d ago" */
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
@@ -45,7 +81,6 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-/** Human-readable label for an audit-log action + metadata. */
 function formatActivityItem(item: ActivityItem): {
   label: string;
   sub: string;
@@ -93,206 +128,182 @@ function formatActivityItem(item: ActivityItem): {
   }
 }
 
-/** Format large numbers compactly: 1234567 → "1.2M", 12345 → "12.3k" */
 function compactNum(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
   return n.toLocaleString();
 }
 
-/** Percentage reduction: how much smaller b is vs a. Returns 0–100 clamped. */
-function pctReduction(a: number, b: number): number {
-  if (!a || a <= 0) return 0;
-  return Math.min(100, Math.max(0, Math.round(((a - b) / a) * 100)));
-}
-
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Token Savings (Overview chart) — shadcn interactive area chart
+// ---------------------------------------------------------------------------
+
+const tokenChartConfig = {
+  original: {
+    label: "Original (JSON)",
+    color: "var(--chart-1)",
+  },
+  compressed: {
+    label: "Compressed (TOON)",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
+
 type Period = "7d" | "30d" | "all";
-
-const periodLabels: Record<Period, string> = {
-  "7d": "7d",
-  "30d": "30d",
-  all: "All time",
-};
-
-function PeriodSelector({
-  value,
-  onChange,
-}: {
-  value: Period;
-  onChange: (p: Period) => void;
-}) {
-  return (
-    <div className="flex gap-1 rounded-md border border-[var(--cream-dark)] bg-[var(--cream)] p-0.5">
-      {(Object.keys(periodLabels) as Period[]).map((p) => (
-        <button
-          key={p}
-          onClick={() => onChange(p)}
-          className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-            value === p
-              ? "bg-white text-[var(--ink)] shadow-sm"
-              : "text-[var(--ink-muted)] hover:text-[var(--ink)]"
-          }`}
-        >
-          {periodLabels[p]}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function TokenSavingsCard() {
   const [period, setPeriod] = useState<Period>("30d");
   const [stats, setStats] = useState<TokenSavingsStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const fetchStats = useCallback(
-    async (p: Period) => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/dashboard/stats?period=${p}`);
-        if (res.ok) {
-          const data: TokenSavingsStats = await res.json();
-          setStats(data);
-        }
-      } catch {
-        // silently ignore — empty state shown
-      } finally {
-        setLoading(false);
+  const fetchStats = useCallback(async (p: Period) => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch(`/api/dashboard/stats?period=${p}`);
+      if (res.ok) {
+        const data: TokenSavingsStats = await res.json();
+        setStats(data);
+      } else {
+        const text = await res.text();
+        console.error(`[dashboard/stats] API ${res.status}: ${text.slice(0, 120)}`);
+        setFetchError("error");
       }
-    },
-    []
-  );
+    } catch (err) {
+      console.error("[dashboard/stats] Fetch error:", err);
+      setFetchError("error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchStats(period);
   }, [period, fetchStats]);
 
-  const hasPrecisionData =
-    stats != null &&
-    stats.totalSourceFileChars != null &&
-    stats.totalSnippetChars != null &&
-    stats.totalSourceFileChars > 0;
+  const hasData = stats != null && Array.isArray(stats.daily) && stats.daily.length > 0;
 
-  const hasToonData = stats != null && stats.totalJsonChars > 0;
-  const hasAnyData = hasPrecisionData || hasToonData;
-
-  const precisionPct = hasPrecisionData
-    ? pctReduction(stats!.totalSourceFileChars!, stats!.totalSnippetChars!)
-    : 0;
-  const toonPct =
-    hasToonData ? pctReduction(stats!.totalJsonChars, stats!.totalToonChars) : 0;
+  const chartData = hasData
+    ? stats!.daily.map((d) => ({
+        date: d.date,
+        original: d.jsonChars,
+        compressed: d.toonChars,
+      }))
+    : [];
 
   return (
-    <div className="rounded-lg border border-[var(--cream-dark)] bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--cream-dark)] p-5 pb-3">
-        <div>
-          <h3 className="text-sm font-semibold text-[var(--ink)]">Token Savings</h3>
-          <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
-            Estimated context reduction per search — approximate (chars/4)
-          </p>
+    <Card className="pt-0">
+      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+        <div className="grid flex-1 gap-1">
+          <CardTitle className="text-base font-semibold">Token Savings</CardTitle>
+          <CardDescription>
+            Context size before & after TOON compression
+          </CardDescription>
         </div>
-        <PeriodSelector value={period} onChange={setPeriod} />
-      </div>
-
-      <div className="p-4">
+        <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+          <SelectTrigger
+            className="hidden w-[160px] rounded-lg sm:ml-auto sm:flex"
+            aria-label="Select period"
+          >
+            <SelectValue placeholder="Last 30 days" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            <SelectItem value="30d" className="rounded-lg">Last 30 days</SelectItem>
+            <SelectItem value="7d" className="rounded-lg">Last 7 days</SelectItem>
+            <SelectItem value="all" className="rounded-lg">All time</SelectItem>
+          </SelectContent>
+        </Select>
+      </CardHeader>
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         {loading ? (
           <div className="space-y-3 py-4">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-10 animate-pulse rounded-md bg-[var(--cream)]"
-              />
+              <div key={i} className="h-10 animate-pulse rounded bg-muted" />
             ))}
           </div>
-        ) : !hasAnyData ? (
-          <div className="py-10 text-center text-[var(--ink-muted)]">
-            <Zap
-              className="mx-auto mb-2 h-10 w-10 text-[var(--ink-muted)]/25"
-              strokeWidth={1.5}
-            />
-            <p className="text-sm">No searches yet</p>
-            <p className="mt-0.5 text-xs">
+        ) : fetchError ? (
+          <div className="py-8 text-center">
+            <p className="text-sm font-medium text-destructive">Failed to load chart data</p>
+            <p className="mt-1 text-xs text-muted-foreground">Please try refreshing the page</p>
+          </div>
+        ) : !hasData ? (
+          <div className="py-12 text-center">
+            <Zap className="mx-auto mb-3 h-10 w-10 text-muted-foreground/25" strokeWidth={1.5} />
+            <p className="text-sm text-muted-foreground">No searches yet</p>
+            <p className="mt-1 text-sm text-muted-foreground/70">
               Token savings will appear here as you use the search API
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Totals row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-md bg-[var(--cream)] px-3 py-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--ink-muted)]">
-                  Est. tokens saved
-                </p>
-                <p className="mt-0.5 text-xl font-bold text-[var(--ink)]">
-                  ~{compactNum(stats!.totalTokensSaved)}
-                </p>
-                <p className="mt-0.5 text-[11px] text-[var(--ink-muted)]">
-                  {stats!.totalSearches.toLocaleString()} searches
-                </p>
-              </div>
-              <div className="rounded-md bg-[var(--cream)] px-3 py-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--ink-muted)]">
-                  Chars saved
-                </p>
-                <p className="mt-0.5 text-xl font-bold text-[var(--ink)]">
-                  {compactNum(stats!.totalCharsSaved)}
-                </p>
-                <p className="mt-0.5 text-[11px] text-[var(--ink-muted)]">
-                  via TOON format
-                </p>
-              </div>
-            </div>
-
-            {/* Search precision savings (snippet vs full file) */}
-            {hasPrecisionData && (
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-[var(--ink)]">
-                    Search precision
-                  </span>
-                  <span className="text-[11px] font-semibold text-[var(--accent)]">
-                    {precisionPct}% smaller
-                  </span>
-                </div>
-                <Progress value={precisionPct} className="h-1.5" />
-                <p className="mt-1 text-[11px] text-[var(--ink-muted)]">
-                  Snippets ({compactNum(stats!.totalSnippetChars!)} chars) vs full
-                  files ({compactNum(stats!.totalSourceFileChars!)} chars)
-                </p>
-              </div>
-            )}
-
-            {/* TOON compression savings */}
-            {hasToonData && (
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-[var(--ink)]">
-                    TOON compression
-                  </span>
-                  <span className="text-[11px] font-semibold text-[var(--accent)]">
-                    {toonPct}% smaller
-                  </span>
-                </div>
-                <Progress value={toonPct} className="h-1.5" />
-                <p className="mt-1 text-[11px] text-[var(--ink-muted)]">
-                  TOON format ({compactNum(stats!.totalToonChars)} chars) vs JSON (
-                  {compactNum(stats!.totalJsonChars)} chars)
-                </p>
-              </div>
-            )}
-
-            <p className="text-[10px] text-[var(--ink-muted)]/70">
-              Token counts are estimated at 1 token per 4 characters.
-            </p>
-          </div>
+          <ChartContainer
+            config={tokenChartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="fillOriginal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-original)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--color-original)" stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient id="fillCompressed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-compressed)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--color-compressed)" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  });
+                }}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(value) => {
+                      return new Date(value).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      });
+                    }}
+                    indicator="dot"
+                  />
+                }
+              />
+              <Area
+                dataKey="compressed"
+                type="natural"
+                fill="url(#fillCompressed)"
+                stroke="var(--color-compressed)"
+                stackId="a"
+              />
+              <Area
+                dataKey="original"
+                type="natural"
+                fill="url(#fillOriginal)"
+                stroke="var(--color-original)"
+                stackId="a"
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+            </AreaChart>
+          </ChartContainer>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -359,7 +370,6 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
     const sessionId = params.get("session_id");
     const setup = params.get("setup");
 
-    // Returning from Stripe checkout — provision and go to cloud onboarding
     if (setup === "complete" && sessionId) {
       setPhase("provisioning");
       fetch("/api/stripe/provision", {
@@ -380,7 +390,6 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
       return;
     }
 
-    // Normal load — check if org already has a plan or is set up
     fetch("/api/org")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -457,69 +466,74 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
 
   if (phase === "provisioning") {
     return (
-      <div className="flex items-center justify-center gap-3 rounded-xl border-2 border-[var(--accent)]/20 bg-white p-8">
-        <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
-        <span className="text-sm text-[var(--ink-muted)]">Setting up your account...</span>
-      </div>
+      <Card className="border-l-4 border-l-primary">
+        <CardContent className="flex items-center justify-center gap-3 py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Setting up your account...</span>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-xl border-2 border-[var(--accent)]/20 bg-white p-6">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10">
-          <Rocket className="h-5 w-5 text-[var(--accent)]" />
+    <Card className="border-l-4 border-l-primary">
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Rocket className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-semibold">Get started with Clean</CardTitle>
+            <p className="text-sm text-muted-foreground">Choose a plan to start indexing your repos.</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-[var(--ink)]">Get started with Clean</h3>
-          <p className="text-sm text-[var(--ink-muted)]">Choose a plan to start indexing your repos.</p>
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {PLANS.map((plan) => (
-          <div
-            key={plan.id}
-            className={`relative flex flex-col rounded-xl border p-5 transition-all ${
-              plan.popular
-                ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/10"
-                : "border-[var(--cream-dark)]"
-            }`}
-          >
-            {plan.popular && (
-              <span className="absolute -top-2.5 left-4 rounded-full bg-[var(--accent)] px-2.5 py-0.5 text-[10px] font-semibold text-white">
-                Popular
-              </span>
-            )}
-            <h4 className="text-sm font-semibold text-[var(--ink)]">{plan.name}</h4>
-            <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-[var(--ink)]">{plan.price}</span>
-              {plan.period && <span className="text-xs text-[var(--ink-muted)]">{plan.period}</span>}
-            </div>
-            <ul className="mt-4 flex-1 space-y-2">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-xs text-[var(--ink-light)]">
-                  <Check className="h-3 w-3 text-[var(--accent)]" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => plan.id === "free" ? handleFreePlan() : handlePaidPlan(plan.id)}
-              disabled={loadingPlan !== null}
-              className={`mt-4 flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PLANS.map((plan) => (
+            <div
+              key={plan.id}
+              className={`relative flex flex-col rounded-xl border p-5 transition-all ${
                 plan.popular
-                  ? "bg-[var(--accent)] text-white hover:bg-[var(--accent-secondary)]"
-                  : "border border-[var(--cream-dark)] text-[var(--ink)] hover:bg-[var(--cream)]"
+                  ? "border-primary ring-1 ring-primary/20"
+                  : "border-border"
               }`}
             >
-              {loadingPlan === plan.id ? <Loader2 className="h-4 w-4 animate-spin" /> : plan.cta}
-              {loadingPlan !== plan.id && <ArrowRight className="h-3 w-3" />}
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
+              {plan.popular && (
+                <Badge className="absolute -top-2.5 left-4" variant="default">
+                  Popular
+                </Badge>
+              )}
+              <h4 className="text-base font-semibold">{plan.name}</h4>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-3xl font-bold tabular-nums">{plan.price}</span>
+                {plan.period && (
+                  <span className="text-sm text-muted-foreground">{plan.period}</span>
+                )}
+              </div>
+              <ul className="mt-4 flex-1 space-y-2">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Check className="h-3 w-3 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                onClick={() => plan.id === "free" ? handleFreePlan() : handlePaidPlan(plan.id)}
+                disabled={loadingPlan !== null}
+                variant={plan.popular ? "default" : "outline"}
+                size="sm"
+                className="mt-4 w-full"
+              >
+                {loadingPlan === plan.id ? <Loader2 className="h-4 w-4 animate-spin" /> : plan.cta}
+                {loadingPlan !== plan.id && <ArrowRight className="ml-1 h-3 w-3" />}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -528,10 +542,10 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
 // ---------------------------------------------------------------------------
 
 const statsConfig = [
-  { key: "keys", label: "API KEYS", icon: Key },
-  { key: "repos", label: "REPOSITORIES", icon: GitBranch },
-  { key: "searches", label: "SEARCHES", icon: Search },
-  { key: "tokens", label: "TOKENS SAVED", icon: Zap },
+  { key: "keys", label: "API Keys", icon: Key },
+  { key: "repos", label: "Repositories", icon: GitBranch },
+  { key: "searches", label: "Total Searches", icon: Search },
+  { key: "tokens", label: "Tokens Saved", icon: Zap },
 ] as const;
 
 const ACTIVITY_POLL_MS = 30_000;
@@ -547,7 +561,6 @@ export default function DashboardPage() {
   const [showSetup, setShowSetup] = useState(true);
   const [hasLicense, setHasLicense] = useState<boolean | null>(null);
 
-  // Fetch activity (used for initial load and polling)
   const fetchActivity = useCallback(async () => {
     try {
       const res = await fetch("/api/dashboard/activity");
@@ -558,12 +571,11 @@ export default function DashboardPage() {
         }
       }
     } catch {
-      // silently ignore polling errors
+      // silently ignore
     }
   }, []);
 
   useEffect(() => {
-    // Fetch all dashboard data on mount
     Promise.allSettled([
       fetch("/api/stats")
         .then((r) => (r.ok ? r.json() : null))
@@ -575,7 +587,6 @@ export default function DashboardPage() {
         .then((d) => {
           if (d?.org) {
             setOrgData({ apiKeyCount: d.apiKeyCount ?? 0 });
-            // Has license if licenseKey exists OR tier is paid OR cloud mode (licenseKey may be hidden for non-owners)
             const hasPaidPlan = d.org.tier === "pro" || d.org.tier === "max" || d.org.tier === "enterprise";
             const isCloud = d.org.hostingMode === "cloud";
             setHasLicense(isCloud || hasPaidPlan || (!!d.org.licenseKey && !d.org.licenseRevoked));
@@ -591,183 +602,177 @@ export default function DashboardPage() {
         }),
     ]);
 
-    // Poll activity every 30 seconds
     const interval = setInterval(fetchActivity, ACTIVITY_POLL_MS);
     return () => clearInterval(interval);
   }, [fetchActivity]);
 
   const statValues = {
     keys: {
-      value: orgData ? String(orgData.apiKeyCount) : "\u2014",
+      value: orgData ? String(orgData.apiKeyCount) : "—",
       sub: "Active keys",
     },
     repos: {
-      value: repoCount !== null ? String(repoCount) : "\u2014",
+      value: repoCount !== null ? String(repoCount) : "—",
       sub: "Cloud repos",
     },
     searches: {
-      value: searchStats ? searchStats.totalSearches.toLocaleString() : "\u2014",
-      sub: searchStats ? `${searchStats.searchesThisWeek} this week` : "No data",
+      value: searchStats ? searchStats.totalSearches.toLocaleString() : "—",
+      sub: searchStats ? `${searchStats.searchesThisWeek} this week` : "No data yet",
     },
     tokens: {
-      value: searchStats
-        ? `~${searchStats.totalTokensSaved.toLocaleString()}`
-        : "\u2014",
-      sub: searchStats ? "Via TOON format" : "No data",
+      value: searchStats ? `~${searchStats.totalTokensSaved.toLocaleString()}` : "—",
+      sub: searchStats ? "Via TOON format" : "No data yet",
     },
   };
 
   return (
-    <div className="max-w-6xl space-y-8">
-      {/* Welcome */}
-      <div>
-        <h2 className="text-2xl font-medium text-[var(--ink)]">
-          Welcome back, {firstName}
-        </h2>
-        <p className="mt-1 text-sm text-[var(--ink-muted)]">
-          Here&apos;s an overview of your account activity.
-        </p>
+    <div className="space-y-4">
+      {/* Page Header — matches shadcn-admin: text-2xl font-bold tracking-tight */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Dashboard
+        </h1>
+        <Button size="sm" asChild>
+          <Link href="/dashboard/keys/new">
+            <Plus className="mr-1 h-4 w-4" />
+            New Key
+          </Link>
+        </Button>
       </div>
 
-      {/* First-time setup card — only when explicitly no license */}
+      {/* Setup card */}
       {hasLicense === false && showSetup && (
         <SetupCard onComplete={() => { setShowSetup(false); setHasLicense(true); }} />
       )}
 
-      {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statsConfig.map((s) => {
-          const data = statValues[s.key];
-          const Icon = s.icon;
-          return (
-            <GlowCard
-              key={s.key}
-              className="rounded-lg border border-[var(--cream-dark)] bg-white"
-            >
-              <div className="relative p-5">
-                <div className="absolute bottom-0 left-0 top-0 w-[3px] rounded-l-lg bg-[var(--accent)]" />
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-[11px] font-semibold tracking-widest text-[var(--ink-muted)]">
-                    {s.label}
-                  </span>
-                  <Icon
-                    className="h-4 w-4 text-[var(--accent)]/60"
-                    strokeWidth={2}
-                  />
-                </div>
-                <div className="text-2xl font-bold tracking-tight text-[var(--ink)]">
-                  {data.value}
-                </div>
-                <p className="mt-1 text-xs text-[var(--ink-muted)]">{data.sub}</p>
-              </div>
-            </GlowCard>
-          );
-        })}
-      </div>
+      {/* Tabs — matches shadcn-admin Dashboard pattern */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+        </TabsList>
 
-      {/* Two-column cards — row 1 */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Recent Searches */}
-        <div className="rounded-lg border border-[var(--cream-dark)] bg-white">
-          <div className="border-b border-[var(--cream-dark)] p-5 pb-3">
-            <h3 className="text-sm font-semibold text-[var(--ink)]">
-              Recent Searches
-            </h3>
-            <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
-              Latest code searches across your repositories
-            </p>
+        <TabsContent value="overview" className="space-y-4">
+          {/* Row 1: Stat Cards — exact shadcn-admin pattern */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {statsConfig.map((s) => {
+              const data = statValues[s.key];
+              const Icon = s.icon;
+              return (
+                <Card key={s.key}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-base font-semibold">
+                      {s.label}
+                    </CardTitle>
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-4xl font-bold">{data.value}</div>
+                    <p className="text-sm text-muted-foreground">
+                      {data.sub}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-          <div className="p-4">
-            {searchStats && searchStats.recentSearches.length > 0 ? (
-              <div className="space-y-2">
-                {searchStats.recentSearches.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-start justify-between gap-3 rounded-md p-2.5 transition-colors hover:bg-[var(--cream)]"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-[var(--ink)]">
-                        {s.query}
-                      </p>
-                      <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
-                        {s.repo} &middot; {s.resultCount} results &middot;{" "}
-                        {s.durationMs}ms
-                      </p>
-                    </div>
-                    <span className="whitespace-nowrap text-[11px] text-[var(--ink-muted)]">
-                      {timeAgo(s.createdAt)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-10 text-center text-[var(--ink-muted)]">
-                <Search
-                  className="mx-auto mb-2 h-10 w-10 text-[var(--ink-muted)]/25"
-                  strokeWidth={1.5}
-                />
-                <p className="text-sm">No searches yet</p>
-                <p className="mt-0.5 text-xs">
-                  Use the API or MCP to search code
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Recent Activity */}
-        <div className="rounded-lg border border-[var(--cream-dark)] bg-white">
-          <div className="border-b border-[var(--cream-dark)] p-5 pb-3">
-            <h3 className="text-sm font-semibold text-[var(--ink)]">
-              Recent Activity
-            </h3>
-            <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
-              Latest account and API activity
-            </p>
-          </div>
-          <div className="p-4">
-            {activity.length > 0 ? (
-              <div className="space-y-2">
-                {activity.map((a) => {
-                  const { label, sub } = formatActivityItem(a);
-                  return (
-                    <div
-                      key={a.id}
-                      className="flex items-start justify-between gap-3 rounded-md p-2.5 transition-colors hover:bg-[var(--cream)]"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[var(--ink)]">
-                          {label}
-                        </p>
-                        <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
-                          {sub}
-                        </p>
+          {/* Row 2: Chart (col-span-4) + Recent Searches (col-span-3) */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
+            <div className="lg:col-span-4">
+              <TokenSavingsCard />
+            </div>
+            <Card className="lg:col-span-3">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">Recent Searches</CardTitle>
+                <CardDescription>
+                  Latest code searches across your repositories.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {searchStats && searchStats.recentSearches.length > 0 ? (
+                  <div className="space-y-4">
+                    {searchStats.recentSearches.slice(0, 6).map((s) => (
+                      <div key={s.id} className="flex items-center">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                          <Search className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="ml-4 min-w-0 flex-1 space-y-1">
+                          <p className="truncate text-sm font-medium leading-none">
+                            {s.query}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {s.repo}
+                          </p>
+                        </div>
+                        <div className="ml-auto text-right">
+                          <p className="text-sm font-medium tabular-nums">
+                            ~{compactNum(s.tokensSaved)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {s.durationMs}ms
+                          </p>
+                        </div>
                       </div>
-                      <span className="whitespace-nowrap text-[11px] text-[var(--ink-muted)]">
-                        {timeAgo(a.createdAt)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="py-10 text-center text-[var(--ink-muted)]">
-                <Activity
-                  className="mx-auto mb-2 h-10 w-10 text-[var(--ink-muted)]/25"
-                  strokeWidth={1.5}
-                />
-                <p className="text-sm">No recent activity</p>
-                <p className="mt-0.5 text-xs">
-                  Repository indexing and key events will appear here
-                </p>
-              </div>
-            )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center">
+                    <Search className="mx-auto mb-3 h-10 w-10 text-muted-foreground/25" strokeWidth={1.5} />
+                    <p className="text-sm text-muted-foreground">No searches yet</p>
+                    <p className="mt-1 text-sm text-muted-foreground/70">
+                      Use the API or MCP to search code
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* Token Savings Card — full width below the two-column row */}
-      <TokenSavingsCard />
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
+              <CardDescription>
+                Latest account and API events.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {activity.length > 0 ? (
+                <div className="space-y-4">
+                  {activity.map((a) => {
+                    const { label, sub } = formatActivityItem(a);
+                    return (
+                      <div key={a.id} className="flex items-center">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                          <Activity className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="ml-4 min-w-0 flex-1 space-y-1">
+                          <p className="text-sm font-medium leading-none">{label}</p>
+                          <p className="text-sm text-muted-foreground">{sub}</p>
+                        </div>
+                        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {timeAgo(a.createdAt)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-12 text-center">
+                  <Activity className="mx-auto mb-3 h-10 w-10 text-muted-foreground/25" strokeWidth={1.5} />
+                  <p className="text-sm text-muted-foreground">No recent activity</p>
+                  <p className="mt-1 text-sm text-muted-foreground/70">
+                    Repository indexing and key events will appear here
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -28,6 +28,7 @@ import {
   PauseCircle,
   AlertTriangle,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { UpgradeModal } from "@/components/upgrade-modal";
 
 interface JobProgress {
@@ -223,53 +224,66 @@ export default function CloudReposPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "ready":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-[#05DF72]" />;
       case "error":
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-[#ef4444]" />;
       case "disconnected":
-        return <WifiOff className="h-5 w-5 text-amber-500" />;
+        return <WifiOff className="h-5 w-5 text-[#f59e0b]" />;
       case "paused":
-        return <PauseCircle className="h-5 w-5 text-amber-500" />;
+        return <PauseCircle className="h-5 w-5 text-[#f59e0b]" />;
       case "cloning":
       case "indexing":
       case "pending":
         return (
-          <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+          <Loader2 className="h-5 w-5 animate-spin text-[var(--dash-accent-light)]" />
         );
       default:
-        return <Clock className="h-5 w-5 text-[var(--ink-muted)]" />;
+        return <Clock className="h-5 w-5 text-[var(--dash-text-muted)]" />;
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "ready":
-        return "Indexed";
-      case "error":
-        return "Failed";
-      case "disconnected":
-        return "Disconnected";
-      case "paused":
-        return "Paused";
-      case "cloning":
-        return "Cloning...";
-      case "indexing":
-        return "Indexing...";
-      case "pending":
-        return "Pending...";
-      default:
-        return status;
+      case "ready": return "Indexed";
+      case "error": return "Failed";
+      case "disconnected": return "Disconnected";
+      case "paused": return "Paused";
+      case "cloning": return "Cloning...";
+      case "indexing": return "Indexing...";
+      case "pending": return "Pending...";
+      default: return status;
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    const text = getStatusText(status);
+    const style = status === "ready"
+      ? "bg-[#05DF72]/10 text-[#05DF72]"
+      : status === "error"
+        ? "bg-[#ef4444]/10 text-[#ef4444]"
+        : status === "disconnected" || status === "paused"
+          ? "bg-[#f59e0b]/10 text-[#f59e0b]"
+          : "bg-[#1772E7]/10 text-[var(--dash-accent-light)]";
+    return (
+      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${style}`}>
+        {text}
+      </span>
+    );
+  };
+
   return (
-    <div className="max-w-6xl space-y-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="w-full max-w-none space-y-8"
+    >
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-medium text-[var(--ink)]">
+          <h1 className="text-3xl font-bold text-[var(--dash-text)]">
             Repositories
-          </h2>
-          <p className="mt-1 text-sm text-[var(--ink-muted)]">
+          </h1>
+          <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
             Manage your indexed GitHub repositories
           </p>
         </div>
@@ -277,7 +291,7 @@ export default function CloudReposPage() {
           {hasInstallation && (
             <button
               onClick={() => router.push("/dashboard/repositories/add")}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-secondary)]"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
             >
               <Plus className="h-4 w-4" />
               Add Repos
@@ -288,22 +302,23 @@ export default function CloudReposPage() {
 
       {/* Connected accounts */}
       {installations.length > 0 && (
-        <div className="flex items-center gap-3 text-sm text-[var(--ink-muted)]">
+        <div className="flex items-center gap-3 text-sm text-[var(--dash-text-muted)]">
           <span>Connected:</span>
           {installations.map((inst) => (
             <span
               key={inst.id}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cream-dark)] bg-white px-3 py-1 text-xs font-medium text-[var(--ink)]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-[var(--dash-surface)] px-3 py-1 text-xs font-medium text-[var(--dash-text)]"
             >
               {inst.accountAvatarUrl && (
                 <img src={inst.accountAvatarUrl} alt="" className="h-4 w-4 rounded-full" />
               )}
               {inst.accountLogin}
+              <div className="h-1.5 w-1.5 rounded-full bg-[#05DF72]" />
             </span>
           ))}
           <a
             href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
-            className="text-xs text-[var(--accent)] hover:underline"
+            className="text-xs text-[var(--dash-accent-light)] hover:underline"
           >
             + Add another account
           </a>
@@ -314,8 +329,8 @@ export default function CloudReposPage() {
         <div
           className={`rounded-lg border px-4 py-3 text-sm ${
             message.type === "error"
-              ? "border-red-200 bg-red-50 text-red-800"
-              : "border-green-200 bg-green-50 text-green-800"
+              ? "border-[var(--dash-error)]/30 bg-[var(--dash-error)]/10 text-[var(--dash-error)]"
+              : "border-[var(--dash-success)]/30 bg-[var(--dash-success)]/10 text-[var(--dash-success)]"
           }`}
         >
           {message.text}
@@ -323,9 +338,9 @@ export default function CloudReposPage() {
       )}
 
       {repoLimit !== null && repos.length > repoLimit && (
-        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-          <div className="text-sm text-amber-800">
+        <div className="flex items-center gap-3 rounded-xl border border-[#f59e0b]/30 bg-[#f59e0b]/10 px-4 py-3">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-[#f59e0b]" />
+          <div className="text-sm text-[#f59e0b]">
             <span className="font-medium">You&apos;re over your plan limit.</span>{" "}
             Your plan allows {repoLimit} {repoLimit === 1 ? "repo" : "repos"} but you have {repos.length}.{" "}
             {repos.filter((r) => r.status === "paused").length > 0 && (
@@ -347,17 +362,17 @@ export default function CloudReposPage() {
       )}
 
       {!hasInstallation && !loading && (
-        <div className="rounded-xl border-2 border-dashed border-[var(--cream-dark)] bg-white p-8 text-center">
-          <Github className="mx-auto h-10 w-10 text-[var(--ink-muted)]" />
-          <h3 className="mt-3 font-semibold text-[var(--ink)]">
+        <div className="rounded-xl border-2 border-dashed border-[var(--dash-border)] bg-[var(--dash-surface)] p-8 text-center">
+          <Github className="mx-auto h-10 w-10 text-[var(--dash-text-muted)]" />
+          <h3 className="mt-3 text-base font-semibold text-[var(--dash-text)]">
             Connect GitHub to get started
           </h3>
-          <p className="mt-1 text-sm text-[var(--ink-muted)]">
+          <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
             Install the Clean GitHub App to access and index your repositories.
           </p>
           <button
             onClick={() => router.push("/dashboard/repositories/add")}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--ink)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--ink)]/90"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
           >
             <Github className="h-4 w-4" />
             Connect GitHub
@@ -367,13 +382,13 @@ export default function CloudReposPage() {
 
       {/* Repo list */}
       {repos.length > 0 && (
-        <div className="rounded-xl border border-[var(--cream-dark)] bg-white">
-          <div className="flex items-center justify-between border-b border-[var(--cream-dark)] px-6 py-4">
+        <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+          <div className="flex items-center justify-between border-b border-[var(--dash-border)] px-6 py-4">
             <div>
-              <h3 className="font-semibold text-[var(--ink)]">
+              <h3 className="text-base font-semibold text-[var(--dash-text)]">
                 Indexed Repositories
               </h3>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
+              <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
                 {repos.length}{" "}
                 {repos.length === 1 ? "repository" : "repositories"}
               </p>
@@ -381,7 +396,7 @@ export default function CloudReposPage() {
             <button
               onClick={fetchRepos}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)]"
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] transition-colors hover:border-[var(--dash-border-strong)] hover:bg-[var(--dash-surface-hover)]"
             >
               <RefreshCw
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
@@ -390,23 +405,23 @@ export default function CloudReposPage() {
             </button>
           </div>
 
-          <div className="divide-y divide-[var(--cream-dark)]">
+          <div className="divide-y divide-[var(--dash-border)]">
             {repos.map((repo) => (
               <div
                 key={repo.id}
-                className="flex items-center justify-between px-6 py-4"
+                className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-[var(--dash-surface-hover)]"
               >
                 <div className="flex items-center gap-4">
                   {getStatusIcon(repo.status)}
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-[var(--ink)]">
+                      <p className="font-medium font-mono text-[var(--dash-text)]">
                         {repo.fullName}
                       </p>
                       {repo.private ? (
-                        <Lock className="h-3 w-3 text-[var(--ink-muted)]" />
+                        <Lock className="h-3 w-3 text-[var(--dash-text-muted)]" />
                       ) : (
-                        <Globe className="h-3 w-3 text-[var(--ink-muted)]" />
+                        <Globe className="h-3 w-3 text-[var(--dash-text-muted)]" />
                       )}
                       {repo.language && (
                         <div className="flex items-center gap-1">
@@ -417,13 +432,13 @@ export default function CloudReposPage() {
                                 LANG_COLORS[repo.language] || "#888",
                             }}
                           />
-                          <span className="text-xs text-[var(--ink-muted)]">
+                          <span className="text-xs text-[var(--dash-text-muted)]">
                             {repo.language}
                           </span>
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-[var(--ink-muted)]">
+                    <p className="text-sm text-[var(--dash-text-muted)]">
                       {repo.status === "ready" && repo.entityCount !== null
                         ? `${repo.entityCount.toLocaleString()} entities`
                         : repo.error
@@ -438,10 +453,13 @@ export default function CloudReposPage() {
                       )}
                     </p>
                     {repo.job && repo.job.progress > 0 && (
-                      <div className="mt-1.5 h-1.5 w-48 overflow-hidden rounded-full bg-[var(--cream-dark)]">
+                      <div className="mt-1.5 h-1.5 w-48 overflow-hidden rounded-full bg-[var(--dash-bg)]">
                         <div
-                          className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
-                          style={{ width: `${Math.min(repo.job.progress, 100)}%` }}
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(repo.job.progress, 100)}%`,
+                            background: "linear-gradient(90deg, #1772E7, #5EB1FF)",
+                          }}
                         />
                       </div>
                     )}
@@ -454,7 +472,7 @@ export default function CloudReposPage() {
                     <button
                       onClick={() => handleReindex(repo)}
                       disabled={actionInProgress === repo.id}
-                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--cream-dark)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--cream-dark)] disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] transition-colors hover:border-[var(--dash-border-strong)] hover:bg-[var(--dash-surface-hover)] disabled:opacity-50"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                       Re-index
@@ -465,27 +483,27 @@ export default function CloudReposPage() {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <button
-                        className="inline-flex items-center justify-center rounded-lg border border-[var(--cream-dark)] p-1.5 text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded-lg border border-[var(--dash-border)] p-1.5 text-[var(--dash-text-muted)] transition-colors hover:bg-[#ef4444]/10 hover:text-[#ef4444] disabled:opacity-50"
                         disabled={actionInProgress === repo.id}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="border-[var(--dash-border)] bg-[var(--dash-surface)]">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Remove Repository?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogTitle className="text-[var(--dash-text)]">Remove Repository?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-[var(--dash-text-muted)]">
                           This will remove{" "}
-                          <strong>{repo.fullName}</strong> from your index and
+                          <strong className="text-[var(--dash-text)]">{repo.fullName}</strong> from your index and
                           delete all associated data. This action cannot be
                           undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel className="border-[var(--dash-border)] bg-[var(--dash-surface)] text-[var(--dash-text)] hover:bg-[var(--dash-surface-hover)]">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => handleDelete(repo.id, repo.fullName)}
-                          className="bg-red-600 text-white hover:bg-red-700"
+                          className="bg-[#ef4444] text-white hover:bg-[#dc2626]"
                         >
                           Remove
                         </AlertDialogAction>
@@ -494,19 +512,7 @@ export default function CloudReposPage() {
                   </AlertDialog>
 
                   {/* Status badge */}
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      repo.status === "ready"
-                        ? "bg-green-100 text-green-700"
-                        : repo.status === "error"
-                          ? "bg-red-100 text-red-700"
-                          : repo.status === "disconnected" || repo.status === "paused"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-blue-100 text-blue-700"
-                    }`}
-                  >
-                    {getStatusText(repo.status)}
-                  </span>
+                  {getStatusBadge(repo.status)}
                 </div>
               </div>
             ))}
@@ -516,17 +522,17 @@ export default function CloudReposPage() {
 
       {loading && repos.length === 0 && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--ink-muted)]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--dash-text-muted)]" />
         </div>
       )}
 
       {!loading && repos.length === 0 && hasInstallation && (
-        <div className="rounded-xl border border-[var(--cream-dark)] bg-white p-8 text-center">
-          <p className="text-sm text-[var(--ink-muted)]">
+        <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)] p-8 text-center">
+          <p className="text-sm text-[var(--dash-text-muted)]">
             No repos indexed yet.{" "}
             <button
               onClick={() => router.push("/dashboard/repositories/add")}
-              className="font-medium text-[var(--accent)] hover:underline"
+              className="font-medium text-[var(--dash-accent-light)] hover:underline"
             >
               Select repos to index
             </button>
@@ -538,6 +544,6 @@ export default function CloudReposPage() {
         onClose={() => setShowUpgrade(false)}
         feature="repos"
       />
-    </div>
+    </motion.div>
   );
 }

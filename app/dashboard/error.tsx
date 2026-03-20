@@ -15,15 +15,15 @@ export default function DashboardError({
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-      <h2 className="text-xl font-semibold text-[var(--ink)]">
+      <h2 className="text-2xl font-bold text-[var(--dash-text)]">
         Something went wrong
       </h2>
-      <p className="text-sm text-[var(--ink)]/60">
+      <p className="text-sm text-[var(--dash-text-muted)]">
         {error.message || "An unexpected error occurred"}
       </p>
       <button
         onClick={reset}
-        className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm text-white hover:opacity-90"
+        className="rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
       >
         Try again
       </button>
