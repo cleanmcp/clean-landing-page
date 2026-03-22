@@ -20,6 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://tryclean.ai/sitemap.xml",
+    sitemap: "https://www.tryclean.ai/sitemap.xml",
   };
 }

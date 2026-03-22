@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -20,7 +20,7 @@ const zodiak = localFont({
   variable: "--font-display",
   weight: "100 900",
   style: "normal",
-  display: "swap",
+  display: "optional",
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -29,9 +29,34 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.tryclean.ai"),
   title: "Clean - One MCP. Every Agent Synced.",
-  description: "Stop burning tokens. Work with your team. One MCP to sync all your AI agents with 70% less spend.",
+  description:
+    "Clean is an MCP server that indexes your codebase and syncs context across all your AI coding agents — Claude, Cursor, Codex, Windsurf — reducing token usage by up to 70%.",
+  alternates: {
+    canonical: "https://www.tryclean.ai",
+  },
+  openGraph: {
+    title: "Clean - One MCP. Every Agent Synced.",
+    description:
+      "One MCP server to sync context across all your AI coding agents. 70% less token spend, 3x faster sessions.",
+    url: "https://www.tryclean.ai",
+    siteName: "Clean",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Clean - One MCP. Every Agent Synced.",
+    description:
+      "One MCP server to sync context across all your AI coding agents. 70% less token spend, 3x faster sessions.",
+  },
 };
 
 export default function RootLayout({
@@ -39,11 +64,44 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.tryclean.ai/#organization",
+        name: "Clean",
+        url: "https://www.tryclean.ai",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://www.tryclean.ai/landing/clean-icon.svg",
+        },
+        sameAs: ["https://www.linkedin.com/company/cleanailabs"],
+        contactPoint: {
+          "@type": "ContactPoint",
+          email: "hello@tryclean.ai",
+          contactType: "customer support",
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.tryclean.ai/#website",
+        url: "https://www.tryclean.ai",
+        name: "Clean",
+        publisher: { "@id": "https://www.tryclean.ai/#organization" },
+      },
+    ],
+  };
+
   const body = (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${zodiak.variable} ${plusJakartaSans.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <IconSprite />
         {children}
       </body>
