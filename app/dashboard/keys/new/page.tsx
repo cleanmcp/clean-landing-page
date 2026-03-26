@@ -258,7 +258,7 @@ export default function NewApiKeyPage() {
         </div>
 
         {/* MCP config card */}
-        <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+        <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]" data-tutorial="mcp-config">
           <div className="flex items-center gap-2 border-b border-[var(--dash-border)] px-5 py-4">
             <Shield className="h-4 w-4 text-[var(--dash-text-muted)]" />
             <span className="text-base font-semibold text-[var(--dash-text)]">MCP Configuration</span>

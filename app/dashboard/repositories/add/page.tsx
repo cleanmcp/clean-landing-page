@@ -200,6 +200,7 @@ export default function AddReposPage() {
           <button
             onClick={handleInstallGitHubApp}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+            data-tutorial="install-github-app"
           >
             <Github className="h-4 w-4" />
             Install GitHub App

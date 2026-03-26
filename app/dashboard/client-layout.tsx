@@ -6,6 +6,7 @@ import { useUser } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { Menu } from "lucide-react";
 import Sidebar from "@/components/dashboard/sidebar";
+import TutorialOverlay from "@/components/dashboard/tutorial-overlay";
 
 export default function ClientLayout({
   children,
@@ -90,6 +91,9 @@ export default function ClientLayout({
           {children}
         </main>
       </div>
+
+      {/* Tutorial guide overlay */}
+      <TutorialOverlay />
     </div>
   );
 }

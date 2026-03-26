@@ -267,6 +267,7 @@ export default function KeysPage() {
           <Link
             href="/dashboard/keys/new"
             className="inline-flex items-center gap-1.5 rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+            data-tutorial="create-key"
           >
             <Plus className="h-4 w-4" />
             Create Key
@@ -313,6 +314,7 @@ export default function KeysPage() {
               <Link
                 href="/dashboard/keys/new"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-4 py-2 text-sm font-medium text-[var(--dash-text)] transition-colors hover:border-[var(--dash-border-strong)] hover:bg-[var(--dash-surface-hover)]"
+                data-tutorial="create-key"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Create your first key

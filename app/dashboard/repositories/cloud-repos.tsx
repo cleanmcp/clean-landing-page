@@ -299,6 +299,7 @@ export default function CloudReposPage() {
             <button
               onClick={() => router.push("/dashboard/repositories/add")}
               className="inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+              data-tutorial="add-repos"
             >
               <Plus className="h-4 w-4" />
               Add Repos
@@ -380,6 +381,7 @@ export default function CloudReposPage() {
           <button
             onClick={() => router.push("/dashboard/repositories/add")}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+            data-tutorial="connect-github"
           >
             <Github className="h-4 w-4" />
             Connect GitHub

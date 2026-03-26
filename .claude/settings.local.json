@@ -24,7 +24,9 @@
       "Bash(npx shadcn@latest add @systaliko-ui/cards-stack)",
       "Bash(npx next:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/app/dashboard -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.jsx \\\\\\))",
+      "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/components/ui -type f -name *.tsx)"
     ]
   }
 }
