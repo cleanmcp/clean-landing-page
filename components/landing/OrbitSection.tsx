@@ -35,6 +35,12 @@ export default function OrbitSection() {
         />
       </motion.div>
 
+      {/* Bottom ellipse glow — before orbit wrapper so orbit renders on top */}
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-[-195px] w-[2800px] h-[420px] pointer-events-none">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" src={`${A}/orbit-gradient.svg`} className="w-full h-full" />
+      </div>
+
       {/* Orbit visuals — scale wrapper only around the orbit, not the text */}
       <div
         className="absolute bottom-[8px] left-1/2 -translate-x-1/2 w-[1440px] h-[800px] scale-[0.65] sm:scale-[0.8] lg:scale-100"
@@ -44,14 +50,6 @@ export default function OrbitSection() {
         <div className="absolute left-1/2 -translate-x-1/2 top-[236px] w-[994px] h-[564px] pointer-events-none">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" src={`${A}/orbit-glow.svg`} className="w-full h-full" />
-        </div>
-
-        {/* Bottom ellipse glow — rotated tall ellipse matching Figma */}
-        <div className="absolute left-1/2 -translate-x-1/2 w-[1700px] h-[400px] pointer-events-none overflow-visible" style={{ top: 610 }}>
-          <div className="-rotate-90 origin-center w-full h-full flex items-center justify-center" style={{ transform: "rotate(-90deg) skewX(-0.61deg)" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img alt="" src={`${A}/orbit-ellipse.svg`} className="w-[400px] h-[1700px] max-w-none" />
-          </div>
         </div>
 
         {/* Orbit assembly */}
