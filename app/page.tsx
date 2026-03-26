@@ -129,10 +129,33 @@ const softwareJsonLd = {
     "An MCP server that indexes your codebase once and serves shared context to all your AI coding agents — Claude, Cursor, Codex, Windsurf — reducing token usage by up to 70%.",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web, Docker",
+  featureList:
+    "Codebase indexing, Context sync across AI agents, Token usage reduction, Claude integration, Cursor integration, Codex integration, Windsurf integration",
   offers: [
-    { "@type": "Offer", name: "Free", price: "0", priceCurrency: "USD" },
-    { "@type": "Offer", name: "Pro", price: "14.99", priceCurrency: "USD" },
-    { "@type": "Offer", name: "Max", price: "29.99", priceCurrency: "USD" },
+    {
+      "@type": "Offer",
+      name: "Free",
+      price: "0",
+      priceCurrency: "USD",
+      url: "https://www.tryclean.ai/pricing-plan",
+      availability: "https://schema.org/OnlineOnly",
+    },
+    {
+      "@type": "Offer",
+      name: "Pro",
+      price: "14.99",
+      priceCurrency: "USD",
+      url: "https://www.tryclean.ai/pricing-plan",
+      availability: "https://schema.org/OnlineOnly",
+    },
+    {
+      "@type": "Offer",
+      name: "Max",
+      price: "29.99",
+      priceCurrency: "USD",
+      url: "https://www.tryclean.ai/pricing-plan",
+      availability: "https://schema.org/OnlineOnly",
+    },
   ],
   publisher: { "@id": "https://www.tryclean.ai/#organization" },
 };
@@ -250,7 +273,7 @@ export default function Home() {
           </div>
           <div className="flex justify-start">
             <ScrollRevealText
-              text="Without shared context, each agent burns through hundreds of thousands of tokens re-exploring code that another agent already understood."
+              text="Too much context wastes your money. Too little wastes your time. Clean saves exactly the right context—so every agent is fast, focused, and cheap to run."
               baseOverlayColor="rgba(28, 28, 28, 0.4)"
               activeColor="#1c1c1c"
               className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight leading-[1.25] max-w-[1304px] text-left justify-start"
@@ -297,7 +320,7 @@ export default function Home() {
             One{" "}
             <span className="text-[#66a6dd]">MCP server</span>
             {" "}that pre-indexes your codebase and{" "}
-            <span className="text-[#66a6dd]">syncs context</span>
+            <span className="text-[#66a6dd]">stores context</span>
             {" "}across every agent your team uses
           </h2>
           <div className="hidden md:block">
@@ -337,7 +360,7 @@ export default function Home() {
                         <span className="gradient-text-blue text-xl font-bold uppercase whitespace-nowrap" style={{ fontFamily: "var(--font-display)" }}>{s.label}</span>
                         <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1c1c1c] leading-[1.25] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.heading}</h3>
                         <p className="text-base sm:text-lg text-[#8b949e] tracking-tight leading-[29px] whitespace-pre-line" style={{ fontFamily: "var(--font-jakarta)" }}>{s.desc}</p>
-                        <BtnTryClean />
+                        {s.num === "03" && <BtnTryClean />}
                       </div>
                     </div>
                     {/* Right — flow diagram (hidden on mobile) */}

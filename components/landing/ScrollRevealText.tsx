@@ -3,10 +3,10 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 
-function Character({ children, progress, range, activeColor }: { children: string; progress: MotionValue<number>; range: [number, number]; activeColor: string }) {
-  const opacity = useTransform(progress, range, [0, 1]);
+function Character({ children, progress, range, baseColor, activeColor }: { children: string; progress: MotionValue<number>; range: [number, number]; baseColor: string; activeColor: string }) {
+  const color = useTransform(progress, range, [baseColor, activeColor]);
   return (
-    <motion.span className="inline-block relative z-10" style={{ opacity, color: activeColor }}>
+    <motion.span className="inline-block" style={{ color }}>
       {children}
     </motion.span>
   );
@@ -17,15 +17,12 @@ function Word({ children, progress, range, baseColor, activeColor }: { children:
   const amount = range[1] - range[0];
   const step = amount / children.length;
   return (
-    <span className="relative inline-block whitespace-pre">
-      <span className="absolute opacity-100" style={{ color: baseColor }}>
-        {children}
-      </span>
+    <span className="inline-block whitespace-pre">
       {characters.map((char: string, i: number) => {
         const start = range[0] + i * step;
         const end = range[0] + (i + 1) * step;
         return (
-          <Character key={i} progress={progress} range={[start, end]} activeColor={activeColor}>
+          <Character key={i} progress={progress} range={[start, end]} baseColor={baseColor} activeColor={activeColor}>
             {char}
           </Character>
         );

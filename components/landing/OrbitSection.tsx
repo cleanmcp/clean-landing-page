@@ -27,7 +27,7 @@ export default function OrbitSection() {
         viewport={{ once: true }}
       >
         <ScrollRevealText
-          text="Enable your coding agents to collaborate seamlessly with a shared context."
+          text="Save and use context properly across all your coding agents."
           baseOverlayColor="rgba(255, 255, 255, 0.3)"
           activeColor="#ffffff"
           className="text-[24px] sm:text-[36px] lg:text-[56px] font-semibold text-center tracking-[-1.12px] leading-[1.2] sm:leading-[normal] max-w-[340px] sm:max-w-[600px] lg:max-w-[800px] mx-auto justify-center"

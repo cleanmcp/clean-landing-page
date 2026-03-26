@@ -72,6 +72,8 @@ export default function RootLayout({
         "@id": "https://www.tryclean.ai/#organization",
         name: "Clean",
         url: "https://www.tryclean.ai",
+        description:
+          "Clean builds an MCP server that indexes codebases and syncs context across AI coding agents, reducing token usage by up to 70%.",
         logo: {
           "@type": "ImageObject",
           url: "https://www.tryclean.ai/landing/clean-icon.svg",
