@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GitBranch,
-  Key,
   ArrowRight,
   Check,
   X,
@@ -75,38 +74,18 @@ const STEPS: TutorialStep[] = [
     id: "wait-indexing",
     title: "Wait for Indexing",
     description:
-      "Your repository is being indexed. This may take a few minutes depending on the size. Once it's done, we'll move on!",
+      "Your repository is being indexed. This takes a few minutes. Once it's done, an API key will be created for you automatically — hang tight!",
     targetPage: "/dashboard/repositories",
     icon: Sparkles,
     action: "wait",
     position: "center",
   },
   {
-    id: "go-to-keys",
-    title: "Go to Keys",
-    description:
-      "Great! Your repo is indexed. Now let's create an API key. Click Keys in the sidebar.",
-    targetPage: "/dashboard/repositories",
-    sidebarHighlight: "Keys",
-    icon: Key,
-    action: "navigate",
-  },
-  {
-    id: "create-key",
-    title: "Create Your First Key",
-    description:
-      'Click "Create Key" to generate an API key for connecting your IDE.',
-    targetPage: "/dashboard/keys",
-    highlightSelector: '[data-tutorial="create-key"]',
-    icon: Plus,
-    action: "click",
-  },
-  {
     id: "mcp-config",
     title: "Set Up MCP Configuration",
     description:
-      "After creating your key, copy the MCP configuration for your editor and paste it into your settings.",
-    targetPage: "/dashboard/keys/new",
+      "Your API key is ready. Copy the MCP configuration for your editor and paste it into your settings to start searching with Clean.",
+    targetPage: "/dashboard/onboarding",
     highlightSelector: '[data-tutorial="mcp-config"]',
     icon: Copy,
     action: "wait",
@@ -327,13 +306,8 @@ export default function TutorialOverlay() {
     if (step.id === "go-to-repos" && pathname.startsWith("/dashboard/repositories")) {
       setCurrentStep(1);
     }
-    if (step.id === "go-to-keys" && pathname.startsWith("/dashboard/keys")) {
-      setCurrentStep((prev) => {
-        const keysStep = STEPS.findIndex((s) => s.id === "create-key");
-        return keysStep > prev ? keysStep : prev;
-      });
-    }
-    if (step.id === "create-key" && pathname === "/dashboard/keys/new") {
+    // When onboarding lands on the MCP config step, auto-advance to it
+    if (step.id === "wait-indexing" && pathname.startsWith("/dashboard/onboarding")) {
       setCurrentStep((prev) => {
         const mcpStep = STEPS.findIndex((s) => s.id === "mcp-config");
         return mcpStep > prev ? mcpStep : prev;
@@ -353,8 +327,6 @@ export default function TutorialOverlay() {
     // If next step is on a different page, navigate
     if (nextStep.sidebarHighlight === "Repositories") {
       router.push("/dashboard/repositories");
-    } else if (nextStep.sidebarHighlight === "Keys") {
-      router.push("/dashboard/keys");
     }
 
     setCurrentStep(nextIdx);

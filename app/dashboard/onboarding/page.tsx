@@ -938,7 +938,7 @@ function CloudOnboardingContent() {
           )}
 
           {/* MCP Config */}
-          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]" data-tutorial="mcp-config">
             <div className="border-b border-[var(--dash-border)] px-5 py-3">
               <h3 className="text-base font-semibold text-[var(--dash-text)]">
                 MCP Configuration
