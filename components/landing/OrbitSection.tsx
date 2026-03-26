@@ -46,10 +46,12 @@ export default function OrbitSection() {
           <img alt="" src={`${A}/orbit-glow.svg`} className="w-full h-full" />
         </div>
 
-        {/* Bottom ellipse glow */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[1440px] h-[223px] pointer-events-none">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="" src={`${A}/orbit-ellipse-glow.svg`} className="w-full h-full" />
+        {/* Bottom ellipse glow — rotated tall ellipse matching Figma */}
+        <div className="absolute left-1/2 -translate-x-1/2 w-[1700px] h-[400px] pointer-events-none overflow-visible" style={{ top: 610 }}>
+          <div className="-rotate-90 origin-center w-full h-full flex items-center justify-center" style={{ skewX: "-0.61deg" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img alt="" src={`${A}/orbit-ellipse.svg`} className="w-[400px] h-[1700px] max-w-none" />
+          </div>
         </div>
 
         {/* Orbit assembly */}
