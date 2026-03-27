@@ -176,8 +176,8 @@ export default function CloudReposPage() {
         method: "DELETE",
       });
       if (res.ok) {
+        setRepos((prev) => prev.filter((r) => r.id !== repoId));
         setMessage({ type: "success", text: `${fullName} removed` });
-        fetchRepos();
       } else {
         const data = await res.json().catch(() => ({}));
         setMessage({
