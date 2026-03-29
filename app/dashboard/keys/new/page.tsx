@@ -85,10 +85,12 @@ function getMcpConfig(tab: ConfigTab, key: string, slug: string | null): string 
     }
 
     case "codex": {
+      // Escape for TOML basic strings (double-quoted): backslashes and double quotes
+      const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
       const lines = [
         `[mcp_servers.clean]`,
         `command = "npx"`,
-        `args = ["-y", "mcp-remote", ${JSON.stringify(SSE_URL)}, "--header", "Authorization:Bearer ${key}"${slug ? `, "--header", "X-Clean-Slug:${slug}"` : ""}]`,
+        `args = ["-y", "mcp-remote", ${JSON.stringify(SSE_URL)}, "--header", "Authorization:Bearer ${esc(key)}"${slug ? `, "--header", "X-Clean-Slug:${esc(slug)}"` : ""}]`,
       ];
       return lines.join("\n");
     }
