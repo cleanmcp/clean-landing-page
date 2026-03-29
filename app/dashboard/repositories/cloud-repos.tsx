@@ -27,6 +27,7 @@ import {
   WifiOff,
   PauseCircle,
   AlertTriangle,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { UpgradeModal } from "@/components/upgrade-modal";
@@ -99,6 +100,9 @@ export default function CloudReposPage() {
     text: string;
   } | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showLinkForm, setShowLinkForm] = useState(false);
+  const [linkId, setLinkId] = useState("");
+  const [linking, setLinking] = useState(false);
 
   const fetchRepos = useCallback(async () => {
     try {
@@ -322,6 +326,29 @@ export default function CloudReposPage() {
               )}
               {inst.accountLogin}
               <div className="h-1.5 w-1.5 rounded-full bg-[#05DF72]" />
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (!confirm(`Disconnect GitHub account "${inst.accountLogin}"? Existing indexed repos will remain but you won't be able to add new ones from this account.`)) return;
+                  try {
+                    const res = await fetch(`/api/github/install?id=${encodeURIComponent(inst.id)}`, { method: "DELETE" });
+                    if (res.ok) {
+                      setInstallations((prev) => prev.filter((i) => i.id !== inst.id));
+                      setMessage({ type: "success", text: `Disconnected ${inst.accountLogin}` });
+                      fetchRepos();
+                    } else {
+                      const data = await res.json().catch(() => ({}));
+                      setMessage({ type: "error", text: data.error || "Failed to disconnect" });
+                    }
+                  } catch {
+                    setMessage({ type: "error", text: "Network error" });
+                  }
+                }}
+                className="ml-0.5 text-[var(--dash-text-muted)] hover:text-[#ef4444] transition-colors"
+                title="Disconnect"
+              >
+                <X className="h-3 w-3" />
+              </button>
             </span>
           ))}
           <a
@@ -386,6 +413,57 @@ export default function CloudReposPage() {
             <Github className="h-4 w-4" />
             Connect GitHub
           </button>
+
+          <div className="mt-4">
+            {!showLinkForm ? (
+              <button
+                onClick={() => setShowLinkForm(true)}
+                className="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-accent-light)] transition-colors"
+              >
+                Already installed? Link with installation ID
+              </button>
+            ) : (
+              <div className="mx-auto mt-2 flex max-w-sm items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Installation ID (from GitHub URL)"
+                  value={linkId}
+                  onChange={(e) => setLinkId(e.target.value)}
+                  className="flex-1 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:border-[#1772E7] focus:outline-none"
+                />
+                <button
+                  onClick={async () => {
+                    if (!linkId.trim()) return;
+                    setLinking(true);
+                    try {
+                      const res = await fetch("/api/github/install/link", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ installationId: linkId.trim() }),
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setMessage({ type: "success", text: `Linked GitHub account: ${data.account}` });
+                        setShowLinkForm(false);
+                        setLinkId("");
+                        fetchRepos();
+                      } else {
+                        setMessage({ type: "error", text: data.error || "Failed to link" });
+                      }
+                    } catch {
+                      setMessage({ type: "error", text: "Network error" });
+                    } finally {
+                      setLinking(false);
+                    }
+                  }}
+                  disabled={linking || !linkId.trim()}
+                  className="rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-50"
+                >
+                  {linking ? "Linking..." : "Link"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

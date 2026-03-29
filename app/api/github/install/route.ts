@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { githubInstallations } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { getGitHubAppInstallUrl, getInstallationInfo } from "@/lib/github-app";
+import {
+  createInstallState,
+  verifyInstallCookie,
+  INSTALL_STATE_COOKIE,
+} from "@/lib/github-install-state";
 
 /**
  * GET /api/github/install — Check GitHub App installation status for the current org.
@@ -33,10 +39,22 @@ export async function GET() {
       )
     );
 
+  // Generate a signed state token for CSRF protection on the install flow.
+  // The nonce travels through GitHub's redirect; the cookie stays in the browser.
+  const { nonce, cookie: stateCookie } = createInstallState(ctx.userId, ctx.orgId);
+  const cookieStore = await cookies();
+  cookieStore.set(INSTALL_STATE_COOKIE, stateCookie, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 30 * 60, // 30 minutes
+    path: "/",
+  });
+
   return NextResponse.json({
     connected: installations.length > 0,
     installations,
-    installUrl: getGitHubAppInstallUrl(),
+    installUrl: getGitHubAppInstallUrl(nonce),
   });
 }
 
@@ -53,11 +71,42 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Verify the install-state cookie to confirm this user initiated the
+  // GitHub App installation flow from our app (prevents hijacking).
+  const cookieStore = await cookies();
+  const stateCookie = cookieStore.get(INSTALL_STATE_COOKIE)?.value;
+  if (!stateCookie || !verifyInstallCookie(stateCookie, ctx.userId, ctx.orgId)) {
+    return NextResponse.json(
+      { error: "Install flow not initiated or session expired. Please try again." },
+      { status: 403 },
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const installationId = parseInt(body.installationId, 10);
 
   if (!installationId || isNaN(installationId)) {
     return NextResponse.json({ error: "Missing installation_id" }, { status: 400 });
+  }
+
+  // Reject if this installation is already linked to a different org.
+  const [existingClaim] = await db
+    .select({ orgId: githubInstallations.orgId })
+    .from(githubInstallations)
+    .where(
+      and(
+        eq(githubInstallations.installationId, installationId),
+        ne(githubInstallations.orgId, ctx.orgId),
+        eq(githubInstallations.active, true),
+      ),
+    )
+    .limit(1);
+
+  if (existingClaim) {
+    return NextResponse.json(
+      { error: "This GitHub installation is already linked to another organization" },
+      { status: 409 },
+    );
   }
 
   try {
@@ -82,6 +131,9 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date(),
         },
       });
+
+    // Clear the state cookie after successful save
+    cookieStore.delete(INSTALL_STATE_COOKIE);
 
     return NextResponse.json({ saved: true });
   } catch (error) {
@@ -114,4 +166,44 @@ export async function POST(request: NextRequest) {
       );
     }
   }
+}
+
+/**
+ * DELETE /api/github/install?id=<uuid> — Disconnect a GitHub App installation.
+ *
+ * Sets the installation to inactive (soft delete). Only OWNER/ADMIN can disconnect.
+ */
+export async function DELETE(request: NextRequest) {
+  const ctx = await getAuthContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (ctx.role !== "OWNER" && ctx.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const installId = searchParams.get("id");
+
+  if (!installId) {
+    return NextResponse.json({ error: "Missing installation id" }, { status: 400 });
+  }
+
+  const result = await db
+    .update(githubInstallations)
+    .set({ active: false, updatedAt: new Date() })
+    .where(
+      and(
+        eq(githubInstallations.id, installId),
+        eq(githubInstallations.orgId, ctx.orgId),
+      ),
+    )
+    .returning({ id: githubInstallations.id });
+
+  if (result.length === 0) {
+    return NextResponse.json({ error: "Installation not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ disconnected: true });
 }

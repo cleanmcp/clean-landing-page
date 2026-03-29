@@ -400,15 +400,22 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Try cloudRepos bookmark first (GitHub App repos have a UUID here)
-    const [bookmark] = await db
-      .select()
-      .from(cloudRepos)
-      .where(and(eq(cloudRepos.id, repoId), eq(cloudRepos.orgId, ctx.orgId)))
-      .limit(1);
+    // Try cloudRepos bookmark first (GitHub App repos have a UUID here).
+    // MCP-indexed repos use engine project_ids which are NOT valid UUIDs —
+    // skip the DB lookup to avoid a Postgres "invalid input syntax" error.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const [bookmark] = UUID_RE.test(repoId)
+      ? await db
+          .select()
+          .from(cloudRepos)
+          .where(and(eq(cloudRepos.id, repoId), eq(cloudRepos.orgId, ctx.orgId)))
+          .limit(1)
+      : [];
 
     // Also accept fullName param for MCP-indexed repos (no cloudRepos row)
-    const fullName = bookmark?.fullName ?? searchParams.get("fullName");
+    const REPO_NAME_RE = /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/;
+    const rawFullName = searchParams.get("fullName");
+    const fullName = bookmark?.fullName ?? (rawFullName && REPO_NAME_RE.test(rawFullName) ? rawFullName : null);
 
     if (!bookmark && !fullName) {
       return NextResponse.json({ error: "Repo not found" }, { status: 404 });
