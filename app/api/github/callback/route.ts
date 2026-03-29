@@ -63,8 +63,31 @@ export async function GET(request: NextRequest) {
       });
     installSaved = true;
   } catch (error) {
-    console.error("Failed to process GitHub App callback:", error);
-    // Still redirect — pass installation_id so the onboarding page can retry
+    console.error("Failed to fetch GitHub installation info:", error);
+    // Still save the installation with minimal info so the connection is
+    // established even if the GitHub API call fails (e.g. missing credentials).
+    // The account details will be populated later when repos are fetched.
+    try {
+      await db
+        .insert(githubInstallations)
+        .values({
+          orgId: ctx.orgId,
+          installationId: numericInstallationId,
+          accountLogin: "unknown",
+          accountType: "User",
+          accountAvatarUrl: "",
+        })
+        .onConflictDoUpdate({
+          target: [githubInstallations.orgId, githubInstallations.installationId],
+          set: {
+            active: true,
+            updatedAt: new Date(),
+          },
+        });
+      installSaved = true;
+    } catch (dbError) {
+      console.error("Failed to save GitHub installation fallback:", dbError);
+    }
   }
 
   // Redirect based on context

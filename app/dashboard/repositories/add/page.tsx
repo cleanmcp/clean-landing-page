@@ -107,9 +107,36 @@ export default function AddReposPage() {
     fetchData();
   }, [fetchData]);
 
+  const [awaitingGitHub, setAwaitingGitHub] = useState(false);
+
+  // Poll for GitHub connection while user is on GitHub in another tab
+  useEffect(() => {
+    if (!awaitingGitHub || connected) return;
+
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/github/install");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.connected) {
+            setAwaitingGitHub(false);
+            setConnected(true);
+            setInstallations(data.installations || []);
+            // Re-fetch repos now that we're connected
+            fetchData();
+          }
+        }
+      } catch {}
+    };
+
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [awaitingGitHub, connected, fetchData]);
+
   function handleInstallGitHubApp() {
     if (installUrl) {
-      window.location.href = installUrl;
+      window.open(installUrl, "_blank");
+      setAwaitingGitHub(true);
     }
   }
 
@@ -199,13 +226,28 @@ export default function AddReposPage() {
           </p>
           <button
             onClick={handleInstallGitHubApp}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+            disabled={awaitingGitHub}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-70"
             data-tutorial="install-github-app"
           >
-            <Github className="h-4 w-4" />
-            Install GitHub App
-            <ExternalLink className="h-3.5 w-3.5" />
+            {awaitingGitHub ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Waiting for GitHub...
+              </>
+            ) : (
+              <>
+                <Github className="h-4 w-4" />
+                Install GitHub App
+                <ExternalLink className="h-3.5 w-3.5" />
+              </>
+            )}
           </button>
+          {awaitingGitHub && (
+            <p className="mt-2 text-sm text-[#1772E7]">
+              Complete the installation on GitHub, then come back here.
+            </p>
+          )}
         </div>
       )}
 

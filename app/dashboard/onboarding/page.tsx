@@ -395,9 +395,41 @@ function CloudOnboardingContent() {
     })();
   }, [step, apiKey]);
 
+  // Poll for GitHub connection while user is on GitHub in another tab
+  const [awaitingGitHub, setAwaitingGitHub] = useState(false);
+
+  useEffect(() => {
+    if (!awaitingGitHub || step !== "connect-github") return;
+
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/github/install");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.connected) {
+            setAwaitingGitHub(false);
+            setInstallations(data.installations || []);
+            // Fetch repos and advance to next step
+            const ghRes = await fetch("/api/github/repos");
+            if (ghRes.ok) {
+              const ghData = await ghRes.json();
+              setGithubRepos(ghData.repos || []);
+            }
+            setStep("select-repos");
+          }
+        }
+      } catch {}
+    };
+
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [awaitingGitHub, step]);
+
   function handleInstallGitHubApp() {
     if (installUrl) {
-      window.location.href = installUrl;
+      // Open GitHub in a new tab so this page can poll for the connection
+      window.open(installUrl, "_blank");
+      setAwaitingGitHub(true);
     }
   }
 
@@ -564,12 +596,28 @@ function CloudOnboardingContent() {
           </p>
           <button
             onClick={handleInstallGitHubApp}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+            disabled={awaitingGitHub}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-70"
           >
-            <Github className="h-4 w-4" />
-            Install GitHub App
-            <ExternalLink className="h-3.5 w-3.5" />
+            {awaitingGitHub ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Waiting for GitHub...
+              </>
+            ) : (
+              <>
+                <Github className="h-4 w-4" />
+                Install GitHub App
+                <ExternalLink className="h-3.5 w-3.5" />
+              </>
+            )}
           </button>
+          {awaitingGitHub && (
+            <p className="mt-3 text-sm text-[#1772E7]">
+              Complete the installation on GitHub, then come back here.
+              This page will update automatically.
+            </p>
+          )}
           <p className="mt-4 text-sm text-[var(--dash-text-muted)]">
             We only read code — never write or modify your repos.
             Works with personal accounts and organizations.
