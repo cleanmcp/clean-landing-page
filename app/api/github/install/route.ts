@@ -41,15 +41,29 @@ export async function GET() {
 
   // Generate a signed state token for CSRF protection on the install flow.
   // The nonce travels through GitHub's redirect; the cookie stays in the browser.
-  const { nonce, cookie: stateCookie } = createInstallState(ctx.userId, ctx.orgId);
+  //
+  // IMPORTANT: If a valid cookie already exists (e.g. from a recent call),
+  // reuse its nonce so that polling calls don't invalidate an in-flight
+  // GitHub install redirect.
   const cookieStore = await cookies();
-  cookieStore.set(INSTALL_STATE_COOKIE, stateCookie, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 30 * 60, // 30 minutes
-    path: "/",
-  });
+  const existingCookie = cookieStore.get(INSTALL_STATE_COOKIE)?.value;
+  let nonce: string;
+
+  if (existingCookie && verifyInstallCookie(existingCookie, ctx.userId, ctx.orgId)) {
+    // Reuse the nonce from the existing valid cookie
+    nonce = existingCookie.split(":")[0];
+  } else {
+    // No valid cookie — generate a fresh state
+    const state = createInstallState(ctx.userId, ctx.orgId);
+    nonce = state.nonce;
+    cookieStore.set(INSTALL_STATE_COOKIE, state.cookie, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 30 * 60, // 30 minutes
+      path: "/",
+    });
+  }
 
   return NextResponse.json({
     connected: installations.length > 0,
@@ -186,8 +200,9 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const installId = searchParams.get("id");
 
-  if (!installId) {
-    return NextResponse.json({ error: "Missing installation id" }, { status: 400 });
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!installId || !UUID_RE.test(installId)) {
+    return NextResponse.json({ error: "Invalid installation id" }, { status: 400 });
   }
 
   const result = await db
