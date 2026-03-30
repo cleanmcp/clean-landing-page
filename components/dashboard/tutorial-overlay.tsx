@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -277,18 +277,10 @@ function saveTutorialState(step: number, dismissed: boolean) {
 export default function TutorialOverlay() {
   const router = useRouter();
   const pathname = usePathname();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [dismissed, setDismissed] = useState(false);
+  const [currentStep, setCurrentStep] = useState(() => loadTutorialState().step);
+  const [dismissed, setDismissed] = useState(() => loadTutorialState().dismissed);
   const [showDoneModal, setShowDoneModal] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  // Restore state from localStorage on mount
-  useEffect(() => {
-    const saved = loadTutorialState();
-    setCurrentStep(saved.step);
-    setDismissed(saved.dismissed);
-    setHydrated(true);
-  }, []);
+  const [hydrated] = useState(true);
 
   // Persist every time step or dismissed changes (after hydration)
   useEffect(() => {
@@ -304,13 +296,15 @@ export default function TutorialOverlay() {
 
     // Auto-advance if we navigated to the right page
     if (step.id === "go-to-repos" && pathname.startsWith("/dashboard/repositories")) {
-      setCurrentStep(1);
+      startTransition(() => setCurrentStep(1));
     }
     // When onboarding lands on the MCP config step, auto-advance to it
     if (step.id === "wait-indexing" && pathname.startsWith("/dashboard/onboarding")) {
-      setCurrentStep((prev) => {
-        const mcpStep = STEPS.findIndex((s) => s.id === "mcp-config");
-        return mcpStep > prev ? mcpStep : prev;
+      startTransition(() => {
+        setCurrentStep((prev) => {
+          const mcpStep = STEPS.findIndex((s) => s.id === "mcp-config");
+          return mcpStep > prev ? mcpStep : prev;
+        });
       });
     }
   }, [pathname, step, dismissed, currentStep, hydrated]);
