@@ -95,9 +95,10 @@ export async function POST(request: NextRequest) {
         );
       }
     } else {
-      // For org installations, verify the caller is a member of the GitHub org
+      // For org installations, verify the caller is an admin of the GitHub org
+      // (installing a GitHub App requires org admin permissions)
       const membershipRes = await fetch(
-        `https://api.github.com/orgs/${encodeURIComponent(info.account.login)}/members/${encodeURIComponent(ghUser.login)}`,
+        `https://api.github.com/orgs/${encodeURIComponent(info.account.login)}/memberships/${encodeURIComponent(ghUser.login)}`,
         {
           headers: {
             Authorization: `Bearer ${ghToken}`,
@@ -106,9 +107,17 @@ export async function POST(request: NextRequest) {
         },
       );
 
-      if (membershipRes.status !== 204) {
+      if (!membershipRes.ok) {
         return NextResponse.json(
-          { error: "You must be a member of this GitHub organization to link its installation." },
+          { error: "You must be an admin of this GitHub organization to link its installation." },
+          { status: 403 },
+        );
+      }
+
+      const membership = await membershipRes.json();
+      if (membership.role !== "admin") {
+        return NextResponse.json(
+          { error: "You must be an admin of this GitHub organization to link its installation." },
           { status: 403 },
         );
       }

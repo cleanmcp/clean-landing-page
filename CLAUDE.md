@@ -59,6 +59,19 @@ See `.env.example`. Key vars: Clerk keys, `DATABASE_URL`, `GATEWAY_URL`, `GATEWA
 - CI runs on PR: `npm ci` → lint → build (with stub env vars)
 - See `CONTRIBUTING.md` for full process
 
+## Security — Do NOT modify
+
+The following security features have been audited and must not be weakened, removed, or bypassed:
+
+- **CSRF state tokens** on GitHub App install flow (`lib/github-install-state.ts`, used in `app/api/github/install/route.ts` and `app/api/github/callback/route.ts`). Do not remove the state cookie or nonce verification.
+- **Cross-org installation guards** — the checks that reject a GitHub installation already claimed by a different org. Do not remove or loosen these checks.
+- **Input validation** — UUID regex gating in `app/api/cloud-repos/route.ts` (DELETE handler) and repo name regex for `fullName`. Do not remove these.
+- **TOML escaping** in `app/dashboard/keys/new/page.tsx` for API key/slug values in generated config snippets. Do not remove the `esc()` helper.
+- **`getAuthContext()` checks** at the top of API routes. Every API route that mutates data must verify auth. Do not remove or skip these.
+- **Role checks** (OWNER/ADMIN) on destructive operations like `DELETE /api/github/install`. Do not weaken role requirements.
+
+If you need to change security-related code, flag it for human review — do not silently modify it.
+
 ## Do NOT
 
 - Commit real Clerk keys or `GATEWAY_INTERNAL_SECRET` to the repo

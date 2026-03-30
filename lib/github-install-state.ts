@@ -15,10 +15,14 @@
 
 import crypto from "crypto";
 
-const SECRET = process.env.GITHUB_APP_PRIVATE_KEY || "";
+function getSecret(): string {
+  const key = process.env.GITHUB_APP_PRIVATE_KEY;
+  if (!key) throw new Error("GITHUB_APP_PRIVATE_KEY is required for install state HMAC");
+  return key;
+}
 
 function hmac(data: string): string {
-  return crypto.createHmac("sha256", SECRET).update(data).digest("hex");
+  return crypto.createHmac("sha256", getSecret()).update(data).digest("hex");
 }
 
 /**

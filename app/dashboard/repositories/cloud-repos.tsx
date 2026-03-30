@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,8 +86,16 @@ function formatDate(date: string | null) {
   });
 }
 
+const URL_ERROR_MESSAGES: Record<string, string> = {
+  installation_claimed:
+    "This GitHub account is already connected to another organization. Each GitHub installation can only be linked to one organization at a time.",
+  invalid_state:
+    "The connection request expired or was invalid. Please try connecting again.",
+};
+
 export default function CloudReposPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [repos, setRepos] = useState<CloudRepo[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasInstallation, setHasInstallation] = useState(false);
@@ -104,6 +112,20 @@ export default function CloudReposPage() {
   const [linkId, setLinkId] = useState("");
   const [linking, setLinking] = useState(false);
 
+  // Track recently deleted repos so polling doesn't re-add them before the
+  // engine finishes processing the delete.
+  const deletedRepos = useRef<Map<string, number>>(new Map());
+
+  // Show error from URL params (e.g. after GitHub callback redirect)
+  useEffect(() => {
+    const errorCode = searchParams.get("error");
+    if (errorCode && URL_ERROR_MESSAGES[errorCode]) {
+      setMessage({ type: "error", text: URL_ERROR_MESSAGES[errorCode] });
+      // Clean the error param from the URL without a navigation
+      router.replace("/dashboard/repositories", { scroll: false });
+    }
+  }, [searchParams, router]);
+
   const fetchRepos = useCallback(async () => {
     try {
       const [crRes, ghRes, installRes] = await Promise.all([
@@ -114,7 +136,15 @@ export default function CloudReposPage() {
 
       if (crRes.ok) {
         const data = await crRes.json();
-        setRepos(data.repos || []);
+        // Expire stale entries (>30s) and filter out recently deleted repos
+        const now = Date.now();
+        for (const [name, ts] of deletedRepos.current) {
+          if (now - ts > 30_000) deletedRepos.current.delete(name);
+        }
+        const filtered = ((data.repos || []) as CloudRepo[]).filter(
+          (r) => !deletedRepos.current.has(r.fullName)
+        );
+        setRepos(filtered);
         setRepoLimit(data.repoLimit ?? null);
       }
 
@@ -180,6 +210,7 @@ export default function CloudReposPage() {
         method: "DELETE",
       });
       if (res.ok) {
+        deletedRepos.current.set(fullName, Date.now());
         setRepos((prev) => prev.filter((r) => r.id !== repoId));
         setMessage({ type: "success", text: `${fullName} removed` });
       } else {
