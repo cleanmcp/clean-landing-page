@@ -598,9 +598,12 @@ export default function Home() {
           </div>
           {/* Footer nav */}
           <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:top-[207px] flex flex-col sm:flex-row items-center sm:justify-between w-full max-w-[1326px] px-5 gap-4 sm:gap-0 mx-auto">
-            <div className="flex gap-6 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
+            <div className="flex flex-wrap justify-center gap-6 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
               <a href="https://www.linkedin.com/company/cleanailabs" target="_blank" rel="noopener noreferrer" className="hover:opacity-70">LinkedIn</a>
               <Link href="/contact" className="hover:opacity-70">Contact</Link>
+              <Link href="/privacy" className="hover:opacity-70">Privacy</Link>
+              <Link href="/terms" className="hover:opacity-70">Terms</Link>
+              <Link href="/beta-agreement" className="hover:opacity-70">Beta Agreement</Link>
             </div>
             <span className="text-sm text-[#1c1c1c] leading-5" style={{ fontFamily: "var(--font-display)" }}>2026 Clean. All rights reserved.</span>
           </div>
