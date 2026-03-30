@@ -577,7 +577,7 @@ export default function Home() {
         </section>
 
         {/* Footer — overlaps CTA by 279px */}
-        <footer className="relative bg-white rounded-t-[36px] sm:rounded-t-[72px] overflow-hidden w-full h-auto min-h-[200px] sm:min-h-[279px] py-8 z-10">
+        <footer className="relative bg-white rounded-t-[36px] sm:rounded-t-[72px] overflow-hidden w-full h-auto min-h-[200px] sm:min-h-[340px] py-8 z-10">
           {/* Subtle background — flipped gradient image */}
           <div className="absolute left-1/2 -translate-x-1/2 w-[1820px] h-[731px] opacity-50 pointer-events-none" style={{ bottom: -440, transform: "translateX(-50%) rotate(180deg) scaleY(-1)" }}>
             <Image src={`${A}/footer-subtle-bg.jpg`} alt="" fill className="object-cover" />
@@ -597,7 +597,7 @@ export default function Home() {
             clean
           </div>
           {/* Footer nav */}
-          <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:top-[207px] flex flex-col items-center w-full max-w-[1326px] px-5 gap-3 mx-auto">
+          <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:bottom-6 flex flex-col items-center w-full max-w-[1326px] px-5 gap-3 mx-auto">
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
               <a href="https://www.linkedin.com/company/cleanailabs" target="_blank" rel="noopener noreferrer" className="hover:opacity-70">LinkedIn</a>
               <Link href="/contact" className="hover:opacity-70">Contact</Link>
