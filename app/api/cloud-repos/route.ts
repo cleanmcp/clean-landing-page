@@ -441,11 +441,16 @@ export async function DELETE(request: NextRequest) {
     const parts = repoName!.split("/");
     if (parts.length === 2) {
       try {
-        await engineFetch(ctx.orgId, `/repos/${parts[0]}/${parts[1]}`, {
+        const branch = bookmark?.defaultBranch;
+        const enginePath = branch
+          ? `/repos/${parts[0]}/${parts[1]}?branch=${encodeURIComponent(branch)}`
+          : `/repos/${parts[0]}/${parts[1]}`;
+        await engineFetch(ctx.orgId, enginePath, {
           method: "DELETE",
         });
-      } catch {
-        // continue — delete from DB even if engine is unavailable
+      } catch (err) {
+        // continue — soft-delete from DB even if engine is unavailable
+        console.error("Engine delete failed for", repoName, err);
       }
     }
 
