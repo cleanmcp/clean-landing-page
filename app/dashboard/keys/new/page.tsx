@@ -31,11 +31,12 @@ const EXPIRATION_OPTIONS = [
   { id: "1y", label: "1 year" },
 ];
 
-type ConfigTab = "claude-code" | "cursor" | "windsurf" | "gemini" | "cline" | "continue" | "claude-desktop" | "codex";
+type ConfigTab = "claude-code" | "cursor" | "windsurf" | "gemini" | "cline" | "continue" | "claude-desktop" | "codex" | "antigravity";
 
 const CONFIG_TABS: { id: ConfigTab; label: string; file: string }[] = [
   { id: "claude-code", label: "Claude Code", file: ".mcp.json (project root)" },
   { id: "cursor", label: "Cursor", file: "~/.cursor/mcp.json" },
+  { id: "antigravity", label: "Antigravity", file: "MCP config" },
   { id: "windsurf", label: "Windsurf", file: "~/.codeium/windsurf/mcp_config.json" },
   { id: "gemini", label: "Gemini CLI", file: "~/.gemini/settings.json" },
   { id: "cline", label: "Cline", file: "VS Code MCP Settings" },
@@ -93,6 +94,19 @@ function getMcpConfig(tab: ConfigTab, key: string, slug: string | null): string 
         `args = ["-y", "mcp-remote", ${JSON.stringify(SSE_URL)}, "--header", "Authorization:Bearer ${esc(key)}"${slug ? `, "--header", "X-Clean-Slug:${esc(slug)}"` : ""}]`,
       ];
       return lines.join("\n");
+    }
+
+    case "antigravity": {
+      const agArgs = ["mcp-remote", SSE_URL, "--header", `Authorization: Bearer ${key}`];
+      if (slug) agArgs.push("--header", `X-Clean-Slug: ${slug}`);
+      return JSON.stringify({
+        mcpServers: {
+          clean: {
+            command: "npx",
+            args: agArgs,
+          },
+        },
+      }, null, 2);
     }
 
     default:
@@ -267,7 +281,7 @@ export default function NewApiKeyPage() {
           </div>
 
           {/* Agent tabs — pill style */}
-          <div className="flex gap-1 overflow-x-auto border-b border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2">
+          <div className="dash-tabs-scroll flex gap-1 overflow-x-auto border-b border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2">
             {CONFIG_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -292,7 +306,7 @@ export default function NewApiKeyPage() {
               ) : null}
             </p>
             <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
-              <pre className="overflow-x-auto bg-[var(--dash-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--dash-text)]">
+              <pre className="dash-scrollbar overflow-x-auto bg-[var(--dash-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--dash-text)]">
                 {config}
               </pre>
             </div>
