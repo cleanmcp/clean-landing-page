@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import IconSprite from "@/components/IconSprite";
+import PostHogProvider from "@/components/PostHogProvider";
 import { ClerkProvider } from '@clerk/nextjs'
 
 const geistSans = Geist({
@@ -105,7 +106,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <IconSprite />
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
   );
