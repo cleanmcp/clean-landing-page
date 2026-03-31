@@ -47,6 +47,7 @@ export const waitlist = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     acceptedAt: timestamp("accepted_at"),
     rejectedAt: timestamp("rejected_at"),
+    followUpSentAt: timestamp("follow_up_sent_at"),
   },
   (table) => [
     index("waitlist_email_idx").on(table.email),
@@ -394,7 +395,8 @@ export type CloudRepoStatus =
   | "ready"
   | "error"
   | "disconnected"
-  | "paused";
+  | "paused"
+  | "deleted";
 
 export const cloudRepos = pgTable(
   "cloud_repos",

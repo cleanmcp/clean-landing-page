@@ -10,6 +10,8 @@ type Plan = {
   name: string;
   price: string;
   period: string;
+  credits: string;
+  searchesEquiv: string;
   rows: { label: string; value: string }[];
   features: string[];
   ctaLabel: string;
@@ -23,8 +25,10 @@ const plans: Plan[] = [
     name: "Free",
     price: "$0",
     period: "forever",
+    credits: "1,000",
+    searchesEquiv: "~50 searches",
     rows: [
-      { label: "Credits", value: "1,000" },
+      { label: "Credits / mo", value: "1,000" },
       { label: "Searches", value: "~50" },
       { label: "Repos", value: "3" },
       { label: "Team", value: "1 user" },
@@ -40,8 +44,10 @@ const plans: Plan[] = [
     name: "Pro",
     price: "$20",
     period: "/ mo",
+    credits: "10,000",
+    searchesEquiv: "~500 searches",
     rows: [
-      { label: "Credits", value: "10,000" },
+      { label: "Credits / mo", value: "10,000" },
       { label: "Searches", value: "~500" },
       { label: "Repos", value: "15" },
       { label: "Team", value: "5 users" },
@@ -57,8 +63,10 @@ const plans: Plan[] = [
     name: "Team",
     price: "$75",
     period: "/ mo",
+    credits: "50,000",
+    searchesEquiv: "~2,500 searches",
     rows: [
-      { label: "Credits", value: "50,000" },
+      { label: "Credits / mo", value: "50,000" },
       { label: "Searches", value: "~2,500" },
       { label: "Repos", value: "Unlimited" },
       { label: "Team", value: "15 users" },
@@ -74,8 +82,10 @@ const plans: Plan[] = [
     name: "Enterprise",
     price: "Custom",
     period: "tailored to your org",
+    credits: "Unlimited",
+    searchesEquiv: "Unlimited searches",
     rows: [
-      { label: "Credits", value: "Unlimited" },
+      { label: "Credits / mo", value: "Unlimited" },
       { label: "Searches", value: "Unlimited" },
       { label: "Repos", value: "Unlimited" },
       { label: "Team", value: "Unlimited" },
@@ -176,7 +186,7 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
       </div>
 
       {/* Price */}
-      <div className="mb-6 border-b border-white/8 pb-6">
+      <div className="mb-2">
         <div className="flex flex-col gap-1">
           <span
             className="text-4xl font-bold tracking-tight text-white sm:text-5xl leading-tight"
@@ -186,6 +196,18 @@ function PlanCard({ plan, index }: { plan: Plan; index: number }) {
           </span>
           <span className="text-sm text-white/35 whitespace-normal" style={{ fontFamily: "var(--font-jakarta)" }}>
             {plan.period}
+          </span>
+        </div>
+      </div>
+
+      {/* Credits callout */}
+      <div className="mb-6 border-b border-white/8 pb-6">
+        <div className="rounded-xl bg-white/5 border border-white/8 px-4 py-3 mt-2">
+          <span className="block text-lg font-bold text-[#79c0ff]" style={{ fontFamily: "var(--font-jakarta)" }}>
+            {plan.credits} credits
+          </span>
+          <span className="text-xs text-white/40" style={{ fontFamily: "var(--font-jakarta)" }}>
+            {plan.searchesEquiv} &middot; 1 search = 20 credits
           </span>
         </div>
       </div>
@@ -302,10 +324,13 @@ export default function PricingPlanPage() {
               className="mb-4 text-[36px] sm:text-[48px] lg:text-[64px] font-semibold leading-[1.1] tracking-tight text-white"
               style={{ fontFamily: "var(--font-jakarta)" }}
             >
-              Simple, <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>transparent</em> pricing.
+              Pay for what you{" "}
+              <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>use.</em>
             </h1>
-            <p className="mx-auto max-w-md text-lg text-white/45" style={{ fontFamily: "var(--font-jakarta)" }}>
-              Start free in the cloud. Scale when you&apos;re ready.
+            <p className="mx-auto max-w-lg text-lg text-white/45" style={{ fontFamily: "var(--font-jakarta)" }}>
+              Simple credits-based pricing. One search costs 20 credits.
+              <br />
+              Start free, scale as you grow.
             </p>
           </motion.div>
 

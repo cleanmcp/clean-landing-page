@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   GitBranch,
@@ -316,6 +316,41 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
   );
 }
 
+/* ─── User account section ─── */
+
+function UserAccountSection() {
+  const { user } = useUser();
+  const name = user?.fullName || user?.username || "Account";
+  const email = user?.primaryEmailAddress?.emailAddress || "";
+
+  return (
+    <div className="mt-3 flex items-center gap-3 rounded-lg px-1 py-2">
+      <UserButton
+        appearance={{
+          variables: {
+            colorPrimary: "#1772E7",
+            colorBackground: "#09090b",
+            colorInputBackground: "#09090b",
+            colorText: "#fafafa",
+            colorTextSecondary: "#a1a1aa",
+            colorNeutral: "#fafafa",
+          },
+          elements: {
+            avatarBox: "h-8 w-8",
+            userButtonPopoverCard: "bg-[#09090b] border border-[#27272a]",
+          },
+        }}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-foreground">{name}</p>
+        {email && (
+          <p className="truncate text-xs text-muted-foreground">{email}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Sidebar content (shared between desktop and mobile drawer) ─── */
 
 function SidebarContent({
@@ -390,25 +425,8 @@ function SidebarContent({
       {/* Plan indicator */}
       <PlanIndicator plan={plan} onUpgrade={onUpgrade} />
 
-      {/* Clerk user button */}
-      <div className="mt-3 flex items-center gap-3 rounded-lg px-1 py-2">
-        <UserButton
-          appearance={{
-            variables: {
-              colorPrimary: "#1772E7",
-              colorBackground: "#09090b",
-              colorInputBackground: "#09090b",
-              colorText: "#fafafa",
-              colorTextSecondary: "#a1a1aa",
-              colorNeutral: "#fafafa",
-            },
-            elements: {
-              avatarBox: "h-8 w-8",
-              userButtonPopoverCard: "bg-[#09090b] border border-[#27272a]",
-            },
-          }}
-        />
-      </div>
+      {/* User account */}
+      <UserAccountSection />
     </div>
   );
 }

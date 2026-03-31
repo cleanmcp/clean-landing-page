@@ -50,3 +50,8 @@ next-env.d.ts
 .worktrees
 .clean-worktrees/
 .clean/
+
+# Internal engineering notes (may contain production IPs / architecture details)
+findings.md
+progress.md
+task_plan.md
