@@ -26,7 +26,9 @@
       "Bash(npx tsc:*)",
       "Bash(npx:*)",
       "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/app/dashboard -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.jsx \\\\\\))",
-      "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/components/ui -type f -name *.tsx)"
+      "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/components/ui -type f -name *.tsx)",
+      "Bash(git reset:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

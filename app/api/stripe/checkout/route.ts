@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   // Server-side allowlist: only accept known Stripe price IDs
   const allowedPriceIds = [
     process.env.STRIPE_PRO_PRICE_ID,
-    process.env.STRIPE_MAX_PRICE_ID,
+    process.env.STRIPE_TEAM_PRICE_ID,
   ].filter(Boolean);
 
   if (!allowedPriceIds.includes(priceId)) {

@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       stripeCustomerId: session.customer as string,
       stripeSubscriptionId: session.subscription as string,
       stripePriceId: session.metadata?.priceId || null,
-      tier: tier as "free" | "pro" | "max" | "enterprise",
+      tier: tier as "free" | "pro" | "team" | "enterprise",
       licenseKey,
       licenseJti: claims.jti,
       licenseExpiresAt: new Date(claims.exp * 1000),

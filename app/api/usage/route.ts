@@ -13,13 +13,19 @@ export async function GET() {
     }
 
     const [org] = await db
-      .select({ tier: organizations.tier })
+      .select({
+        tier: organizations.tier,
+        creditBalance: organizations.creditBalance,
+        creditsPerSearch: organizations.creditsPerSearch,
+      })
       .from(organizations)
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);
 
     const tier = org?.tier ?? "free";
     const limits = getCloudTierLimits(tier);
+    const creditBalance = org?.creditBalance ?? 0;
+    const creditsPerSearch = org?.creditsPerSearch ?? 20;
 
     // Count repos
     const [repoCount] = await db
@@ -46,7 +52,11 @@ export async function GET() {
       repos: { used: repoCount?.count ?? 0, limit: toLimit(limits.repos) },
       seats: { used: seatCount?.count ?? 0, limit: toLimit(limits.members) },
       apiKeys: { used: keyCount?.count ?? 0, limit: toLimit(limits.apiKeys) },
-      searches: { used: null, limit: toLimit(limits.searchesPerDay) },
+      credits: {
+        balance: creditBalance,
+        perSearch: creditsPerSearch,
+        searchesRemaining: Math.floor(creditBalance / creditsPerSearch),
+      },
       storage: { used: null, limit: toLimit(limits.storageMb) },
     });
   } catch (error) {

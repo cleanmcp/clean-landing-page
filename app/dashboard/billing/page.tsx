@@ -24,7 +24,7 @@ interface Invoice {
 }
 
 interface BillingData {
-  tier: "free" | "pro" | "max" | "enterprise";
+  tier: "free" | "pro" | "team" | "enterprise";
   licenseExpiresAt: string | null;
   licenseRevoked: boolean;
   stripeSubscriptionId: string | null;

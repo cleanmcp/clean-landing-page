@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { organizations, orgMembers, users, apiKeys } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 // GET /api/org - Get current user's organization info
 export async function GET() {
@@ -53,7 +53,7 @@ export async function GET() {
     const [keyCount] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(apiKeys)
-      .where(eq(apiKeys.orgId, ctx.orgId));
+      .where(and(eq(apiKeys.orgId, ctx.orgId), isNull(apiKeys.revokedAt)));
 
     const currentMember = members.find((m) => m.userId === ctx.userId);
 

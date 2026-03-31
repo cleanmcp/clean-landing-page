@@ -327,25 +327,25 @@ const PLANS = [
     name: "Free",
     price: "$0",
     period: "forever",
-    features: ["3 repos", "1 user", "50 searches/day", "Cloud only"],
+    features: ["3 repos", "1 user", "1,000 credits (~50 searches)", "Cloud only"],
     cta: "Start Free",
     popular: false,
   },
   {
     id: "pro",
     name: "Pro",
-    price: "$14.99",
-    period: "/user/mo",
-    features: ["15 repos", "5 users", "1,000 searches/day", "Priority indexing"],
+    price: "$20",
+    period: "/mo",
+    features: ["15 repos", "5 users", "10,000 credits (~500 searches)", "Priority indexing"],
     cta: "Subscribe",
     popular: true,
   },
   {
-    id: "max",
-    name: "Max",
-    price: "$29.99",
-    period: "/user/mo",
-    features: ["Unlimited repos", "10 users", "10,000 searches/day", "Private cloud + SLA"],
+    id: "team",
+    name: "Team",
+    price: "$75",
+    period: "/mo",
+    features: ["Unlimited repos", "15 users", "50,000 credits (~2,500 searches)", "Private cloud + SLA"],
     cta: "Subscribe",
     popular: false,
   },
@@ -398,7 +398,7 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
           return;
         }
         const org = data.org as OrgInfo & { hostingMode?: string };
-        const hasPaidPlan = org.tier === "pro" || org.tier === "max" || org.tier === "enterprise";
+        const hasPaidPlan = org.tier === "pro" || org.tier === "team" || org.tier === "enterprise";
         const isCloud = org.hostingMode === "cloud";
         if (isCloud || hasPaidPlan || (org.licenseKey && !org.licenseRevoked)) {
           setPhase("done");
@@ -440,7 +440,7 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
     try {
       const priceId =
         planId === "pro" ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID :
-        planId === "max" ? process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID : "";
+        planId === "team" ? process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID : "";
       if (!priceId) {
         alert("Stripe price ID not configured.");
         setLoadingPlan(null);
@@ -587,7 +587,7 @@ export default function DashboardPage() {
         .then((d) => {
           if (d?.org) {
             setOrgData({ apiKeyCount: d.apiKeyCount ?? 0 });
-            const hasPaidPlan = d.org.tier === "pro" || d.org.tier === "max" || d.org.tier === "enterprise";
+            const hasPaidPlan = d.org.tier === "pro" || d.org.tier === "team" || d.org.tier === "enterprise";
             const isCloud = d.org.hostingMode === "cloud";
             setHasLicense(isCloud || hasPaidPlan || (!!d.org.licenseKey && !d.org.licenseRevoked));
           }
