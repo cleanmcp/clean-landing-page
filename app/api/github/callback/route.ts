@@ -121,9 +121,6 @@ export async function GET(request: NextRequest) {
         },
       });
     installSaved = true;
-
-    // Clear the state cookie after successful save
-    cookieStore.delete(INSTALL_STATE_COOKIE);
   } catch (error) {
     console.error("Failed to fetch GitHub installation info:", error);
     // Still save the installation with minimal info so the connection is
@@ -152,12 +149,19 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Redirect based on context
+  // Redirect based on context — clear the CSRF cookie on the redirect response
+  let redirectUrl: string;
   if (setupAction === "update") {
-    return NextResponse.redirect(`${appUrl}/dashboard/repositories`);
+    redirectUrl = `${appUrl}/dashboard/repositories`;
+  } else {
+    // Pass installation_id as fallback if save failed, so onboarding can retry
+    const fallbackParam = !installSaved ? `&installation_id=${numericInstallationId}` : "";
+    redirectUrl = `${appUrl}/dashboard/onboarding?step=select-repos${fallbackParam}`;
   }
 
-  // Pass installation_id as fallback if save failed, so onboarding can retry
-  const fallbackParam = !installSaved ? `&installation_id=${numericInstallationId}` : "";
-  return NextResponse.redirect(`${appUrl}/dashboard/onboarding?step=select-repos${fallbackParam}`);
+  const redirect = NextResponse.redirect(redirectUrl);
+  if (installSaved) {
+    redirect.cookies.delete(INSTALL_STATE_COOKIE);
+  }
+  return redirect;
 }
