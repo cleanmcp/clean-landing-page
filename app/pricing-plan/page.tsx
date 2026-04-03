@@ -282,7 +282,7 @@ export default function PricingPlanPage() {
             Sign In
           </Link>
           <a
-            href="/waitlist"
+            href="/sign-up"
             className="group relative inline-flex items-center h-[40px] rounded-full text-white text-[14px] font-semibold tracking-tight pl-5 pr-10 transition-all duration-300 hover:scale-[1.02]"
             style={{
               background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)",
@@ -291,7 +291,7 @@ export default function PricingPlanPage() {
               fontFamily: "var(--font-jakarta)",
             }}
           >
-            <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
+            <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Try Now</span>
             <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-7 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
               <svg className="w-3 h-3 text-[#1772e7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
             </span>

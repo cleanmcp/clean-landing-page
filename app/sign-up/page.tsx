@@ -36,7 +36,7 @@ function SignUpContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"email-gate" | "details" | "verify">("email-gate");
+  const [step, setStep] = useState<"details" | "verify">("details");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,32 +48,6 @@ function SignUpContent() {
 
   if (!isLoaded || !userLoaded) return <Spinner />;
   if (user) return <Spinner />;
-
-  const handleWaitlistCheck = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const checkRes = await fetch("/api/waitlist/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase().trim() }),
-      });
-      const checkData = await checkRes.json();
-
-      if (!checkData.accepted) {
-        router.push("/waitlist?not_approved=1");
-        return;
-      }
-
-      setStep("details");
-    } catch {
-      setError("Could not verify waitlist status. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOAuth = async (strategy: OAuthStrategy) => {
     if (!signUp) return;
@@ -141,32 +115,24 @@ function SignUpContent() {
     "w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-3.5 text-[15px] text-white placeholder:text-white/30 outline-none transition-all duration-300 focus:border-[#5eb1ff]/50 focus:bg-white/[0.07] focus:ring-1 focus:ring-[#5eb1ff]/20 backdrop-blur-sm";
 
   const headingText =
-    step === "email-gate"
+    step === "details"
       ? "Get started"
-      : step === "details"
-        ? "Create your account"
-        : "Verify your email";
+      : "Verify your email";
 
   const headingItalic =
-    step === "email-gate"
+    step === "details"
       ? "started"
-      : step === "details"
-        ? "account"
-        : "email";
+      : "email";
 
   const headingPrefix =
-    step === "email-gate"
+    step === "details"
       ? "Get "
-      : step === "details"
-        ? "Create your "
-        : "Verify your ";
+      : "Verify your ";
 
   const subtitleText =
-    step === "email-gate"
-      ? "Enter your email to check access."
-      : step === "details"
-        ? "You're in! Set up your account."
-        : `We sent a code to ${email}`;
+    step === "details"
+      ? "Create your account and start using Clean."
+      : `We sent a code to ${email}`;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
@@ -235,50 +201,7 @@ function SignUpContent() {
             </div>
           )}
 
-          {step === "email-gate" ? (
-            <>
-              <form onSubmit={handleWaitlistCheck} className="space-y-5">
-                <div>
-                  <label htmlFor="email" className="mb-2 block text-sm font-medium text-white/60" style={{ fontFamily: "var(--font-jakarta)" }}>
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    autoFocus
-                    className={inputClass}
-                    style={{ fontFamily: "var(--font-jakarta)" }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="group relative flex w-full items-center justify-center h-[52px] rounded-[26px] text-white text-[16px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.01] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
-                  style={{
-                    background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)",
-                    border: "3px solid rgba(255,255,255,0.5)",
-                    boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.6), inset 0px -2px 6px rgba(0,50,150,0.3)",
-                    fontFamily: "var(--font-jakarta)",
-                  }}
-                >
-                  <span style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>
-                    {loading ? "Checking..." : "Continue"}
-                  </span>
-                </button>
-              </form>
-
-              <p className="mt-5 text-center text-xs text-white/30" style={{ fontFamily: "var(--font-jakarta)" }}>
-                Don&apos;t have access yet?{" "}
-                <Link href="/waitlist" className="font-medium text-[#79c0ff] transition-colors hover:text-[#aed8ff]">
-                  Join the waitlist
-                </Link>
-              </p>
-            </>
-          ) : step === "details" ? (
+          {step === "details" ? (
             <>
               {/* GitHub OAuth */}
               <button
@@ -301,12 +224,21 @@ function SignUpContent() {
               </div>
 
               <form onSubmit={handleEmailSubmit} className="space-y-5">
-                {/* Locked email display */}
-                <div
-                  className="rounded-2xl border border-[#5eb1ff]/20 bg-[#5eb1ff]/5 px-5 py-3.5 text-[15px] text-[#79c0ff]"
-                  style={{ fontFamily: "var(--font-jakarta)" }}
-                >
-                  {email}
+                <div>
+                  <label htmlFor="email" className="mb-2 block text-sm font-medium text-white/60" style={{ fontFamily: "var(--font-jakarta)" }}>
+                    Email address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    autoFocus
+                    className={inputClass}
+                    style={{ fontFamily: "var(--font-jakarta)" }}
+                  />
                 </div>
                 <div>
                   <label htmlFor="password" className="mb-2 block text-sm font-medium text-white/60" style={{ fontFamily: "var(--font-jakarta)" }}>
@@ -341,14 +273,6 @@ function SignUpContent() {
                 </button>
               </form>
 
-              <button
-                type="button"
-                onClick={() => { setStep("email-gate"); setError(""); setPassword(""); }}
-                className="mt-4 w-full text-center text-xs font-medium text-white/30 transition-colors duration-200 hover:text-white/60 cursor-pointer"
-                style={{ fontFamily: "var(--font-jakarta)" }}
-              >
-                Use a different email
-              </button>
             </>
           ) : (
             <form onSubmit={handleVerify} className="space-y-5">

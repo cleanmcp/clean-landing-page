@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   GitBranch,
@@ -18,6 +18,7 @@ import {
   ArrowUpRight,
   Plus,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { PlanPickerDialog } from "@/components/dashboard/plan-picker-dialog";
 
@@ -320,11 +321,12 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
 
 function UserAccountSection() {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const name = user?.fullName || user?.username || "Account";
   const email = user?.primaryEmailAddress?.emailAddress || "";
 
   return (
-    <div className="mt-3 flex items-center gap-3 rounded-lg px-1 py-2">
+    <div className="group relative mt-3 flex items-center gap-3 rounded-lg px-1 py-2">
       <UserButton
         appearance={{
           variables: {
@@ -347,6 +349,13 @@ function UserAccountSection() {
           <p className="truncate text-xs text-muted-foreground">{email}</p>
         )}
       </div>
+      <button
+        onClick={() => signOut({ redirectUrl: "/" })}
+        className="absolute right-1 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-foreground group-hover:opacity-100"
+        title="Sign out"
+      >
+        <LogOut className="h-4 w-4" strokeWidth={1.5} />
+      </button>
     </div>
   );
 }

@@ -42,8 +42,8 @@ function SectionBadge({ icon, label, variant = "light" }: { icon: string; label:
 
 function BtnBookDemo({ className = "" }: { className?: string }) {
   return (
-    <a href="/waitlist" className={`group relative inline-flex items-center h-[52px] rounded-[26px] text-white text-[17px] font-semibold tracking-tight pl-6 pr-[52px] transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #1A1A1A 0%, #000000 100%)", border: "2px solid rgba(255,255,255,1)", boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.5), inset 0px 2px 10px rgba(255,255,255,0.7), inset 0px -2px 10px rgba(0,0,0,0.8)" }}>
-      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.5)" }}>Book a Demo</span>
+    <a href="/sign-up" className={`group relative inline-flex items-center h-[52px] rounded-[26px] text-white text-[17px] font-semibold tracking-tight pl-6 pr-[52px] transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #1A1A1A 0%, #000000 100%)", border: "2px solid rgba(255,255,255,1)", boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.5), inset 0px 2px 10px rgba(255,255,255,0.7), inset 0px -2px 10px rgba(0,0,0,0.8)" }}>
+      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.5)" }}>Get Started for Free</span>
       <span className="absolute right-[6px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-10 transition-transform duration-300 group-hover:rotate-45 text-black" style={{ boxShadow: "0px 2px 5px rgba(0,0,0,0.2)" }}>
         <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
       </span>
@@ -53,7 +53,7 @@ function BtnBookDemo({ className = "" }: { className?: string }) {
 
 function BtnTryClean() {
   return (
-    <a href="/waitlist" className="relative inline-flex items-center justify-center h-[44px] md:h-[48px] lg:h-[56px] px-6 md:px-8 lg:px-10 rounded-full text-white text-[15px] md:text-[17px] lg:text-[20px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] whitespace-nowrap" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #60B3F8 100%)", border: "4px solid #DCEFF8", boxShadow: "inset 0px 4px 10px rgba(255,255,255,0.8), inset 0px -3px 6px rgba(20,100,200,0.3)" }}>
+    <a href="/sign-up" className="relative inline-flex items-center justify-center h-[44px] md:h-[48px] lg:h-[56px] px-6 md:px-8 lg:px-10 rounded-full text-white text-[15px] md:text-[17px] lg:text-[20px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] whitespace-nowrap" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #60B3F8 100%)", border: "4px solid #DCEFF8", boxShadow: "inset 0px 4px 10px rgba(255,255,255,0.8), inset 0px -3px 6px rgba(20,100,200,0.3)" }}>
       <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(20,100,200,0.4)" }}>Try Clean Now</span>
     </a>
   );
@@ -61,8 +61,8 @@ function BtnTryClean() {
 
 function BtnJoinWaitlist({ className = "" }: { className?: string }) {
   return (
-    <a href="/waitlist" className={`relative inline-flex items-center justify-center h-[52px] px-8 rounded-[26px] text-white text-[17px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)", border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.8), inset 0px -2px 6px rgba(0,50,150,0.3)" }}>
-      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>Join Waitlist</span>
+    <a href="/sign-up" className={`relative inline-flex items-center justify-center h-[52px] px-8 rounded-[26px] text-white text-[17px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)", border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.8), inset 0px -2px 6px rgba(0,50,150,0.3)" }}>
+      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>Try Now</span>
     </a>
   );
 }
@@ -570,8 +570,9 @@ export default function Home() {
             </h2>
             <p className="text-sm sm:text-lg text-white/80" style={{ fontFamily: "var(--font-jakarta)" }}>Join teams saving thousands on AI agent costs every month.</p>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center">
-              <BtnBookDemo />
-              <BtnJoinWaitlist />
+              <a href="/sign-up" className="relative inline-flex items-center justify-center h-[52px] px-8 rounded-[26px] text-white text-[17px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)", border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.8), inset 0px -2px 6px rgba(0,50,150,0.3)" }}>
+                <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>Get Started for Free</span>
+              </a>
             </div>
           </MotionDiv>
         </section>
