@@ -48,6 +48,7 @@ export async function GET() {
   const cookieStore = await cookies();
   const existingCookie = cookieStore.get(INSTALL_STATE_COOKIE)?.value;
   let nonce: string;
+  let newCookieValue: string | null = null;
 
   if (existingCookie && verifyInstallCookie(existingCookie, ctx.userId, ctx.orgId)) {
     // Reuse the nonce from the existing valid cookie
@@ -56,7 +57,20 @@ export async function GET() {
     // No valid cookie — generate a fresh state
     const state = createInstallState(ctx.userId, ctx.orgId);
     nonce = state.nonce;
-    cookieStore.set(INSTALL_STATE_COOKIE, state.cookie, {
+    newCookieValue = state.cookie;
+  }
+
+  // Set cookie directly on the NextResponse to ensure the Set-Cookie header
+  // is included in the response. Using cookieStore.set() alone can fail to
+  // merge into the final response in Next.js 15+/16.
+  const response = NextResponse.json({
+    connected: installations.length > 0,
+    installations,
+    installUrl: getGitHubAppInstallUrl(nonce),
+  });
+
+  if (newCookieValue) {
+    response.cookies.set(INSTALL_STATE_COOKIE, newCookieValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -65,11 +79,7 @@ export async function GET() {
     });
   }
 
-  return NextResponse.json({
-    connected: installations.length > 0,
-    installations,
-    installUrl: getGitHubAppInstallUrl(nonce),
-  });
+  return response;
 }
 
 /**
@@ -147,9 +157,9 @@ export async function POST(request: NextRequest) {
       });
 
     // Clear the state cookie after successful save
-    cookieStore.delete(INSTALL_STATE_COOKIE);
-
-    return NextResponse.json({ saved: true });
+    const response = NextResponse.json({ saved: true });
+    response.cookies.delete(INSTALL_STATE_COOKIE);
+    return response;
   } catch (error) {
     console.error("Failed to verify GitHub installation:", error);
     // Save with minimal info so the connection is established even if
@@ -171,7 +181,9 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date(),
           },
         });
-      return NextResponse.json({ saved: true });
+      const response = NextResponse.json({ saved: true });
+      response.cookies.delete(INSTALL_STATE_COOKIE);
+      return response;
     } catch (dbError) {
       console.error("Failed to save GitHub installation fallback:", dbError);
       return NextResponse.json(
