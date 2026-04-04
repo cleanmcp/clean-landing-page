@@ -39,7 +39,7 @@ const PLANS = [
   },
   {
     name: "Team",
-    price: "$75",
+    price: "$100",
     period: "/mo",
     features: ["Unlimited repositories", "15 team members", "Unlimited API keys", "50,000 credits (~2,500 searches)", "Private cloud + SLA"],
     accent: false,

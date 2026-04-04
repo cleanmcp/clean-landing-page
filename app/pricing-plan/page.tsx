@@ -61,7 +61,7 @@ const plans: Plan[] = [
   },
   {
     name: "Team",
-    price: "$75",
+    price: "$100",
     period: "/ mo",
     credits: "50,000",
     searchesEquiv: "~2,500 searches",

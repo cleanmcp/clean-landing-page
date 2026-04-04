@@ -65,7 +65,7 @@ export default function TermsPage() {
             <ul className="list-disc space-y-2 pl-6">
               <li><strong className="text-white/90">Free:</strong> $0/month. 1,000 credits/month, 3 repos, 1 user, cloud hosting, community support.</li>
               <li><strong className="text-white/90">Pro:</strong> $20/month. 10,000 credits/month, 15 repos, 5 users, cloud hosting, priority indexing, usage dashboard.</li>
-              <li><strong className="text-white/90">Team:</strong> $75/month. 50,000 credits/month, unlimited repos, 15 users, cloud + self-host, private cloud, SLA, priority support.</li>
+              <li><strong className="text-white/90">Team:</strong> $100/month. 50,000 credits/month, unlimited repos, 15 users, cloud + self-host, private cloud, SLA, priority support.</li>
             </ul>
             <p className="mt-3">Clean reserves the right to modify pricing or plan features with 30 days notice. 1 search equals 20 credits.</p>
           </section>

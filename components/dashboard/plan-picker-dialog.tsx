@@ -34,7 +34,7 @@ const PLANS: PlanOption[] = [
   {
     id: "team",
     name: "Team",
-    price: "$75",
+    price: "$100",
     period: "/mo",
     description: "For teams that need everything.",
     features: [
