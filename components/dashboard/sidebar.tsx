@@ -19,6 +19,8 @@ import {
   Plus,
   Settings,
   LogOut,
+  Zap,
+  ArrowRight,
 } from "lucide-react";
 import { PlanPickerDialog } from "@/components/dashboard/plan-picker-dialog";
 
@@ -80,14 +82,19 @@ function PlanIndicator({ plan, onUpgrade }: { plan: PlanInfo | null; onUpgrade: 
   }
 
   return (
-    <div className="rounded-lg border border-sidebar-border bg-sidebar-accent px-3 py-3">
-      <p className="text-sm font-semibold text-sidebar-foreground">{tierLabel}</p>
+    <div className="rounded-xl border border-sidebar-border bg-gradient-to-br from-sidebar-accent to-sidebar-accent/50 p-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+          <Zap className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <p className="text-sm font-semibold text-sidebar-foreground">{tierLabel}</p>
+      </div>
       {usage && usage.limit > 0 && (
         <>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             {formatTokens(usage.used)} / {formatTokens(usage.limit)} tokens
           </p>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${pct}%` }}
@@ -98,9 +105,9 @@ function PlanIndicator({ plan, onUpgrade }: { plan: PlanInfo | null; onUpgrade: 
       {isFree && (
         <button
           onClick={onUpgrade}
-          className="mt-2 inline-block text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
         >
-          Upgrade →
+          Upgrade <ArrowRight className="h-3 w-3" />
         </button>
       )}
     </div>
