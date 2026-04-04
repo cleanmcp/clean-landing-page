@@ -30,5 +30,9 @@
       "Bash(git reset:*)",
       "Bash(git rm:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "clean"
+  ],
+  "enableAllProjectMcpServers": true
 }

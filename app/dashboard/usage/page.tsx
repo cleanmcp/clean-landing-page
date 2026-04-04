@@ -8,26 +8,13 @@ import {
   Key,
   GitBranch,
   Users,
-  TrendingUp,
   ArrowUpRight,
   RefreshCw,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
+  Zap,
+} from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,12 +25,18 @@ interface UsageMetric {
   limit: number | null;
 }
 
+interface CreditInfo {
+  balance: number;
+  perSearch: number;
+  searchesRemaining: number;
+}
+
 interface UsageData {
   tier: string;
   repos: UsageMetric;
   seats: UsageMetric;
   apiKeys: UsageMetric;
-  searches: UsageMetric;
+  credits: CreditInfo;
   storage: UsageMetric;
 }
 
@@ -95,14 +88,14 @@ const fadeUp = {
 const tierLabels: Record<string, string> = {
   free: "Free",
   pro: "Pro",
-  max: "Max",
+  team: "Team",
   enterprise: "Enterprise",
 };
 
 const tierColors: Record<string, string> = {
   free: "bg-[var(--dash-text-muted)]/20 text-[var(--dash-text-muted)]",
   pro: "bg-[var(--dash-accent)]/15 text-[var(--dash-accent-light)]",
-  max: "bg-blue-500/15 text-blue-400",
+  team: "bg-blue-500/15 text-blue-400",
   enterprise: "bg-purple-500/15 text-purple-400",
 };
 
@@ -175,79 +168,6 @@ function UsageBarCard({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Radar chart — usage breakdown by category
-// ---------------------------------------------------------------------------
-
-const radarData = [
-  { category: "Search Speed", current: 186, previous: 160 },
-  { category: "Token Savings", current: 205, previous: 170 },
-  { category: "Index Coverage", current: 207, previous: 180 },
-  { category: "API Latency", current: 173, previous: 160 },
-  { category: "Compression", current: 195, previous: 190 },
-  { category: "Cache Hits", current: 174, previous: 140 },
-];
-
-const radarChartConfig = {
-  current: {
-    label: "This Period",
-    color: "var(--chart-1)",
-  },
-  previous: {
-    label: "Last Period",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig;
-
-function UsageRadarChart() {
-  return (
-    <Card>
-      <CardHeader className="items-center pb-4">
-        <CardTitle className="text-base font-semibold">Performance Overview</CardTitle>
-        <CardDescription>
-          Comparing current vs previous period metrics
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pb-0">
-        <ChartContainer
-          config={radarChartConfig}
-          className="mx-auto aspect-square max-h-[300px]"
-        >
-          <RadarChart data={radarData}>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            <PolarAngleAxis dataKey="category" />
-            <PolarGrid radialLines={false} />
-            <Radar
-              dataKey="current"
-              fill="var(--color-current)"
-              fillOpacity={0}
-              stroke="var(--color-current)"
-              strokeWidth={2}
-            />
-            <Radar
-              dataKey="previous"
-              fill="var(--color-previous)"
-              fillOpacity={0}
-              stroke="var(--color-previous)"
-              strokeWidth={2}
-            />
-          </RadarChart>
-        </ChartContainer>
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 12.4% this period <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Based on aggregated usage metrics
-        </div>
-      </CardFooter>
-    </Card>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -385,10 +305,10 @@ export default function UsagePage() {
         <motion.div custom={1} initial="hidden" animate="visible" variants={fadeUp}>
           <div className="grid gap-4 sm:grid-cols-2">
             <UsageBarCard
-              label="Searches / day"
+              label="Credits Remaining"
               icon={Search}
-              used={usage.searches.used}
-              limit={usage.searches.limit}
+              used={usage.credits.balance}
+              limit={null}
             />
             <UsageBarCard
               label="API Keys"
@@ -412,10 +332,44 @@ export default function UsagePage() {
         </motion.div>
       )}
 
-      {/* Section 3: Usage Radar Chart */}
-      <motion.div custom={2} initial="hidden" animate="visible" variants={fadeUp}>
-        <UsageRadarChart />
-      </motion.div>
+      {/* Section 3: Credit Summary */}
+      {usage && (
+        <motion.div custom={2} initial="hidden" animate="visible" variants={fadeUp}>
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)] p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--dash-accent-glow)]">
+                <Zap className="h-4 w-4 text-[var(--dash-accent-light)]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-[var(--dash-text)]">Search Credits</h3>
+                <p className="text-sm text-[var(--dash-text-muted)]">
+                  Each search costs {usage.credits.perSearch} credits
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-sm text-[var(--dash-text-muted)]">Balance</p>
+                <p className="text-2xl font-bold text-[var(--dash-text)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                  {usage.credits.balance.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-[var(--dash-text-muted)]">Cost per Search</p>
+                <p className="text-2xl font-bold text-[var(--dash-text)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                  {usage.credits.perSearch}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-[var(--dash-text-muted)]">Searches Remaining</p>
+                <p className="text-2xl font-bold text-[var(--dash-text)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                  ~{usage.credits.searchesRemaining.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Section 4: Usage by Repository */}
       {stats && stats.topRepos.length > 0 && (
