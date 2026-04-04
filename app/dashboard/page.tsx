@@ -285,18 +285,16 @@ function TokenSavingsCard() {
                 }
               />
               <Area
-                dataKey="compressed"
-                type="natural"
-                fill="url(#fillCompressed)"
-                stroke="var(--color-compressed)"
-                stackId="a"
-              />
-              <Area
                 dataKey="original"
                 type="natural"
                 fill="url(#fillOriginal)"
                 stroke="var(--color-original)"
-                stackId="a"
+              />
+              <Area
+                dataKey="compressed"
+                type="natural"
+                fill="url(#fillCompressed)"
+                stroke="var(--color-compressed)"
               />
               <ChartLegend content={<ChartLegendContent />} />
             </AreaChart>
@@ -380,6 +378,7 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
         .then((r) => r.json())
         .then((data) => {
           if (data.licenseKey || data.success) {
+            onComplete();
             window.history.replaceState({}, "", "/dashboard");
             router.push("/dashboard/onboarding");
           } else {
@@ -402,6 +401,7 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
         const isCloud = org.hostingMode === "cloud";
         if (isCloud || hasPaidPlan || (org.licenseKey && !org.licenseRevoked)) {
           setPhase("done");
+          onComplete();
         } else {
           setPhase("choose-plan");
         }
@@ -420,6 +420,7 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
       });
       const data = await res.json();
       if (data.licenseKey || data.success) {
+        onComplete();
         router.push("/dashboard/onboarding");
         return;
       }
