@@ -343,7 +343,7 @@ const PLANS = [
   {
     id: "team",
     name: "Team",
-    price: "$75",
+    price: "$100",
     period: "/mo",
     features: ["Unlimited repos", "15 users", "50,000 credits (~2,500 searches)", "Private cloud + SLA"],
     cta: "Subscribe",
