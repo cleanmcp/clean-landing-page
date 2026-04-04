@@ -76,6 +76,8 @@ export default function LandingNavbar() {
         </Link>
 
         <div className="relative z-10 hidden items-center gap-6 lg:flex">
+          <a href="https://discord.gg/f7fA4aze9F" target="_blank" rel="noopener noreferrer" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Discord</a>
+          <a href="https://docs.tryclean.ai" target="_blank" rel="noopener noreferrer" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Docs</a>
           <Link href="/pricing-plan" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Pricing</Link>
           <Link href="/sign-in" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
           <a href="/waitlist" className="group relative inline-flex items-center h-[46px] rounded-full text-white text-[15px] font-semibold tracking-tight pl-5 pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
@@ -115,6 +117,24 @@ export default function LandingNavbar() {
               transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             >
               <div className="flex flex-col gap-1">
+                <a
+                  href="https://discord.gg/f7fA4aze9F"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-4 py-3 text-base font-semibold text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Discord
+                </a>
+                <a
+                  href="https://docs.tryclean.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-4 py-3 text-base font-semibold text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Docs
+                </a>
                 <Link
                   href="/pricing-plan"
                   onClick={() => setMobileOpen(false)}
