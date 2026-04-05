@@ -25,8 +25,8 @@ const plans: Plan[] = [
     period: "forever",
     rows: [
       { label: "Hosting", value: "Cloud only" },
-      { label: "Repos", value: "3" },
-      { label: "Searches", value: "50/day" },
+      { label: "Repos", value: "2" },
+      { label: "Searches", value: "10/mo" },
       { label: "Team", value: "1 user" },
       { label: "Setup", value: "API key only" },
     ],
@@ -43,7 +43,7 @@ const plans: Plan[] = [
     rows: [
       { label: "Hosting", value: "Cloud only" },
       { label: "Repos", value: "15" },
-      { label: "Searches", value: "1,000/day" },
+      { label: "Searches", value: "500/mo" },
       { label: "Team", value: "5 users" },
       { label: "Setup", value: "API key only" },
     ],
@@ -60,7 +60,7 @@ const plans: Plan[] = [
     rows: [
       { label: "Hosting", value: "Cloud + Self-host" },
       { label: "Repos", value: "Unlimited" },
-      { label: "Searches", value: "10,000/day" },
+      { label: "Searches", value: "5,000/mo" },
       { label: "Team", value: "10 users" },
       { label: "Setup", value: "API key or Docker" },
     ],

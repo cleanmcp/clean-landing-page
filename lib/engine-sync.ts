@@ -7,7 +7,7 @@ interface KeySyncData {
   name?: string;
   expiresAt?: string | null;
   tier?: string;
-  searchesPerDay?: number;
+  searchesPerMonth?: number;
   maxRepos?: number;
   storageMb?: number;
 }

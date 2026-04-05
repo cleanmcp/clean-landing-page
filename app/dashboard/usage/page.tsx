@@ -385,7 +385,7 @@ export default function UsagePage() {
         <motion.div custom={1} initial="hidden" animate="visible" variants={fadeUp}>
           <div className="grid gap-4 sm:grid-cols-2">
             <UsageBarCard
-              label="Searches / day"
+              label="Searches / mo"
               icon={Search}
               used={usage.searches.used}
               limit={usage.searches.limit}
