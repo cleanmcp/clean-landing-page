@@ -47,7 +47,7 @@ function validateEntry(e: unknown): e is SearchEntry {
   const o = e as Record<string, unknown>;
   return (
     typeof o.org_id === "string" && UUID_RE.test(o.org_id) &&
-    typeof o.api_key_id === "string" && UUID_RE.test(o.api_key_id) &&
+    typeof o.api_key_id === "string" && o.api_key_id.length > 0 &&
     typeof o.repo === "string" && o.repo.length > 0 &&
     typeof o.query === "string" &&
     typeof o.result_count === "number" &&
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     await db.insert(searchLogs).values(
       valid.map((e) => ({
         orgId: e.org_id,
-        apiKeyId: e.api_key_id,
+        apiKeyId: UUID_RE.test(e.api_key_id) ? e.api_key_id : null,
         repo: e.repo,
         query: e.query,
         resultCount: e.result_count,
