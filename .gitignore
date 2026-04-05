@@ -43,8 +43,18 @@ next-env.d.ts
 # clerk configuration (can include secrets)
 /.clerk/
 
+# MCP config (contains API keys)
+.mcp.json
+
 # AI agent / skill files
 .agents/
 .claude/skills/
 .cursor/skills/
 .worktrees
+.clean-worktrees/
+.clean/
+
+# Internal engineering notes (may contain production IPs / architecture details)
+findings.md
+progress.md
+task_plan.md

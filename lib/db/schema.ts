@@ -47,6 +47,7 @@ export const waitlist = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     acceptedAt: timestamp("accepted_at"),
     rejectedAt: timestamp("rejected_at"),
+    followUpSentAt: timestamp("follow_up_sent_at"),
   },
   (table) => [
     index("waitlist_email_idx").on(table.email),
@@ -75,7 +76,9 @@ export const organizations = pgTable(
     clerkOrgId: text("clerk_org_id"),
     metadata: jsonb("metadata").$type<OrgMetadata>(),
     licenseKey: text("license_key"),
-    tier: text("tier").$type<"free" | "pro" | "max" | "enterprise">().default("free"),
+    tier: text("tier").$type<"free" | "pro" | "team" | "enterprise">().default("free"),
+    creditBalance: integer("credit_balance").notNull().default(1000),
+    creditsPerSearch: integer("credits_per_search").notNull().default(20),
     seatLimit: integer("seat_limit"), // null = unlimited
     licenseExpiresAt: timestamp("license_expires_at"),
     licenseJti: text("license_jti"),
@@ -276,7 +279,7 @@ export type SubscriptionStatus =
   | "unpaid"
   | "paused";
 
-export type Plan = "free" | "pro" | "max" | "enterprise";
+export type Plan = "free" | "pro" | "team" | "enterprise";
 
 export const subscriptions = pgTable(
   "subscriptions",
@@ -392,7 +395,8 @@ export type CloudRepoStatus =
   | "ready"
   | "error"
   | "disconnected"
-  | "paused";
+  | "paused"
+  | "deleted";
 
 export const cloudRepos = pgTable(
   "cloud_repos",

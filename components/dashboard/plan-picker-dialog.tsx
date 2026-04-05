@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface PlanOption {
-  id: "pro" | "max" | "enterprise";
+  id: "pro" | "team" | "enterprise";
   name: string;
   price: string;
   period: string;
@@ -25,22 +25,22 @@ const PLANS: PlanOption[] = [
   {
     id: "pro",
     name: "Pro",
-    price: "$14.99",
+    price: "$20",
     period: "/mo",
     description: "For growing teams that need more power.",
-    features: ["15 repositories", "1,000 searches/day", "5 team members", "Priority indexing"],
+    features: ["15 repositories", "10,000 credits (~500 searches)", "5 team members", "Priority indexing"],
     highlighted: true,
   },
   {
-    id: "max",
-    name: "Max",
-    price: "$29.99",
+    id: "team",
+    name: "Team",
+    price: "$100",
     period: "/mo",
     description: "For teams that need everything.",
     features: [
       "Unlimited repositories",
-      "10,000 searches/day",
-      "10 team members",
+      "50,000 credits (~2,500 searches)",
+      "15 team members",
       "Self-hosting option",
       "SLA",
     ],
@@ -77,7 +77,7 @@ export function PlanPickerDialog({
     const priceId =
       plan.id === "pro"
         ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID
-        : process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID;
+        : process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID;
 
     if (!priceId) {
       setError(`${plan.name} plan is not configured. Contact support.`);
@@ -107,7 +107,7 @@ export function PlanPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[750px]">
+      <DialogContent className="dark text-foreground sm:max-w-[750px]">
         <DialogHeader>
           <DialogTitle>Upgrade your plan</DialogTitle>
           <DialogDescription>
@@ -125,37 +125,37 @@ export function PlanPickerDialog({
           {PLANS.map((plan) => (
             <div
               key={plan.id}
-              className={`relative flex flex-col rounded-lg border p-4 ${
+              className={`relative flex flex-col rounded-xl border-2 p-5 transition-all ${
                 plan.highlighted
-                  ? "border-primary bg-primary/5"
-                  : "border-border"
+                  ? "border-primary bg-primary/5 shadow-[0_0_24px_-4px] shadow-primary/20"
+                  : "border-border/60 bg-muted/30"
               }`}
             >
               {plan.highlighted && (
-                <span className="absolute -top-2.5 left-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                <span className="absolute -top-2.5 left-4 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
                   Popular
                 </span>
               )}
-              <div className="mb-3">
-                <h3 className="text-sm font-semibold">{plan.name}</h3>
-                <div className="mt-1 flex items-baseline gap-0.5">
-                  <span className="text-2xl font-bold">{plan.price}</span>
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground">{plan.name}</h3>
+                <div className="mt-1.5 flex items-baseline gap-0.5">
+                  <span className="text-2xl font-bold text-foreground">{plan.price}</span>
                   {plan.period && (
                     <span className="text-sm text-muted-foreground">
                       {plan.period}
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
                   {plan.description}
                 </p>
               </div>
 
-              <ul className="mb-4 flex-1 space-y-1.5">
+              <ul className="mb-5 flex-1 space-y-2">
                 {plan.features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-start gap-2 text-xs text-muted-foreground"
+                    className="flex items-start gap-2 text-xs text-foreground/70"
                   >
                     <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
                     {f}
@@ -165,7 +165,7 @@ export function PlanPickerDialog({
 
               <Button
                 size="sm"
-                variant={plan.highlighted ? "default" : "outline"}
+                variant={plan.highlighted ? "default" : "secondary"}
                 className="w-full"
                 disabled={loadingPlan !== null}
                 onClick={() => handleSelect(plan)}

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   GitBranch,
@@ -18,6 +18,9 @@ import {
   ArrowUpRight,
   Plus,
   Settings,
+  LogOut,
+  Zap,
+  ArrowRight,
 } from "lucide-react";
 import { PlanPickerDialog } from "@/components/dashboard/plan-picker-dialog";
 
@@ -62,8 +65,8 @@ function PlanIndicator({ plan, onUpgrade }: { plan: PlanInfo | null; onUpgrade: 
   const tierLabel =
     plan.tier === "enterprise"
       ? "Enterprise"
-      : plan.tier === "max"
-        ? "Max Plan"
+      : plan.tier === "team"
+        ? "Team Plan"
         : plan.tier === "pro"
           ? "Pro Plan"
           : "Free Plan";
@@ -79,14 +82,19 @@ function PlanIndicator({ plan, onUpgrade }: { plan: PlanInfo | null; onUpgrade: 
   }
 
   return (
-    <div className="rounded-lg border border-sidebar-border bg-sidebar-accent px-3 py-3">
-      <p className="text-sm font-semibold text-sidebar-foreground">{tierLabel}</p>
+    <div className="rounded-xl border border-sidebar-border bg-gradient-to-br from-sidebar-accent to-sidebar-accent/50 p-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+          <Zap className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <p className="text-sm font-semibold text-sidebar-foreground">{tierLabel}</p>
+      </div>
       {usage && usage.limit > 0 && (
         <>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             {formatTokens(usage.used)} / {formatTokens(usage.limit)} tokens
           </p>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${pct}%` }}
@@ -97,9 +105,9 @@ function PlanIndicator({ plan, onUpgrade }: { plan: PlanInfo | null; onUpgrade: 
       {isFree && (
         <button
           onClick={onUpgrade}
-          className="mt-2 inline-block text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
         >
-          Upgrade →
+          Upgrade <ArrowRight className="h-3 w-3" />
         </button>
       )}
     </div>
@@ -316,6 +324,49 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
   );
 }
 
+/* ─── User account section ─── */
+
+function UserAccountSection() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const name = user?.fullName || user?.username || "Account";
+  const email = user?.primaryEmailAddress?.emailAddress || "";
+
+  return (
+    <div className="group relative mt-3 flex items-center gap-3 rounded-lg px-1 py-2">
+      <UserButton
+        appearance={{
+          variables: {
+            colorPrimary: "#1772E7",
+            colorBackground: "#09090b",
+            colorInputBackground: "#09090b",
+            colorText: "#fafafa",
+            colorTextSecondary: "#a1a1aa",
+            colorNeutral: "#fafafa",
+          },
+          elements: {
+            avatarBox: "h-8 w-8",
+            userButtonPopoverCard: "bg-[#09090b] border border-[#27272a]",
+          },
+        }}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-foreground">{name}</p>
+        {email && (
+          <p className="truncate text-xs text-muted-foreground">{email}</p>
+        )}
+      </div>
+      <button
+        onClick={() => signOut({ redirectUrl: "/" })}
+        className="absolute right-1 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-foreground group-hover:opacity-100"
+        title="Sign out"
+      >
+        <LogOut className="h-4 w-4" strokeWidth={1.5} />
+      </button>
+    </div>
+  );
+}
+
 /* ─── Sidebar content (shared between desktop and mobile drawer) ─── */
 
 function SidebarContent({
@@ -390,25 +441,8 @@ function SidebarContent({
       {/* Plan indicator */}
       <PlanIndicator plan={plan} onUpgrade={onUpgrade} />
 
-      {/* Clerk user button */}
-      <div className="mt-3 flex items-center gap-3 rounded-lg px-1 py-2">
-        <UserButton
-          appearance={{
-            variables: {
-              colorPrimary: "#1772E7",
-              colorBackground: "#09090b",
-              colorInputBackground: "#09090b",
-              colorText: "#fafafa",
-              colorTextSecondary: "#a1a1aa",
-              colorNeutral: "#fafafa",
-            },
-            elements: {
-              avatarBox: "h-8 w-8",
-              userButtonPopoverCard: "bg-[#09090b] border border-[#27272a]",
-            },
-          }}
-        />
-      </div>
+      {/* User account */}
+      <UserAccountSection />
     </div>
   );
 }

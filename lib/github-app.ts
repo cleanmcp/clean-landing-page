@@ -22,8 +22,9 @@ const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
  * Get the GitHub App installation URL.
  * After installation, GitHub redirects to our Setup URL with installation_id.
  */
-export function getGitHubAppInstallUrl(): string {
-  return `https://github.com/apps/${GITHUB_APP_SLUG}/installations/new`;
+export function getGitHubAppInstallUrl(state?: string): string {
+  const base = `https://github.com/apps/${GITHUB_APP_SLUG}/installations/new`;
+  return state ? `${base}?state=${encodeURIComponent(state)}` : base;
 }
 
 // ---------------------------------------------------------------------------

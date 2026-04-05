@@ -78,14 +78,20 @@ export async function GET() {
 
     const limits = getCloudTierLimits(org?.tier ?? "free");
 
+    // Separate deleted markers from active bookmarks
+    const deletedNames = new Set(
+      bookmarks.filter((b) => b.status === "deleted").map((b) => b.fullName)
+    );
+    const activeBookmarks = bookmarks.filter((b) => b.status !== "deleted");
+
     // Build lookups
-    const bookmarkMap = new Map(bookmarks.map((b) => [b.fullName, b]));
+    const bookmarkMap = new Map(activeBookmarks.map((b) => [b.fullName, b]));
     const engineMap = new Map(engineResult.map((e) => [e.repo, e]));
 
-    // Collect all unique repo names from both sources
+    // Collect all unique repo names from both sources, excluding deleted
     const allRepoNames = new Set([
-      ...engineResult.map((e) => e.repo),
-      ...bookmarks.map((b) => b.fullName),
+      ...engineResult.map((e) => e.repo).filter((name) => !deletedNames.has(name)),
+      ...activeBookmarks.map((b) => b.fullName),
     ]);
 
     const merged = Array.from(allRepoNames).map((fullName) => {
@@ -221,11 +227,11 @@ export async function POST(request: NextRequest) {
 
     const limits = getCloudTierLimits(org?.tier ?? "free");
     const existingRepos = await db
-      .select({ id: cloudRepos.id })
+      .select({ id: cloudRepos.id, status: cloudRepos.status })
       .from(cloudRepos)
       .where(eq(cloudRepos.orgId, ctx.orgId));
 
-    const currentCount = existingRepos.length;
+    const currentCount = existingRepos.filter((r) => r.status !== "deleted").length;
     const maxNew = Math.max(0, limits.repos - currentCount);
 
     if (maxNew === 0) {
@@ -249,7 +255,8 @@ export async function POST(request: NextRequest) {
 
     const toInsert = validRepos.slice(0, maxNew);
 
-    // Insert cloud repo records (unique constraint on org_id + full_name prevents duplicates)
+    // Insert cloud repo records. On conflict (re-adding a previously deleted
+    // repo), revive the row by resetting its status back to pending.
     const inserted = await db
       .insert(cloudRepos)
       .values(
@@ -263,7 +270,14 @@ export async function POST(request: NextRequest) {
           status: "pending" as const,
         }))
       )
-      .onConflictDoNothing()
+      .onConflictDoUpdate({
+        target: [cloudRepos.orgId, cloudRepos.fullName],
+        set: {
+          status: "pending" as const,
+          error: null,
+          updatedAt: new Date(),
+        },
+      })
       .returning({ id: cloudRepos.id, fullName: cloudRepos.fullName, installationId: cloudRepos.installationId });
 
     // Build a lookup for repo details from the insert data
@@ -400,15 +414,22 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Try cloudRepos bookmark first (GitHub App repos have a UUID here)
-    const [bookmark] = await db
-      .select()
-      .from(cloudRepos)
-      .where(and(eq(cloudRepos.id, repoId), eq(cloudRepos.orgId, ctx.orgId)))
-      .limit(1);
+    // Try cloudRepos bookmark first (GitHub App repos have a UUID here).
+    // MCP-indexed repos use engine project_ids which are NOT valid UUIDs —
+    // skip the DB lookup to avoid a Postgres "invalid input syntax" error.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const [bookmark] = UUID_RE.test(repoId)
+      ? await db
+          .select()
+          .from(cloudRepos)
+          .where(and(eq(cloudRepos.id, repoId), eq(cloudRepos.orgId, ctx.orgId)))
+          .limit(1)
+      : [];
 
     // Also accept fullName param for MCP-indexed repos (no cloudRepos row)
-    const fullName = bookmark?.fullName ?? searchParams.get("fullName");
+    const REPO_NAME_RE = /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/;
+    const rawFullName = searchParams.get("fullName");
+    const fullName = bookmark?.fullName ?? (rawFullName && REPO_NAME_RE.test(rawFullName) ? rawFullName : null);
 
     if (!bookmark && !fullName) {
       return NextResponse.json({ error: "Repo not found" }, { status: 404 });
@@ -420,17 +441,37 @@ export async function DELETE(request: NextRequest) {
     const parts = repoName!.split("/");
     if (parts.length === 2) {
       try {
-        await engineFetch(ctx.orgId, `/repos/${parts[0]}/${parts[1]}`, {
+        const branch = bookmark?.defaultBranch;
+        const enginePath = branch
+          ? `/repos/${parts[0]}/${parts[1]}?branch=${encodeURIComponent(branch)}`
+          : `/repos/${parts[0]}/${parts[1]}`;
+        await engineFetch(ctx.orgId, enginePath, {
           method: "DELETE",
         });
-      } catch {
-        // continue — delete from DB even if engine is unavailable
+      } catch (err) {
+        // continue — soft-delete from DB even if engine is unavailable
+        console.error("Engine delete failed for", repoName, err);
       }
     }
 
-    // Delete cloudRepos bookmark if it exists
+    // Soft-delete cloudRepos bookmark so the GET endpoint knows to suppress
+    // this repo even if the engine is slow to process the delete.
     if (bookmark) {
-      await db.delete(cloudRepos).where(eq(cloudRepos.id, bookmark.id));
+      await db
+        .update(cloudRepos)
+        .set({ status: "deleted", updatedAt: new Date() })
+        .where(eq(cloudRepos.id, bookmark.id));
+    } else if (fullName) {
+      // MCP-indexed repo with no bookmark — create a deleted marker so the
+      // GET endpoint suppresses it from engine results.
+      await db
+        .insert(cloudRepos)
+        .values({
+          orgId: ctx.orgId,
+          fullName,
+          status: "deleted",
+        })
+        .onConflictDoNothing();
     }
 
     audit({

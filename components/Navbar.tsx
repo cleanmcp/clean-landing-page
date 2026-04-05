@@ -100,10 +100,10 @@ export default function Navbar() {
             <Link href="/sign-in">Sign In</Link>
           </motion.div>
           <Link
-            href="/waitlist"
+            href="/sign-up"
             className="btn-gradient rounded-full px-5 py-2 text-sm font-semibold text-white transition-all duration-300 hover:scale-105"
           >
-            Join Waitlist
+            Try Now
           </Link>
         </div>
       </motion.nav>

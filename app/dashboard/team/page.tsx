@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Users, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { InviteModal } from "./invite-modal";
@@ -304,19 +304,11 @@ export default function TeamPage() {
               })}
             </tbody>
           </table>
-          <div className="flex items-center justify-between border-t border-[var(--dash-border)] px-4 py-3">
+          <div className="flex items-center border-t border-[var(--dash-border)] px-4 py-3">
             <span className="text-sm text-[var(--dash-text-muted)]">
               {filteredMembers.length}{" "}
               {filteredMembers.length === 1 ? "user" : "users"}
             </span>
-            <div className="flex items-center gap-2">
-              <button className="rounded p-1 text-[var(--dash-text-muted)] hover:bg-[var(--dash-surface-hover)]">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button className="rounded p-1 text-[var(--dash-text-muted)] hover:bg-[var(--dash-surface-hover)]">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
           </div>
         </div>
       )}

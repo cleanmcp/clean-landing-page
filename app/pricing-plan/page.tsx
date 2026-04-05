@@ -24,13 +24,12 @@ const plans: Plan[] = [
     price: "$0",
     period: "forever",
     rows: [
-      { label: "Hosting", value: "Cloud only" },
-      { label: "Repos", value: "2" },
       { label: "Searches", value: "10/mo" },
+      { label: "Repos", value: "2" },
       { label: "Team", value: "1 user" },
-      { label: "Setup", value: "API key only" },
+      { label: "Hosting", value: "Cloud only" },
     ],
-    features: ["Search", "Index"],
+    features: ["Search", "Index", "Community support"],
     ctaLabel: "Get Started Free",
     ctaAction: "dashboard",
     note: "No credit card required.",
@@ -38,16 +37,15 @@ const plans: Plan[] = [
   },
   {
     name: "Pro",
-    price: "$14.99",
-    period: "/ user / mo",
+    price: "$20",
+    period: "/ mo",
     rows: [
-      { label: "Hosting", value: "Cloud only" },
-      { label: "Repos", value: "15" },
       { label: "Searches", value: "500/mo" },
+      { label: "Repos", value: "15" },
       { label: "Team", value: "5 users" },
-      { label: "Setup", value: "API key only" },
+      { label: "Hosting", value: "Cloud only" },
     ],
-    features: ["Everything in Free", "Priority indexing"],
+    features: ["Everything in Free", "Priority indexing", "Usage dashboard"],
     ctaLabel: "Subscribe to Pro",
     ctaAction: "pro",
     note: "Cancel anytime.",
@@ -55,16 +53,15 @@ const plans: Plan[] = [
   },
   {
     name: "Max",
-    price: "$29.99",
-    period: "/ user / mo",
+    price: "$100",
+    period: "/ mo",
     rows: [
-      { label: "Hosting", value: "Cloud + Self-host" },
-      { label: "Repos", value: "Unlimited" },
       { label: "Searches", value: "5,000/mo" },
+      { label: "Repos", value: "Unlimited" },
       { label: "Team", value: "10 users" },
-      { label: "Setup", value: "API key or Docker" },
+      { label: "Hosting", value: "Cloud + Self-host" },
     ],
-    features: ["Everything in Pro", "Private cloud", "SLA"],
+    features: ["Everything in Pro", "Private cloud", "SLA", "Priority support"],
     ctaLabel: "Subscribe to Max",
     ctaAction: "max",
     note: "Cancel anytime.",
@@ -75,16 +72,15 @@ const plans: Plan[] = [
     price: "Custom",
     period: "tailored to your org",
     rows: [
-      { label: "Hosting", value: "Cloud + Self-host" },
-      { label: "Repos", value: "Unlimited" },
       { label: "Searches", value: "Unlimited" },
+      { label: "Repos", value: "Unlimited" },
       { label: "Team", value: "Unlimited" },
-      { label: "Setup", value: "Dedicated infra" },
+      { label: "Hosting", value: "Dedicated infra" },
     ],
     features: ["Everything in Max", "SSO", "Audit logs", "Dedicated support"],
     ctaLabel: "Contact Us",
     ctaAction: "contact",
-    note: "Let's build something together.",
+    note: "Let\u2019s build something together.",
     highlighted: false,
   },
 ];
@@ -260,7 +256,7 @@ export default function PricingPlanPage() {
             Sign In
           </Link>
           <a
-            href="/waitlist"
+            href="/sign-up"
             className="group relative inline-flex items-center h-[40px] rounded-full text-white text-[14px] font-semibold tracking-tight pl-5 pr-10 transition-all duration-300 hover:scale-[1.02]"
             style={{
               background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)",
@@ -269,7 +265,7 @@ export default function PricingPlanPage() {
               fontFamily: "var(--font-jakarta)",
             }}
           >
-            <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
+            <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Try Now</span>
             <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-7 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
               <svg className="w-3 h-3 text-[#1772e7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
             </span>
@@ -302,10 +298,11 @@ export default function PricingPlanPage() {
               className="mb-4 text-[36px] sm:text-[48px] lg:text-[64px] font-semibold leading-[1.1] tracking-tight text-white"
               style={{ fontFamily: "var(--font-jakarta)" }}
             >
-              Simple, <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>transparent</em> pricing.
+              Pay for what you{" "}
+              <em className="not-italic" style={{ fontFamily: "var(--font-display)" }}>use.</em>
             </h1>
-            <p className="mx-auto max-w-md text-lg text-white/45" style={{ fontFamily: "var(--font-jakarta)" }}>
-              Start free in the cloud. Scale when you&apos;re ready.
+            <p className="mx-auto max-w-lg text-lg text-white/45" style={{ fontFamily: "var(--font-jakarta)" }}>
+              Simple search-based pricing. Start free, upgrade when you need more.
             </p>
           </motion.div>
 

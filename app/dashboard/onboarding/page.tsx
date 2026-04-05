@@ -14,8 +14,12 @@ import {
   Search,
   Sparkles,
   ExternalLink,
+  Terminal,
+  FileCode,
+  AlertTriangle,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { getSetupCommand, hasTerminalCommand, hasAgentRules } from "@/lib/mcp-setup";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -82,9 +86,11 @@ const LANG_COLORS: Record<string, string> = {
 // MCP Config
 // ---------------------------------------------------------------------------
 
-type ConfigTab = "claude-code" | "cursor" | "claude-desktop" | "antigravity" | "codex";
+import type { ConfigTab } from "@/lib/mcp-setup";
 
-function getMcpConfig(tab: ConfigTab, apiKey: string, slug: string) {
+type OnboardingConfigTab = Extract<ConfigTab, "claude-code" | "cursor" | "claude-desktop" | "antigravity" | "codex">;
+
+function getMcpConfig(tab: OnboardingConfigTab, apiKey: string, slug: string) {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${apiKey}`,
     "X-Clean-Slug": slug,
@@ -140,7 +146,7 @@ function getMcpConfig(tab: ConfigTab, apiKey: string, slug: string) {
   };
 }
 
-function formatMcpConfig(tab: ConfigTab, apiKey: string, slug: string): string {
+function formatMcpConfig(tab: OnboardingConfigTab, apiKey: string, slug: string): string {
   const config = getMcpConfig(tab, apiKey, slug);
   if (typeof config === "string") return config;
   return JSON.stringify(config, null, 2);
@@ -189,7 +195,8 @@ function CloudOnboardingContent() {
 
   // MCP config
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [configTab, setConfigTab] = useState<ConfigTab>("claude-code");
+  const [configTab, setConfigTab] = useState<OnboardingConfigTab>("claude-code");
+  const [configView, setConfigView] = useState<"terminal" | "json">("terminal");
   const [copied, setCopied] = useState<string | null>(null);
 
   const fetchGitHubStatus = useCallback(async () => {
@@ -395,9 +402,41 @@ function CloudOnboardingContent() {
     })();
   }, [step, apiKey]);
 
+  // Poll for GitHub connection while user is on GitHub in another tab
+  const [awaitingGitHub, setAwaitingGitHub] = useState(false);
+
+  useEffect(() => {
+    if (!awaitingGitHub || step !== "connect-github") return;
+
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/github/install");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.connected) {
+            setAwaitingGitHub(false);
+            setInstallations(data.installations || []);
+            // Fetch repos and advance to next step
+            const ghRes = await fetch("/api/github/repos");
+            if (ghRes.ok) {
+              const ghData = await ghRes.json();
+              setGithubRepos(ghData.repos || []);
+            }
+            setStep("select-repos");
+          }
+        }
+      } catch {}
+    };
+
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [awaitingGitHub, step]);
+
   function handleInstallGitHubApp() {
     if (installUrl) {
-      window.location.href = installUrl;
+      // Open GitHub in a new tab so this page can poll for the connection
+      window.open(installUrl, "_blank");
+      setAwaitingGitHub(true);
     }
   }
 
@@ -564,12 +603,28 @@ function CloudOnboardingContent() {
           </p>
           <button
             onClick={handleInstallGitHubApp}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+            disabled={awaitingGitHub}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#1772E7] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-70"
           >
-            <Github className="h-4 w-4" />
-            Install GitHub App
-            <ExternalLink className="h-3.5 w-3.5" />
+            {awaitingGitHub ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Waiting for GitHub...
+              </>
+            ) : (
+              <>
+                <Github className="h-4 w-4" />
+                Install GitHub App
+                <ExternalLink className="h-3.5 w-3.5" />
+              </>
+            )}
           </button>
+          {awaitingGitHub && (
+            <p className="mt-3 text-sm text-[#1772E7]">
+              Complete the installation on GitHub, then come back here.
+              This page will update automatically.
+            </p>
+          )}
           <p className="mt-4 text-sm text-[var(--dash-text-muted)]">
             We only read code — never write or modify your repos.
             Works with personal accounts and organizations.
@@ -958,7 +1013,7 @@ function CloudOnboardingContent() {
               ).map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setConfigTab(tab.id)}
+                  onClick={() => { setConfigTab(tab.id); setCopied(null); setConfigView(hasTerminalCommand(tab.id) ? "terminal" : "json"); }}
                   className={`px-4 py-2.5 text-sm font-medium transition-colors ${
                     configTab === tab.id
                       ? "border-b-2 border-[#1772E7] text-[#1772E7]"
@@ -971,29 +1026,94 @@ function CloudOnboardingContent() {
             </div>
 
             <div className="p-5">
-              <p className="mb-3 text-xs text-[var(--dash-text-muted)]">
-                {configTab === "claude-code"
-                  ? "Add to your Claude Code MCP settings:"
-                  : configTab === "cursor"
-                    ? "Add to ~/.cursor/mcp.json:"
-                    : configTab === "antigravity"
-                      ? "Add to ~/.gemini/antigravity/mcp_config.json:"
-                      : configTab === "codex"
-                        ? "Add to ~/.codex/config.toml:"
-                        : "Add to your Claude Desktop config:"}
-              </p>
-              <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
-                <pre className="overflow-x-auto bg-[var(--dash-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--dash-text)]">
-                  {formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org")}
-                </pre>
-              </div>
+              {/* Terminal / JSON toggle */}
+              {hasTerminalCommand(configTab) ? (
+                <div className="mb-4 flex gap-1 rounded-lg bg-[var(--dash-bg)] p-1">
+                  <button
+                    onClick={() => { setConfigView("terminal"); setCopied(null); }}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      configView === "terminal"
+                        ? "bg-[var(--dash-surface)] text-[var(--dash-text)] shadow-sm"
+                        : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+                    }`}
+                  >
+                    <Terminal className="h-3 w-3" />
+                    Terminal Command
+                  </button>
+                  <button
+                    onClick={() => { setConfigView("json"); setCopied(null); }}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      configView === "json"
+                        ? "bg-[var(--dash-surface)] text-[var(--dash-text)] shadow-sm"
+                        : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+                    }`}
+                  >
+                    <FileCode className="h-3 w-3" />
+                    JSON Config
+                  </button>
+                </div>
+              ) : (
+                <div className="mb-3" />
+              )}
+
+              {configView === "terminal" && hasTerminalCommand(configTab) ? (() => {
+                const configJson = formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org");
+                const effectiveKey = apiKey || "clean_sk_prod_xxxxx";
+                const effectiveSlug = orgInfo?.slug || "your-org";
+                const { command, isGlobalConfig } = getSetupCommand(configTab, configJson, effectiveKey, effectiveSlug);
+                return (
+                  <>
+                    <p className="mb-3 text-xs text-[var(--dash-text-muted)]">
+                      Run in your project directory{hasAgentRules(configTab) ? " — sets up MCP config and agent rules" : ""}:
+                    </p>
+                    {isGlobalConfig && (
+                      <div className="mb-3 flex items-start gap-2 rounded-lg bg-[#f59e0b]/10 px-3 py-2.5">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#f59e0b]" />
+                        <p className="text-xs leading-relaxed text-[#f59e0b]">
+                          This will overwrite the existing config file. Use JSON Config to merge manually if you have other MCP servers.
+                        </p>
+                      </div>
+                    )}
+                    <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
+                      <pre className="overflow-x-auto bg-[#0d1117] p-4 font-mono text-[12px] leading-relaxed text-[#e6edf3]">
+                        {command}
+                      </pre>
+                    </div>
+                  </>
+                );
+              })() : (
+                <>
+                  <p className="mb-3 text-xs text-[var(--dash-text-muted)]">
+                    {configTab === "claude-code"
+                      ? "Add to your Claude Code MCP settings:"
+                      : configTab === "cursor"
+                        ? "Add to ~/.cursor/mcp.json:"
+                        : configTab === "antigravity"
+                          ? "Add to ~/.gemini/antigravity/mcp_config.json:"
+                          : configTab === "codex"
+                            ? "Add to ~/.codex/config.toml:"
+                            : "Add to your Claude Desktop config:"}
+                  </p>
+                  <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
+                    <pre className="overflow-x-auto bg-[var(--dash-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--dash-text)]">
+                      {formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org")}
+                    </pre>
+                  </div>
+                </>
+              )}
+
               <button
-                onClick={() =>
-                  copyToClipboard(
-                    formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org"),
-                    "config"
-                  )
-                }
+                onClick={() => {
+                  let text: string;
+                  if (configView === "terminal" && hasTerminalCommand(configTab)) {
+                    const configJson = formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org");
+                    const { command } = getSetupCommand(configTab, configJson, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org");
+                    text = command;
+                  } else {
+                    text = formatMcpConfig(configTab, apiKey || "clean_sk_prod_xxxxx", orgInfo?.slug || "your-org");
+                  }
+                  copyToClipboard(text, "config");
+                }}
                 className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                   copied === "config"
                     ? "border border-green-200 bg-green-50 text-green-700"
@@ -1005,7 +1125,7 @@ function CloudOnboardingContent() {
                 ) : (
                   <Copy className="h-4 w-4" />
                 )}
-                {copied === "config" ? "Copied!" : "Copy config"}
+                {copied === "config" ? "Copied!" : configView === "terminal" && hasTerminalCommand(configTab) ? "Copy command" : "Copy config"}
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +27,7 @@ import {
   WifiOff,
   PauseCircle,
   AlertTriangle,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { UpgradeModal } from "@/components/upgrade-modal";
@@ -85,8 +86,16 @@ function formatDate(date: string | null) {
   });
 }
 
+const URL_ERROR_MESSAGES: Record<string, string> = {
+  installation_claimed:
+    "This GitHub account is already connected to another organization. Each GitHub installation can only be linked to one organization at a time.",
+  invalid_state:
+    "The connection request expired or was invalid. Please try connecting again.",
+};
+
 export default function CloudReposPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [repos, setRepos] = useState<CloudRepo[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasInstallation, setHasInstallation] = useState(false);
@@ -99,6 +108,23 @@ export default function CloudReposPage() {
     text: string;
   } | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showLinkForm, setShowLinkForm] = useState(false);
+  const [linkId, setLinkId] = useState("");
+  const [linking, setLinking] = useState(false);
+
+  // Track recently deleted repos so polling doesn't re-add them before the
+  // engine finishes processing the delete.
+  const deletedRepos = useRef<Map<string, number>>(new Map());
+
+  // Show error from URL params (e.g. after GitHub callback redirect)
+  useEffect(() => {
+    const errorCode = searchParams.get("error");
+    if (errorCode && URL_ERROR_MESSAGES[errorCode]) {
+      setMessage({ type: "error", text: URL_ERROR_MESSAGES[errorCode] });
+      // Clean the error param from the URL without a navigation
+      router.replace("/dashboard/repositories", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const fetchRepos = useCallback(async () => {
     try {
@@ -110,7 +136,15 @@ export default function CloudReposPage() {
 
       if (crRes.ok) {
         const data = await crRes.json();
-        setRepos(data.repos || []);
+        // Expire stale entries (>30s) and filter out recently deleted repos
+        const now = Date.now();
+        for (const [name, ts] of deletedRepos.current) {
+          if (now - ts > 30_000) deletedRepos.current.delete(name);
+        }
+        const filtered = ((data.repos || []) as CloudRepo[]).filter(
+          (r) => !deletedRepos.current.has(r.fullName)
+        );
+        setRepos(filtered);
         setRepoLimit(data.repoLimit ?? null);
       }
 
@@ -176,6 +210,7 @@ export default function CloudReposPage() {
         method: "DELETE",
       });
       if (res.ok) {
+        deletedRepos.current.set(fullName, Date.now());
         setRepos((prev) => prev.filter((r) => r.id !== repoId));
         setMessage({ type: "success", text: `${fullName} removed` });
       } else {
@@ -322,6 +357,29 @@ export default function CloudReposPage() {
               )}
               {inst.accountLogin}
               <div className="h-1.5 w-1.5 rounded-full bg-[#05DF72]" />
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (!confirm(`Disconnect GitHub account "${inst.accountLogin}"? Existing indexed repos will remain but you won't be able to add new ones from this account.`)) return;
+                  try {
+                    const res = await fetch(`/api/github/install?id=${encodeURIComponent(inst.id)}`, { method: "DELETE" });
+                    if (res.ok) {
+                      setInstallations((prev) => prev.filter((i) => i.id !== inst.id));
+                      setMessage({ type: "success", text: `Disconnected ${inst.accountLogin}` });
+                      fetchRepos();
+                    } else {
+                      const data = await res.json().catch(() => ({}));
+                      setMessage({ type: "error", text: data.error || "Failed to disconnect" });
+                    }
+                  } catch {
+                    setMessage({ type: "error", text: "Network error" });
+                  }
+                }}
+                className="ml-0.5 text-[var(--dash-text-muted)] hover:text-[#ef4444] transition-colors"
+                title="Disconnect"
+              >
+                <X className="h-3 w-3" />
+              </button>
             </span>
           ))}
           <a
@@ -386,6 +444,57 @@ export default function CloudReposPage() {
             <Github className="h-4 w-4" />
             Connect GitHub
           </button>
+
+          <div className="mt-4">
+            {!showLinkForm ? (
+              <button
+                onClick={() => setShowLinkForm(true)}
+                className="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-accent-light)] transition-colors"
+              >
+                Already installed? Link with installation ID
+              </button>
+            ) : (
+              <div className="mx-auto mt-2 flex max-w-sm items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Installation ID (from GitHub URL)"
+                  value={linkId}
+                  onChange={(e) => setLinkId(e.target.value)}
+                  className="flex-1 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:border-[#1772E7] focus:outline-none"
+                />
+                <button
+                  onClick={async () => {
+                    if (!linkId.trim()) return;
+                    setLinking(true);
+                    try {
+                      const res = await fetch("/api/github/install/link", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ installationId: linkId.trim() }),
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setMessage({ type: "success", text: `Linked GitHub account: ${data.account}` });
+                        setShowLinkForm(false);
+                        setLinkId("");
+                        fetchRepos();
+                      } else {
+                        setMessage({ type: "error", text: data.error || "Failed to link" });
+                      }
+                    } catch {
+                      setMessage({ type: "error", text: "Network error" });
+                    } finally {
+                      setLinking(false);
+                    }
+                  }}
+                  disabled={linking || !linkId.trim()}
+                  className="rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0] disabled:opacity-50"
+                >
+                  {linking ? "Linking..." : "Link"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing — Clean",
   description:
-    "Simple, transparent pricing for Clean. Start free in the cloud with 3 repos and 50 searches/day. Scale to Pro or Max when you're ready.",
+    "Simple, transparent pricing for Clean. Start free in the cloud with 3 repos and 1,000 credits. Scale to Pro or Team when you're ready.",
   alternates: {
     canonical: "https://www.tryclean.ai/pricing-plan",
   },

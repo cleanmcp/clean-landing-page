@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Copy, Check, AlertTriangle, Key, Shield } from "lucide-react";
+import { ArrowLeft, Copy, Check, AlertTriangle, Key, Shield, Terminal, FileCode } from "lucide-react";
+import { getSetupCommand, hasTerminalCommand, hasAgentRules } from "@/lib/mcp-setup";
 import { motion } from "framer-motion";
 
 const AVAILABLE_SCOPES = [
@@ -31,11 +32,12 @@ const EXPIRATION_OPTIONS = [
   { id: "1y", label: "1 year" },
 ];
 
-type ConfigTab = "claude-code" | "cursor" | "windsurf" | "gemini" | "cline" | "continue" | "claude-desktop" | "codex";
+type ConfigTab = "claude-code" | "cursor" | "windsurf" | "gemini" | "cline" | "continue" | "claude-desktop" | "codex" | "antigravity";
 
 const CONFIG_TABS: { id: ConfigTab; label: string; file: string }[] = [
   { id: "claude-code", label: "Claude Code", file: ".mcp.json (project root)" },
   { id: "cursor", label: "Cursor", file: "~/.cursor/mcp.json" },
+  { id: "antigravity", label: "Antigravity", file: "MCP config" },
   { id: "windsurf", label: "Windsurf", file: "~/.codeium/windsurf/mcp_config.json" },
   { id: "gemini", label: "Gemini CLI", file: "~/.gemini/settings.json" },
   { id: "cline", label: "Cline", file: "VS Code MCP Settings" },
@@ -85,12 +87,27 @@ function getMcpConfig(tab: ConfigTab, key: string, slug: string | null): string 
     }
 
     case "codex": {
+      // Escape for TOML basic strings (double-quoted): backslashes and double quotes
+      const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
       const lines = [
         `[mcp_servers.clean]`,
         `command = "npx"`,
-        `args = ["-y", "mcp-remote", ${JSON.stringify(SSE_URL)}, "--header", "Authorization:Bearer ${key}"${slug ? `, "--header", "X-Clean-Slug:${slug}"` : ""}]`,
+        `args = ["-y", "mcp-remote", ${JSON.stringify(SSE_URL)}, "--header", "Authorization:Bearer ${esc(key)}"${slug ? `, "--header", "X-Clean-Slug:${esc(slug)}"` : ""}]`,
       ];
       return lines.join("\n");
+    }
+
+    case "antigravity": {
+      const agArgs = ["mcp-remote", SSE_URL, "--header", `Authorization: Bearer ${key}`];
+      if (slug) agArgs.push("--header", `X-Clean-Slug: ${slug}`);
+      return JSON.stringify({
+        mcpServers: {
+          clean: {
+            command: "npx",
+            args: agArgs,
+          },
+        },
+      }, null, 2);
     }
 
     default:
@@ -107,6 +124,7 @@ export default function NewApiKeyPage() {
   const [copied, setCopied] = useState(false);
   const [copiedConfig, setCopiedConfig] = useState(false);
   const [configTab, setConfigTab] = useState<ConfigTab>("claude-code");
+  const [configView, setConfigView] = useState<"terminal" | "json">("terminal");
   const [expiration, setExpiration] = useState<string>("never");
   const [error, setError] = useState<string | null>(null);
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
@@ -185,8 +203,14 @@ export default function NewApiKeyPage() {
   async function copyConfig() {
     if (!generatedKey) return;
     try {
-      const config = getMcpConfig(configTab, generatedKey, orgSlug);
-      await navigator.clipboard.writeText(config);
+      let text: string;
+      if (configView === "terminal" && hasTerminalCommand(configTab)) {
+        const { command } = getSetupCommand(configTab, getMcpConfig(configTab, generatedKey, orgSlug), generatedKey, orgSlug);
+        text = command;
+      } else {
+        text = getMcpConfig(configTab, generatedKey, orgSlug);
+      }
+      await navigator.clipboard.writeText(text);
       setCopiedConfig(true);
       setTimeout(() => setCopiedConfig(false), 2000);
     } catch {
@@ -265,11 +289,11 @@ export default function NewApiKeyPage() {
           </div>
 
           {/* Agent tabs — pill style */}
-          <div className="flex gap-1 overflow-x-auto border-b border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2">
+          <div className="dash-tabs-scroll flex gap-1 overflow-x-auto border-b border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2">
             {CONFIG_TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => { setConfigTab(tab.id); setCopiedConfig(false); }}
+                onClick={() => { setConfigTab(tab.id); setCopiedConfig(false); setConfigView(hasTerminalCommand(tab.id) ? "terminal" : "json"); }}
                 className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                   configTab === tab.id
                     ? "bg-[#1772E7] text-white"
@@ -281,19 +305,76 @@ export default function NewApiKeyPage() {
             ))}
           </div>
 
-          {/* Config content */}
+          {/* View toggle + config content */}
           <div className="p-5">
-            <p className="mb-3 text-sm text-[var(--dash-text-muted)]">
-              Add to <code className="rounded-md bg-[var(--dash-bg)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--dash-text)]">{activeTab.file}</code>
-              {configTab === "claude-desktop" || configTab === "codex" ? (
-                <span className="ml-1 text-[#f59e0b]">(requires npx / Node.js installed)</span>
-              ) : null}
-            </p>
-            <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
-              <pre className="overflow-x-auto bg-[var(--dash-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--dash-text)]">
-                {config}
-              </pre>
-            </div>
+            {/* Terminal / JSON toggle */}
+            {hasTerminalCommand(configTab) ? (
+              <div className="mb-4 flex gap-1 rounded-lg bg-[var(--dash-bg)] p-1">
+                <button
+                  onClick={() => { setConfigView("terminal"); setCopiedConfig(false); }}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    configView === "terminal"
+                      ? "bg-[var(--dash-surface)] text-[var(--dash-text)] shadow-sm"
+                      : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+                  }`}
+                >
+                  <Terminal className="h-3 w-3" />
+                  Terminal Command
+                </button>
+                <button
+                  onClick={() => { setConfigView("json"); setCopiedConfig(false); }}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    configView === "json"
+                      ? "bg-[var(--dash-surface)] text-[var(--dash-text)] shadow-sm"
+                      : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+                  }`}
+                >
+                  <FileCode className="h-3 w-3" />
+                  JSON Config
+                </button>
+              </div>
+            ) : (
+              <div className="mb-3" />
+            )}
+
+            {configView === "terminal" && hasTerminalCommand(configTab) ? (() => {
+              const { command, isGlobalConfig } = getSetupCommand(configTab, config, generatedKey, orgSlug);
+              return (
+                <>
+                  <p className="mb-3 text-sm text-[var(--dash-text-muted)]">
+                    Run in your project directory{hasAgentRules(configTab) ? " — sets up MCP config and agent rules" : ""}:
+                  </p>
+                  {isGlobalConfig && (
+                    <div className="mb-3 flex items-start gap-2 rounded-lg bg-[#f59e0b]/10 px-3 py-2.5">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#f59e0b]" />
+                      <p className="text-xs leading-relaxed text-[#f59e0b]">
+                        This will overwrite the existing config file. Use the JSON Config tab to merge manually if you have other MCP servers configured.
+                      </p>
+                    </div>
+                  )}
+                  <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
+                    <pre className="dash-scrollbar overflow-x-auto bg-[#0d1117] p-4 font-mono text-[12px] leading-relaxed text-[#e6edf3]">
+                      {command}
+                    </pre>
+                  </div>
+                </>
+              );
+            })() : (
+              <>
+                <p className="mb-3 text-sm text-[var(--dash-text-muted)]">
+                  Add to <code className="rounded-md bg-[var(--dash-bg)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--dash-text)]">{activeTab.file}</code>
+                  {configTab === "claude-desktop" || configTab === "codex" ? (
+                    <span className="ml-1 text-[#f59e0b]">(requires npx / Node.js installed)</span>
+                  ) : null}
+                </p>
+                <div className="overflow-hidden rounded-lg border border-[var(--dash-border)]">
+                  <pre className="dash-scrollbar overflow-x-auto bg-[var(--dash-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--dash-text)]">
+                    {config}
+                  </pre>
+                </div>
+              </>
+            )}
+
             <button
               onClick={copyConfig}
               className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
@@ -303,7 +384,7 @@ export default function NewApiKeyPage() {
               }`}
             >
               {copiedConfig ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copiedConfig ? "Copied!" : "Copy config"}
+              {copiedConfig ? "Copied!" : configView === "terminal" && hasTerminalCommand(configTab) ? "Copy command" : "Copy config"}
             </button>
           </div>
         </div>

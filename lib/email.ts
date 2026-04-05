@@ -62,3 +62,32 @@ export async function sendAcceptanceEmail(name: string, email: string) {
     console.error("Failed to send acceptance email:", err);
   }
 }
+
+export async function sendFollowUpEmail(name: string, email: string) {
+  try {
+    const safeName = escapeHtml(name);
+
+    await getResend().emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: "How's it going with Clean?",
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+          <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hey ${safeName},</p>
+          <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            It's been about a week since you got access to Clean. I'd love to hear how things are going — whether you've had a chance to try it out, run into any issues, or have any feedback at all.
+          </p>
+          <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+            Just reply to this email with your thoughts. Even a one-liner helps us a ton.
+          </p>
+          <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 8px;">
+            Thanks,<br/>
+            The Clean Team
+          </p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("Failed to send follow-up email:", err);
+  }
+}

@@ -1,4 +1,6 @@
 import React from "react";
+import fs from "node:fs";
+import pathMod from "node:path";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -10,9 +12,48 @@ import DifferencesSection from "@/components/landing/DifferencesSection";
 import MotionDiv from "@/components/landing/MotionDiv";
 import TokenChart from "@/components/landing/TokenChart";
 import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack";
+import TrustedByMarquee from "@/components/landing/TrustedByMarquee";
 
 /* ───────────────────────── asset paths ───────────────────────── */
 const A = "/landing";
+
+/* ───────────────────── trusted-by logos (auto-discovered) ───── */
+// Logos whose images already contain their brand name — no label needed
+const TEXT_IN_IMAGE = new Set(["talunt", "leanmcp"]);
+// Display names for logos (filename stem → label)
+const DISPLAY_NAMES: Record<string, string> = {
+  githired: "GitHired",
+  jigsaw: "Jigsaw",
+  leanmcp: "LeanMCP",
+  matcap: "MatCap",
+  quirk: "Quirk",
+  "runway-avenue": "Runway Ave",
+  ship: "Ship",
+  talunt: "Talunt",
+  tinyfish: "Tinyfish",
+  tsenta: "Tsenta",
+};
+
+function getTrustedByLogos() {
+  const dir = pathMod.join(process.cwd(), "public/landing/trusted-by");
+  try {
+    const files = fs
+      .readdirSync(dir)
+      .filter((f) => /\.(svg|png|webp|jpg|jpeg)$/i.test(f))
+      .filter((f) => !f.startsWith("orca"))
+      .sort();
+    return files.map((f) => {
+      const stem = f.replace(/\.[^.]+$/, "");
+      return {
+        src: `/landing/trusted-by/${f}`,
+        alt: DISPLAY_NAMES[stem] ?? stem.replace(/[-_]/g, " "),
+        name: TEXT_IN_IMAGE.has(stem) ? undefined : (DISPLAY_NAMES[stem] ?? stem),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
 
 /* ───────────────────────── page metadata ────────────────────── */
 export const metadata: Metadata = {
@@ -42,8 +83,8 @@ function SectionBadge({ icon, label, variant = "light" }: { icon: string; label:
 
 function BtnBookDemo({ className = "" }: { className?: string }) {
   return (
-    <a href="/waitlist" className={`group relative inline-flex items-center h-[52px] rounded-[26px] text-white text-[17px] font-semibold tracking-tight pl-6 pr-[52px] transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #1A1A1A 0%, #000000 100%)", border: "2px solid rgba(255,255,255,1)", boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.5), inset 0px 2px 10px rgba(255,255,255,0.7), inset 0px -2px 10px rgba(0,0,0,0.8)" }}>
-      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.5)" }}>Book a Demo</span>
+    <a href="/sign-up" className={`group relative inline-flex items-center h-[52px] rounded-[26px] text-white text-[17px] font-semibold tracking-tight pl-6 pr-[52px] transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #1A1A1A 0%, #000000 100%)", border: "2px solid rgba(255,255,255,1)", boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.5), inset 0px 2px 10px rgba(255,255,255,0.7), inset 0px -2px 10px rgba(0,0,0,0.8)" }}>
+      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.5)" }}>Get Started for Free</span>
       <span className="absolute right-[6px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-10 transition-transform duration-300 group-hover:rotate-45 text-black" style={{ boxShadow: "0px 2px 5px rgba(0,0,0,0.2)" }}>
         <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
       </span>
@@ -53,7 +94,7 @@ function BtnBookDemo({ className = "" }: { className?: string }) {
 
 function BtnTryClean() {
   return (
-    <a href="/waitlist" className="relative inline-flex items-center justify-center h-[44px] md:h-[48px] lg:h-[56px] px-6 md:px-8 lg:px-10 rounded-full text-white text-[15px] md:text-[17px] lg:text-[20px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] whitespace-nowrap" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #60B3F8 100%)", border: "4px solid #DCEFF8", boxShadow: "inset 0px 4px 10px rgba(255,255,255,0.8), inset 0px -3px 6px rgba(20,100,200,0.3)" }}>
+    <a href="/sign-up" className="relative inline-flex items-center justify-center h-[44px] md:h-[48px] lg:h-[56px] px-6 md:px-8 lg:px-10 rounded-full text-white text-[15px] md:text-[17px] lg:text-[20px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] whitespace-nowrap" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #60B3F8 100%)", border: "4px solid #DCEFF8", boxShadow: "inset 0px 4px 10px rgba(255,255,255,0.8), inset 0px -3px 6px rgba(20,100,200,0.3)" }}>
       <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(20,100,200,0.4)" }}>Try Clean Now</span>
     </a>
   );
@@ -61,8 +102,8 @@ function BtnTryClean() {
 
 function BtnJoinWaitlist({ className = "" }: { className?: string }) {
   return (
-    <a href="/waitlist" className={`relative inline-flex items-center justify-center h-[52px] px-8 rounded-[26px] text-white text-[17px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)", border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.8), inset 0px -2px 6px rgba(0,50,150,0.3)" }}>
-      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>Join Waitlist</span>
+    <a href="/sign-up" className={`relative inline-flex items-center justify-center h-[52px] px-8 rounded-[26px] text-white text-[17px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02] ${className}`} style={{ background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)", border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.8), inset 0px -2px 6px rgba(0,50,150,0.3)" }}>
+      <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>Try Now</span>
     </a>
   );
 }
@@ -162,6 +203,8 @@ const softwareJsonLd = {
 
 /* ───────────────────────── MAIN PAGE ─────────────────────────── */
 export default function Home() {
+  const trustedByLogos = getTrustedByLogos();
+
   return (
     <div className="relative min-h-screen bg-white" style={{ overflowX: 'clip' }}>
       <script
@@ -171,7 +214,7 @@ export default function Home() {
       <LandingNavbar />
 
       {/* ═══════════ 1. HERO SECTION ═══════════ */}
-      <section className="relative h-[600px] sm:h-[800px] lg:h-[1024px] w-full bg-white overflow-hidden">
+      <section className="relative h-[95svh] w-full bg-white overflow-hidden">
         {/* Background image */}
         <div className="absolute inset-2 sm:inset-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden">
           <Image src={`${A}/hero-bg.png`} alt="" fill className="object-cover" priority />
@@ -200,6 +243,9 @@ export default function Home() {
           </p>
         </HeroAnimatedWrapper>
       </section>
+
+      {/* ═══════════ TRUSTED BY MARQUEE ═══════════ */}
+      <TrustedByMarquee logos={trustedByLogos} />
 
       {/* ═══════════ 2. PROBLEM SECTION ═══════════ */}
       <section className="relative bg-white py-3">
@@ -570,14 +616,15 @@ export default function Home() {
             </h2>
             <p className="text-sm sm:text-lg text-white/80" style={{ fontFamily: "var(--font-jakarta)" }}>Join teams saving thousands on AI agent costs every month.</p>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center">
-              <BtnBookDemo />
-              <BtnJoinWaitlist />
+              <a href="/sign-up" className="relative inline-flex items-center justify-center h-[52px] px-8 rounded-[26px] text-white text-[17px] font-semibold tracking-tight transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #79C0FF 0%, #3B92F3 100%)", border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0px 2px 10px rgba(59,146,243,0.4), inset 0px 4px 12px 1px rgba(255,255,255,0.8), inset 0px -2px 6px rgba(0,50,150,0.3)" }}>
+                <span className="relative z-10" style={{ textShadow: "0px 1px 2px rgba(0,60,150,0.5)" }}>Get Started for Free</span>
+              </a>
             </div>
           </MotionDiv>
         </section>
 
         {/* Footer — overlaps CTA by 279px */}
-        <footer className="relative bg-white rounded-t-[36px] sm:rounded-t-[72px] overflow-hidden w-full h-auto min-h-[200px] sm:min-h-[279px] py-8 z-10">
+        <footer className="relative bg-white rounded-t-[36px] sm:rounded-t-[72px] overflow-hidden w-full h-auto min-h-[200px] sm:min-h-[340px] py-8 z-10">
           {/* Subtle background — flipped gradient image */}
           <div className="absolute left-1/2 -translate-x-1/2 w-[1820px] h-[731px] opacity-50 pointer-events-none" style={{ bottom: -440, transform: "translateX(-50%) rotate(180deg) scaleY(-1)" }}>
             <Image src={`${A}/footer-subtle-bg.jpg`} alt="" fill className="object-cover" />
@@ -597,12 +644,15 @@ export default function Home() {
             clean
           </div>
           {/* Footer nav */}
-          <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:top-[207px] flex flex-col sm:flex-row items-center sm:justify-between w-full max-w-[1326px] px-5 gap-4 sm:gap-0 mx-auto">
-            <div className="flex gap-6 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
+          <div className="relative sm:absolute left-0 sm:left-1/2 sm:-translate-x-1/2 sm:bottom-6 flex flex-col items-center w-full max-w-[1326px] px-5 gap-3 mx-auto">
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-base text-[#1c1c1c] tracking-[-0.32px]" style={{ fontFamily: "var(--font-display)" }}>
               <a href="https://www.linkedin.com/company/cleanailabs" target="_blank" rel="noopener noreferrer" className="hover:opacity-70">LinkedIn</a>
               <Link href="/contact" className="hover:opacity-70">Contact</Link>
+              <Link href="/privacy" className="hover:opacity-70">Privacy</Link>
+              <Link href="/terms" className="hover:opacity-70">Terms</Link>
+              <Link href="/beta-agreement" className="hover:opacity-70">Beta Agreement</Link>
             </div>
-            <span className="text-sm text-[#1c1c1c] leading-5" style={{ fontFamily: "var(--font-display)" }}>2026 Clean. All rights reserved.</span>
+            <span className="text-sm text-[#1c1c1c]/60 leading-5" style={{ fontFamily: "var(--font-display)" }}>2026 Clean. All rights reserved.</span>
           </div>
         </footer>
       </div>

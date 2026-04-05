@@ -8,26 +8,11 @@ import {
   Key,
   GitBranch,
   Users,
-  TrendingUp,
   ArrowUpRight,
   RefreshCw,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
+
 
 // ---------------------------------------------------------------------------
 // Types
@@ -175,79 +160,6 @@ function UsageBarCard({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Radar chart — usage breakdown by category
-// ---------------------------------------------------------------------------
-
-const radarData = [
-  { category: "Search Speed", current: 186, previous: 160 },
-  { category: "Token Savings", current: 205, previous: 170 },
-  { category: "Index Coverage", current: 207, previous: 180 },
-  { category: "API Latency", current: 173, previous: 160 },
-  { category: "Compression", current: 195, previous: 190 },
-  { category: "Cache Hits", current: 174, previous: 140 },
-];
-
-const radarChartConfig = {
-  current: {
-    label: "This Period",
-    color: "var(--chart-1)",
-  },
-  previous: {
-    label: "Last Period",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig;
-
-function UsageRadarChart() {
-  return (
-    <Card>
-      <CardHeader className="items-center pb-4">
-        <CardTitle className="text-base font-semibold">Performance Overview</CardTitle>
-        <CardDescription>
-          Comparing current vs previous period metrics
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pb-0">
-        <ChartContainer
-          config={radarChartConfig}
-          className="mx-auto aspect-square max-h-[300px]"
-        >
-          <RadarChart data={radarData}>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            <PolarAngleAxis dataKey="category" />
-            <PolarGrid radialLines={false} />
-            <Radar
-              dataKey="current"
-              fill="var(--color-current)"
-              fillOpacity={0}
-              stroke="var(--color-current)"
-              strokeWidth={2}
-            />
-            <Radar
-              dataKey="previous"
-              fill="var(--color-previous)"
-              fillOpacity={0}
-              stroke="var(--color-previous)"
-              strokeWidth={2}
-            />
-          </RadarChart>
-        </ChartContainer>
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 12.4% this period <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Based on aggregated usage metrics
-        </div>
-      </CardFooter>
-    </Card>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -412,12 +324,7 @@ export default function UsagePage() {
         </motion.div>
       )}
 
-      {/* Section 3: Usage Radar Chart */}
-      <motion.div custom={2} initial="hidden" animate="visible" variants={fadeUp}>
-        <UsageRadarChart />
-      </motion.div>
-
-      {/* Section 4: Usage by Repository */}
+      {/* Section 3: Usage by Repository */}
       {stats && stats.topRepos.length > 0 && (
         <motion.div custom={3} initial="hidden" animate="visible" variants={fadeUp}>
           <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">

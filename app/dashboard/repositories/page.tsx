@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
@@ -93,7 +93,11 @@ const POLL_ACTIVE = 3000;
 const POLL_IDLE = 30000;
 
 export default function ReposPage() {
-  return <CloudReposPage />;
+  return (
+    <Suspense>
+      <CloudReposPage />
+    </Suspense>
+  );
 }
 
 function SelfHostedReposPage() {
