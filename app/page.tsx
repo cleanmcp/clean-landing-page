@@ -26,7 +26,6 @@ const DISPLAY_NAMES: Record<string, string> = {
   jigsaw: "Jigsaw",
   leanmcp: "LeanMCP",
   matcap: "MatCap",
-  orca: "Orca",
   quirk: "Quirk",
   "runway-avenue": "Runway Ave",
   ship: "Ship",
@@ -41,6 +40,7 @@ function getTrustedByLogos() {
     const files = fs
       .readdirSync(dir)
       .filter((f) => /\.(svg|png|webp|jpg|jpeg)$/i.test(f))
+      .filter((f) => !f.startsWith("orca"))
       .sort();
     return files.map((f) => {
       const stem = f.replace(/\.[^.]+$/, "");
