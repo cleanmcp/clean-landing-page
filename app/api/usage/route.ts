@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { organizations, orgMembers, cloudRepos, apiKeys } from "@/lib/db/schema";
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { organizations, orgMembers, cloudRepos, apiKeys, searchLogs } from "@/lib/db/schema";
+import { eq, and, isNull, sql, gte } from "drizzle-orm";
 import { getCloudTierLimits } from "@/lib/tier-limits";
 
 export async function GET() {
@@ -13,19 +13,13 @@ export async function GET() {
     }
 
     const [org] = await db
-      .select({
-        tier: organizations.tier,
-        creditBalance: organizations.creditBalance,
-        creditsPerSearch: organizations.creditsPerSearch,
-      })
+      .select({ tier: organizations.tier })
       .from(organizations)
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);
 
     const tier = org?.tier ?? "free";
     const limits = getCloudTierLimits(tier);
-    const creditBalance = org?.creditBalance ?? 0;
-    const creditsPerSearch = org?.creditsPerSearch ?? 20;
 
     // Count repos
     const [repoCount] = await db
@@ -45,6 +39,16 @@ export async function GET() {
       .from(apiKeys)
       .where(and(eq(apiKeys.orgId, ctx.orgId), isNull(apiKeys.revokedAt)));
 
+    // Count searches this month
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [searchCount] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(searchLogs)
+      .where(and(eq(searchLogs.orgId, ctx.orgId), gte(searchLogs.createdAt, monthStart)));
+
     const toLimit = (v: number) => (v === Infinity ? null : v);
 
     return NextResponse.json({
@@ -52,11 +56,7 @@ export async function GET() {
       repos: { used: repoCount?.count ?? 0, limit: toLimit(limits.repos) },
       seats: { used: seatCount?.count ?? 0, limit: toLimit(limits.members) },
       apiKeys: { used: keyCount?.count ?? 0, limit: toLimit(limits.apiKeys) },
-      credits: {
-        balance: creditBalance,
-        perSearch: creditsPerSearch,
-        searchesRemaining: Math.floor(creditBalance / creditsPerSearch),
-      },
+      searches: { used: searchCount?.count ?? 0, limit: toLimit(limits.searchesPerMonth) },
       storage: { used: null, limit: toLimit(limits.storageMb) },
     });
   } catch (error) {

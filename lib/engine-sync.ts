@@ -7,10 +7,9 @@ interface KeySyncData {
   name?: string;
   expiresAt?: string | null;
   tier?: string;
+  searchesPerMonth?: number;
   maxRepos?: number;
   storageMb?: number;
-  creditBalance?: number;
-  creditsPerSearch?: number;
 }
 
 import { db } from "@/lib/db";
@@ -70,19 +69,13 @@ export async function syncAllKeysForOrg(orgId: string): Promise<void> {
   if (!GATEWAY_SECRET) return;
 
   const [org] = await db
-    .select({
-      tier: organizations.tier,
-      creditBalance: organizations.creditBalance,
-      creditsPerSearch: organizations.creditsPerSearch,
-    })
+    .select({ tier: organizations.tier })
     .from(organizations)
     .where(eq(organizations.id, orgId))
     .limit(1);
 
   const tier = org?.tier ?? "free";
   const tierLimits = getCloudTierLimitsForSync(tier);
-  const creditBalance = org?.creditBalance ?? 1000;
-  const creditsPerSearch = org?.creditsPerSearch ?? 20;
 
   const keys = await db
     .select()
@@ -100,8 +93,6 @@ export async function syncAllKeysForOrg(orgId: string): Promise<void> {
       expiresAt: key.expiresAt?.toISOString() ?? null,
       tier,
       ...tierLimits,
-      creditBalance,
-      creditsPerSearch,
     });
   }
 }

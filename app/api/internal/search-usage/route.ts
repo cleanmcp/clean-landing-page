@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
-import { searchLogs, organizations } from "@/lib/db/schema";
-import { sql } from "drizzle-orm";
-import { CREDITS_PER_SEARCH } from "@/lib/tier-limits";
+import { searchLogs } from "@/lib/db/schema";
 
 const GATEWAY_SECRET = process.env.GATEWAY_INTERNAL_SECRET || "";
 
@@ -63,7 +61,8 @@ function validateEntry(e: unknown): e is SearchEntry {
 // POST /api/internal/search-usage
 //
 // Receives batched search log entries from the gateway after each flush.
-// Inserts into searchLogs and decrements org credit balances.
+// Inserts into searchLogs — search limits are enforced by counting rows
+// per month, not via a credit balance column.
 //
 // Body: { entries: SearchEntry[] }
 // Auth: Authorization: Bearer <GATEWAY_INTERNAL_SECRET>
@@ -115,23 +114,6 @@ export async function POST(request: NextRequest) {
         durationMs: e.duration_ms,
       })),
     );
-
-    // Decrement credit balances per org
-    const creditsByOrg = new Map<string, number>();
-    for (const e of valid) {
-      creditsByOrg.set(e.org_id, (creditsByOrg.get(e.org_id) ?? 0) + CREDITS_PER_SEARCH);
-    }
-
-    const creditUpdates = Array.from(creditsByOrg.entries()).map(
-      ([orgId, totalCredits]) =>
-        db
-          .update(organizations)
-          .set({
-            creditBalance: sql`GREATEST(${organizations.creditBalance} - ${totalCredits}, 0)`,
-          })
-          .where(sql`${organizations.id} = ${orgId}`),
-    );
-    await Promise.all(creditUpdates);
 
     return NextResponse.json({
       inserted: valid.length,

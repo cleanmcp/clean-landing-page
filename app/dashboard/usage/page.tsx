@@ -12,9 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  Zap,
-} from "lucide-react";
+
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,23 +23,17 @@ interface UsageMetric {
   limit: number | null;
 }
 
-interface CreditInfo {
-  balance: number;
-  perSearch: number;
-  searchesRemaining: number;
-}
-
 interface UsageData {
   tier: string;
   repos: UsageMetric;
   seats: UsageMetric;
   apiKeys: UsageMetric;
-  credits: CreditInfo;
+  searches: UsageMetric;
   storage: UsageMetric;
 }
 
 interface BillingData {
-  tier: "free" | "pro" | "team" | "enterprise";
+  tier: "free" | "pro" | "max" | "enterprise";
   licenseExpiresAt: string | null;
   stripeSubscriptionId: string | null;
   subscriptionStatus: string | null;
@@ -88,14 +80,14 @@ const fadeUp = {
 const tierLabels: Record<string, string> = {
   free: "Free",
   pro: "Pro",
-  team: "Team",
+  max: "Max",
   enterprise: "Enterprise",
 };
 
 const tierColors: Record<string, string> = {
   free: "bg-[var(--dash-text-muted)]/20 text-[var(--dash-text-muted)]",
   pro: "bg-[var(--dash-accent)]/15 text-[var(--dash-accent-light)]",
-  team: "bg-blue-500/15 text-blue-400",
+  max: "bg-blue-500/15 text-blue-400",
   enterprise: "bg-purple-500/15 text-purple-400",
 };
 
@@ -305,10 +297,10 @@ export default function UsagePage() {
         <motion.div custom={1} initial="hidden" animate="visible" variants={fadeUp}>
           <div className="grid gap-4 sm:grid-cols-2">
             <UsageBarCard
-              label="Credits Remaining"
+              label="Searches / mo"
               icon={Search}
-              used={usage.credits.balance}
-              limit={null}
+              used={usage.searches.used}
+              limit={usage.searches.limit}
             />
             <UsageBarCard
               label="API Keys"
@@ -332,46 +324,7 @@ export default function UsagePage() {
         </motion.div>
       )}
 
-      {/* Section 3: Credit Summary */}
-      {usage && (
-        <motion.div custom={2} initial="hidden" animate="visible" variants={fadeUp}>
-          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)] p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--dash-accent-glow)]">
-                <Zap className="h-4 w-4 text-[var(--dash-accent-light)]" strokeWidth={1.5} />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-[var(--dash-text)]">Search Credits</h3>
-                <p className="text-sm text-[var(--dash-text-muted)]">
-                  Each search costs {usage.credits.perSearch} credits
-                </p>
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <p className="text-sm text-[var(--dash-text-muted)]">Balance</p>
-                <p className="text-2xl font-bold text-[var(--dash-text)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
-                  {usage.credits.balance.toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-[var(--dash-text-muted)]">Cost per Search</p>
-                <p className="text-2xl font-bold text-[var(--dash-text)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
-                  {usage.credits.perSearch}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-[var(--dash-text-muted)]">Searches Remaining</p>
-                <p className="text-2xl font-bold text-[var(--dash-text)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
-                  ~{usage.credits.searchesRemaining.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Section 4: Usage by Repository */}
+      {/* Section 3: Usage by Repository */}
       {stats && stats.topRepos.length > 0 && (
         <motion.div custom={3} initial="hidden" animate="visible" variants={fadeUp}>
           <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
