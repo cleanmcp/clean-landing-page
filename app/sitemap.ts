@@ -13,8 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date("2026-03-22"),
     },
     {
-      url: `${BASE_URL}/waitlist`,
-      lastModified: new Date("2026-03-22"),
+      url: `${BASE_URL}/sign-up`,
+      lastModified: new Date("2026-04-04"),
     },
     {
       url: `${BASE_URL}/contact`,

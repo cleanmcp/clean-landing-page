@@ -80,12 +80,12 @@ export default function LandingNavbar() {
           <a href="https://docs.tryclean.ai" target="_blank" rel="noopener noreferrer" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Docs</a>
           <Link href="/pricing-plan" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Pricing</Link>
           <Link href="/sign-in" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
-          <a href="/waitlist" className="group relative inline-flex items-center h-[46px] rounded-full text-white text-[15px] font-semibold tracking-tight pl-5 pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
-            <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
+          <Link href="/sign-up" className="group relative inline-flex items-center h-[46px] rounded-full text-white text-[15px] font-semibold tracking-tight pl-5 pr-12 transition-all duration-300 hover:scale-[1.02]" style={{ background: "linear-gradient(180deg, #7DC3FC 0%, #BFE1FA 100%)", border: "3px solid #E8F4FC", boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)" }}>
+            <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Start Now</span>
             <span className="absolute right-[4px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-white size-8 transition-transform duration-300 group-hover:rotate-45" style={{ boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" }}>
               <svg className="w-3.5 h-3.5 text-[#1772e7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
             </span>
-          </a>
+          </Link>
         </div>
       </nav>
 
@@ -150,8 +150,8 @@ export default function LandingNavbar() {
                   Sign In
                 </Link>
                 <div className="mt-2">
-                  <a
-                    href="/waitlist"
+                  <Link
+                    href="/sign-up"
                     onClick={() => setMobileOpen(false)}
                     className="group relative flex items-center justify-center h-[46px] rounded-full text-white text-[15px] font-semibold tracking-tight transition-all duration-300"
                     style={{
@@ -160,8 +160,8 @@ export default function LandingNavbar() {
                       boxShadow: "inset 0px 4px 6px rgba(255,255,255,1), 0px 2px 10px rgba(0,0,0,0.1), inset 0px -2px 4px rgba(100,160,240,0.5)",
                     }}
                   >
-                    <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Join Waitlist</span>
-                  </a>
+                    <span className="relative z-10" style={{ textShadow: "0px 1px 1px rgba(255,255,255,0.7)", color: "white" }}>Start Now</span>
+                  </Link>
                 </div>
               </div>
             </motion.div>

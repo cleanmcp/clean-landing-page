@@ -139,6 +139,17 @@ html {
   animation-play-state: paused;
 }
 
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation-play-state: paused;
+  }
+}
+
 /* Button styles */
 .btn-primary-dark {
   background: #1e1e1e;

@@ -1,4 +1,6 @@
 import React from "react";
+import fs from "node:fs";
+import pathMod from "node:path";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -10,9 +12,48 @@ import DifferencesSection from "@/components/landing/DifferencesSection";
 import MotionDiv from "@/components/landing/MotionDiv";
 import TokenChart from "@/components/landing/TokenChart";
 import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack";
+import TrustedByMarquee from "@/components/landing/TrustedByMarquee";
 
 /* ───────────────────────── asset paths ───────────────────────── */
 const A = "/landing";
+
+/* ───────────────────── trusted-by logos (auto-discovered) ───── */
+// Logos whose images already contain their brand name — no label needed
+const TEXT_IN_IMAGE = new Set(["talunt", "leanmcp"]);
+// Display names for logos (filename stem → label)
+const DISPLAY_NAMES: Record<string, string> = {
+  githired: "GitHired",
+  jigsaw: "Jigsaw",
+  leanmcp: "LeanMCP",
+  matcap: "MatCap",
+  orca: "Orca",
+  quirk: "Quirk",
+  "runway-avenue": "Runway Ave",
+  ship: "Ship",
+  talunt: "Talunt",
+  tinyfish: "Tinyfish",
+  tsenta: "Tsenta",
+};
+
+function getTrustedByLogos() {
+  const dir = pathMod.join(process.cwd(), "public/landing/trusted-by");
+  try {
+    const files = fs
+      .readdirSync(dir)
+      .filter((f) => /\.(svg|png|webp|jpg|jpeg)$/i.test(f))
+      .sort();
+    return files.map((f) => {
+      const stem = f.replace(/\.[^.]+$/, "");
+      return {
+        src: `/landing/trusted-by/${f}`,
+        alt: DISPLAY_NAMES[stem] ?? stem.replace(/[-_]/g, " "),
+        name: TEXT_IN_IMAGE.has(stem) ? undefined : (DISPLAY_NAMES[stem] ?? stem),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
 
 /* ───────────────────────── page metadata ────────────────────── */
 export const metadata: Metadata = {
@@ -162,6 +203,8 @@ const softwareJsonLd = {
 
 /* ───────────────────────── MAIN PAGE ─────────────────────────── */
 export default function Home() {
+  const trustedByLogos = getTrustedByLogos();
+
   return (
     <div className="relative min-h-screen bg-white" style={{ overflowX: 'clip' }}>
       <script
@@ -171,7 +214,7 @@ export default function Home() {
       <LandingNavbar />
 
       {/* ═══════════ 1. HERO SECTION ═══════════ */}
-      <section className="relative h-[600px] sm:h-[800px] lg:h-[1024px] w-full bg-white overflow-hidden">
+      <section className="relative h-[95svh] w-full bg-white overflow-hidden">
         {/* Background image */}
         <div className="absolute inset-2 sm:inset-3 rounded-[24px] sm:rounded-[36px] lg:rounded-[48px] overflow-hidden">
           <Image src={`${A}/hero-bg.png`} alt="" fill className="object-cover" priority />
@@ -200,6 +243,9 @@ export default function Home() {
           </p>
         </HeroAnimatedWrapper>
       </section>
+
+      {/* ═══════════ TRUSTED BY MARQUEE ═══════════ */}
+      <TrustedByMarquee logos={trustedByLogos} />
 
       {/* ═══════════ 2. PROBLEM SECTION ═══════════ */}
       <section className="relative bg-white py-3">
