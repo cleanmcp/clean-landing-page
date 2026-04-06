@@ -23,7 +23,7 @@ function toDate(ts: number | null | undefined): Date | null {
 
 // Price ID → plan + org tier + seat limit mapping
 // seatLimit: null = unlimited
-type PlanTier = "free" | "pro" | "team" | "enterprise";
+type PlanTier = "free" | "pro" | "max" | "enterprise";
 type PlanInfo = { plan: PlanTier; tier: PlanTier; seatLimit: number | null };
 
 const PRICE_PLAN_MAP: Record<string, PlanInfo> = {};
@@ -32,8 +32,8 @@ const PRICE_PLAN_MAP: Record<string, PlanInfo> = {};
 if (process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID) {
   PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID] = { plan: "pro", tier: "pro", seatLimit: 5 };
 }
-if (process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID) {
-  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID] = { plan: "team", tier: "team", seatLimit: 15 };
+if (process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID) {
+  PRICE_PLAN_MAP[process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID] = { plan: "max", tier: "max", seatLimit: 10 };
 }
 
 function getPlanFromPriceId(priceId: string): PlanInfo {

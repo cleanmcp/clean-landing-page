@@ -7,7 +7,7 @@ import { getStripe } from "@/lib/stripe";
 
 const PLAN_PRICE_MAP: Record<string, string | undefined> = {
   pro: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
-  team: process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID,
+  max: process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID,
 };
 
 export async function POST(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     if (!priceId) {
       return NextResponse.json(
-        { error: "Invalid plan. Use 'pro' or 'team'." },
+        { error: "Invalid plan. Use 'pro' or 'max'." },
         { status: 400 }
       );
     }

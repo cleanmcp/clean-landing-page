@@ -24,7 +24,7 @@ interface Invoice {
 }
 
 interface BillingData {
-  tier: "free" | "pro" | "team" | "enterprise";
+  tier: "free" | "pro" | "max" | "enterprise";
   licenseExpiresAt: string | null;
   licenseRevoked: boolean;
   stripeSubscriptionId: string | null;
@@ -72,14 +72,14 @@ const fadeUp = {
 const tierLabels: Record<BillingData["tier"], string> = {
   free: "Free",
   pro: "Pro",
-  team: "Team",
+  max: "Max",
   enterprise: "Enterprise",
 };
 
 const tierColors: Record<BillingData["tier"], string> = {
   free: "bg-[var(--dash-text-muted)]/20 text-[var(--dash-text-muted)]",
   pro: "bg-[var(--dash-accent)]/15 text-[var(--dash-accent-light)]",
-  team: "bg-blue-500/15 text-blue-400",
+  max: "bg-blue-500/15 text-blue-400",
   enterprise: "bg-purple-500/15 text-purple-400",
 };
 

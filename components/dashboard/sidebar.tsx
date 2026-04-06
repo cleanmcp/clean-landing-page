@@ -65,8 +65,8 @@ function PlanIndicator({ plan, onUpgrade }: { plan: PlanInfo | null; onUpgrade: 
   const tierLabel =
     plan.tier === "enterprise"
       ? "Enterprise"
-      : plan.tier === "team"
-        ? "Team Plan"
+      : plan.tier === "max"
+        ? "Max Plan"
         : plan.tier === "pro"
           ? "Pro Plan"
           : "Free Plan";

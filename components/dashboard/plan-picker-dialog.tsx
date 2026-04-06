@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface PlanOption {
-  id: "pro" | "team" | "enterprise";
+  id: "pro" | "max" | "enterprise";
   name: string;
   price: string;
   period: string;
@@ -28,19 +28,19 @@ const PLANS: PlanOption[] = [
     price: "$20",
     period: "/mo",
     description: "For growing teams that need more power.",
-    features: ["15 repositories", "10,000 credits (~500 searches)", "5 team members", "Priority indexing"],
+    features: ["15 repositories", "500 searches/mo", "5 team members", "Priority indexing"],
     highlighted: true,
   },
   {
-    id: "team",
-    name: "Team",
+    id: "max",
+    name: "Max",
     price: "$100",
     period: "/mo",
     description: "For teams that need everything.",
     features: [
       "Unlimited repositories",
-      "50,000 credits (~2,500 searches)",
-      "15 team members",
+      "5,000 searches/mo",
+      "10 team members",
       "Self-hosting option",
       "SLA",
     ],
@@ -77,7 +77,7 @@ export function PlanPickerDialog({
     const priceId =
       plan.id === "pro"
         ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID
-        : process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID;
+        : process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID;
 
     if (!priceId) {
       setError(`${plan.name} plan is not configured. Contact support.`);
