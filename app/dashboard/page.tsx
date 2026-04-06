@@ -17,7 +17,7 @@ import {
   Plus,
   Clock,
 } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -155,6 +155,44 @@ const tokenChartConfig = {
 
 type Period = "7d" | "30d" | "all";
 
+function fillDateGaps(
+  data: { date: string; original: number; compressed: number }[],
+  period: Period
+): { date: string; original: number; compressed: number }[] {
+  if (data.length === 0) return [];
+
+  const days = period === "7d" ? 7 : period === "30d" ? 30 : 0;
+  const lookup = new Map(data.map((d) => [d.date, d]));
+
+  // Determine the date range
+  let startDate: Date;
+  let endDate: Date;
+  if (days > 0) {
+    endDate = new Date();
+    startDate = new Date(endDate.getTime() - (days - 1) * 86400000);
+  } else {
+    const sorted = data.map((d) => d.date).sort();
+    startDate = new Date(sorted[0]);
+    endDate = new Date(sorted[sorted.length - 1]);
+  }
+
+  const filled: { date: string; original: number; compressed: number }[] = [];
+  const cur = new Date(startDate);
+  while (cur <= endDate) {
+    const key = cur.toISOString().slice(0, 10);
+    const existing = lookup.get(key);
+    filled.push(existing ?? { date: key, original: 0, compressed: 0 });
+    cur.setDate(cur.getDate() + 1);
+  }
+  return filled;
+}
+
+function compactAxis(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
+  return String(n);
+}
+
 function TokenSavingsCard() {
   const [period, setPeriod] = useState<Period>("30d");
   const [stats, setStats] = useState<TokenSavingsStats | null>(null);
@@ -188,13 +226,23 @@ function TokenSavingsCard() {
 
   const hasData = stats != null && Array.isArray(stats.daily) && stats.daily.length > 0;
 
-  const chartData = hasData
+  const rawChartData = hasData
     ? stats!.daily.map((d) => ({
         date: d.date,
         original: d.jsonChars,
         compressed: d.toonChars,
       }))
     : [];
+
+  const chartData = hasData ? fillDateGaps(rawChartData, period) : [];
+
+  // Summary stats
+  const totalOriginal = hasData ? stats!.totalJsonChars : 0;
+  const totalCompressed = hasData ? stats!.totalToonChars : 0;
+  const savingsPercent =
+    totalOriginal > 0
+      ? Math.round(((totalOriginal - totalCompressed) / totalOriginal) * 100)
+      : 0;
 
   return (
     <Card className="pt-0">
@@ -240,65 +288,95 @@ function TokenSavingsCard() {
             </p>
           </div>
         ) : (
-          <ChartContainer
-            config={tokenChartConfig}
-            className="aspect-auto h-[250px] w-full"
-          >
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="fillOriginal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-original)" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="var(--color-original)" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="fillCompressed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-compressed)" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="var(--color-compressed)" stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                minTickGap={32}
-                tickFormatter={(value) => {
-                  const date = new Date(value);
-                  return date.toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  });
-                }}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(value) => {
-                      return new Date(value).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
-                    }}
-                    indicator="dot"
-                  />
-                }
-              />
-              <Area
-                dataKey="original"
-                type="natural"
-                fill="url(#fillOriginal)"
-                stroke="var(--color-original)"
-              />
-              <Area
-                dataKey="compressed"
-                type="natural"
-                fill="url(#fillCompressed)"
-                stroke="var(--color-compressed)"
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-            </AreaChart>
-          </ChartContainer>
+          <>
+            {/* Summary row */}
+            <div className="mb-4 grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Original</p>
+                <p className="text-lg font-semibold tabular-nums">{compactNum(totalOriginal)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Compressed</p>
+                <p className="text-lg font-semibold tabular-nums">{compactNum(totalCompressed)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Saved</p>
+                <p className="text-lg font-semibold tabular-nums text-emerald-500">{savingsPercent}%</p>
+              </div>
+            </div>
+
+            <ChartContainer
+              config={tokenChartConfig}
+              className="aspect-auto h-[250px] w-full"
+            >
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="fillOriginal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-original)" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="var(--color-original)" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="fillCompressed" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-compressed)" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="var(--color-compressed)" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={32}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+                  }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  width={48}
+                  tickFormatter={compactAxis}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(value) => {
+                        return new Date(value).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        });
+                      }}
+                      indicator="dot"
+                    />
+                  }
+                />
+                <Area
+                  dataKey="original"
+                  type="monotone"
+                  fill="url(#fillOriginal)"
+                  stroke="var(--color-original)"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 2 }}
+                />
+                <Area
+                  dataKey="compressed"
+                  type="monotone"
+                  fill="url(#fillCompressed)"
+                  stroke="var(--color-compressed)"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 2 }}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </AreaChart>
+            </ChartContainer>
+          </>
         )}
       </CardContent>
     </Card>
