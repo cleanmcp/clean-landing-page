@@ -161,19 +161,23 @@ function fillDateGaps(
 ): { date: string; original: number; compressed: number }[] {
   if (data.length === 0) return [];
 
-  const days = period === "7d" ? 7 : period === "30d" ? 30 : 0;
   const lookup = new Map(data.map((d) => [d.date, d]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  // Determine the date range
   let startDate: Date;
-  let endDate: Date;
-  if (days > 0) {
-    endDate = new Date();
-    startDate = new Date(endDate.getTime() - (days - 1) * 86400000);
+  const endDate = new Date(today);
+
+  if (period === "7d") {
+    startDate = new Date(today.getTime() - 6 * 86400000);
+  } else if (period === "30d") {
+    startDate = new Date(today.getTime() - 29 * 86400000);
   } else {
+    // "all" — go from earliest data point, but ensure at least 14 days of range
     const sorted = data.map((d) => d.date).sort();
-    startDate = new Date(sorted[0]);
-    endDate = new Date(sorted[sorted.length - 1]);
+    const earliest = new Date(sorted[0]);
+    const minStart = new Date(today.getTime() - 13 * 86400000);
+    startDate = earliest < minStart ? earliest : minStart;
   }
 
   const filled: { date: string; original: number; compressed: number }[] = [];
@@ -412,16 +416,16 @@ const PLANS = [
     name: "Pro",
     price: "$20",
     period: "/mo",
-    features: ["15 repos", "5 users", "10,000 credits (~500 searches)", "Priority indexing"],
+    features: ["15 repos", "5 users", "500 searches/mo", "Priority indexing"],
     cta: "Subscribe",
     popular: true,
   },
   {
-    id: "team",
+    id: "max",
     name: "Team",
     price: "$100",
     period: "/mo",
-    features: ["Unlimited repos", "15 users", "50,000 credits (~2,500 searches)", "Private cloud + SLA"],
+    features: ["Unlimited repos", "15 users", "5,000 searches/mo", "Private cloud + SLA"],
     cta: "Subscribe",
     popular: false,
   },
@@ -475,7 +479,7 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
           return;
         }
         const org = data.org as OrgInfo & { hostingMode?: string };
-        const hasPaidPlan = org.tier === "pro" || org.tier === "team" || org.tier === "enterprise";
+        const hasPaidPlan = org.tier === "pro" || org.tier === "max" || org.tier === "enterprise";
         const isCloud = org.hostingMode === "cloud";
         if (isCloud || hasPaidPlan || (org.licenseKey && !org.licenseRevoked)) {
           setPhase("done");
@@ -519,7 +523,7 @@ function SetupCard({ onComplete }: { onComplete: () => void }) {
     try {
       const priceId =
         planId === "pro" ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID :
-        planId === "team" ? process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID : "";
+        planId === "max" ? process.env.NEXT_PUBLIC_STRIPE_MAX_PRICE_ID : "";
       if (!priceId) {
         alert("Stripe price ID not configured.");
         setLoadingPlan(null);
@@ -666,7 +670,7 @@ export default function DashboardPage() {
         .then((d) => {
           if (d?.org) {
             setOrgData({ apiKeyCount: d.apiKeyCount ?? 0 });
-            const hasPaidPlan = d.org.tier === "pro" || d.org.tier === "team" || d.org.tier === "enterprise";
+            const hasPaidPlan = d.org.tier === "pro" || d.org.tier === "max" || d.org.tier === "enterprise";
             const isCloud = d.org.hostingMode === "cloud";
             setHasLicense(isCloud || hasPaidPlan || (!!d.org.licenseKey && !d.org.licenseRevoked));
           }
