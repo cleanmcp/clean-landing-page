@@ -77,8 +77,8 @@ export const organizations = pgTable(
     metadata: jsonb("metadata").$type<OrgMetadata>(),
     licenseKey: text("license_key"),
     tier: text("tier").$type<"free" | "pro" | "max" | "enterprise">().default("free"),
-    creditBalance: integer("credit_balance").notNull().default(1000),
-    creditsPerSearch: integer("credits_per_search").notNull().default(20),
+    creditBalance: integer("credit_balance").notNull().default(10),
+    creditsPerSearch: integer("credits_per_search").notNull().default(1),
     seatLimit: integer("seat_limit"), // null = unlimited
     licenseExpiresAt: timestamp("license_expires_at"),
     licenseJti: text("license_jti"),

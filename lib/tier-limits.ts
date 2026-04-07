@@ -34,12 +34,27 @@ export function getTierLimits(tier: string) {
 /** Alias kept for backwards compatibility — same as getCloudTierLimits. */
 export type Tier = SelfHostedTier;
 
-/** Return cloud tier limits with Infinity replaced by 0 for JSON serialization. */
+/**
+ * Credit grant amounts per tier.  Reset on subscription create, update, and
+ * recurring invoice payment.  -1 = unlimited (engine convention).
+ */
+export const CREDIT_GRANTS: Record<string, number> = {
+  free: 10,
+  pro: 500,
+  max: 5_000,
+  enterprise: -1,
+};
+
+export function getCreditGrant(tier: string): number {
+  return CREDIT_GRANTS[tier] ?? CREDIT_GRANTS.free;
+}
+
+/** Return cloud tier limits with Infinity replaced by -1 for JSON serialization (-1 = unlimited). */
 export function getCloudTierLimitsForSync(tier: string) {
   const limits = getCloudTierLimits(tier);
   return {
-    searchesPerMonth: limits.searchesPerMonth === Infinity ? 0 : limits.searchesPerMonth,
-    maxRepos: limits.repos === Infinity ? 0 : limits.repos,
-    storageMb: limits.storageMb === Infinity ? 0 : limits.storageMb,
+    searchesPerMonth: limits.searchesPerMonth === Infinity ? -1 : limits.searchesPerMonth,
+    maxRepos: limits.repos === Infinity ? -1 : limits.repos,
+    storageMb: limits.storageMb === Infinity ? -1 : limits.storageMb,
   };
 }

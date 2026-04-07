@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // Enforce tier limit on API keys
     const [org] = await db
-      .select({ tier: organizations.tier, hostingMode: organizations.hostingMode })
+      .select({ tier: organizations.tier, hostingMode: organizations.hostingMode, creditBalance: organizations.creditBalance })
       .from(organizations)
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);
@@ -168,6 +168,7 @@ export async function POST(request: NextRequest) {
       expiresAt: expiresAt?.toISOString() ?? null,
       tier,
       ...tierLimits,
+      creditBalance: org?.creditBalance ?? 0,
     });
 
     // Return the plain key (only time it's shown)

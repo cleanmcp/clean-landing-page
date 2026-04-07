@@ -13,6 +13,7 @@ import { eq, sql, and } from "drizzle-orm";
 import type Stripe from "stripe";
 import { syncAllKeysForOrg } from "@/lib/engine-sync";
 import { enforceRepoLimits } from "@/lib/enforce-repo-limits";
+import { getCreditGrant } from "@/lib/tier-limits";
 
 /** Safely convert a Stripe Unix timestamp (seconds) to a Date, or null. */
 function toDate(ts: number | null | undefined): Date | null {
@@ -97,6 +98,7 @@ async function handleSubscriptionCreated(sub: Stripe.Subscription) {
         seatLimit,
         licenseExpiresAt: periodEnd,
         stripeCustomerId: sub.customer as string,
+        creditBalance: getCreditGrant(tier),
       })
       .where(eq(organizations.id, orgId)),
   ]);
@@ -147,10 +149,10 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
   if (orgId) {
     await db
       .update(organizations)
-      .set({ tier, seatLimit, licenseExpiresAt: periodEnd })
+      .set({ tier, seatLimit, licenseExpiresAt: periodEnd, creditBalance: getCreditGrant(tier) })
       .where(eq(organizations.id, orgId));
 
-    // Re-sync all keys so engine picks up new tier limits
+    // Re-sync all keys so engine picks up new tier limits + credit balance
     syncAllKeysForOrg(orgId).catch((err) =>
       console.error(`[webhook] Failed to re-sync keys for org ${orgId}:`, err)
     );
@@ -186,7 +188,7 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   if (orgId) {
     await db
       .update(organizations)
-      .set({ tier: "free", seatLimit: 1, licenseExpiresAt: null })
+      .set({ tier: "free", seatLimit: 1, licenseExpiresAt: null, creditBalance: getCreditGrant("free") })
       .where(eq(organizations.id, orgId));
 
     // Re-sync all keys so engine picks up free-tier limits
@@ -280,13 +282,29 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     })
     .onConflictDoNothing();
 
-  // Keep license_expires_at in sync with invoice period
+  // Keep license_expires_at in sync with invoice period and reset credits
   const invoicePeriodEnd = toDate(invoice.period_end);
-  if (orgId && invoicePeriodEnd) {
+  if (orgId) {
+    const [org] = await db
+      .select({ tier: organizations.tier })
+      .from(organizations)
+      .where(eq(organizations.id, orgId))
+      .limit(1);
+
+    const tier = org?.tier ?? "free";
+
     await db
       .update(organizations)
-      .set({ licenseExpiresAt: invoicePeriodEnd })
+      .set({
+        ...(invoicePeriodEnd ? { licenseExpiresAt: invoicePeriodEnd } : {}),
+        creditBalance: getCreditGrant(tier),
+      })
       .where(eq(organizations.id, orgId));
+
+    // Re-sync keys so engine picks up refreshed credit balance
+    syncAllKeysForOrg(orgId).catch((err) =>
+      console.error(`[webhook] Failed to re-sync keys for org ${orgId}:`, err)
+    );
   }
 }
 

@@ -25,7 +25,7 @@ const FEATURE_COPY = {
   },
   searches: {
     title: "Search limit reached",
-    description: "You've hit your daily search limit.",
+    description: "You've hit your monthly search limit.",
   },
 };
 
@@ -34,14 +34,14 @@ const PLANS = [
     name: "Pro",
     price: "$20",
     period: "/mo",
-    features: ["15 repositories", "5 team members", "20 API keys", "10,000 credits (~500 searches)", "Priority indexing"],
+    features: ["15 repositories", "5 team members", "20 API keys", "500 searches/mo", "Priority indexing"],
     accent: true,
   },
   {
-    name: "Team",
+    name: "Max",
     price: "$100",
     period: "/mo",
-    features: ["Unlimited repositories", "15 team members", "Unlimited API keys", "50,000 credits (~2,500 searches)", "Private cloud + SLA"],
+    features: ["Unlimited repositories", "10 team members", "Unlimited API keys", "5,000 searches/mo", "Private cloud + SLA"],
     accent: false,
   },
 ];
