@@ -195,6 +195,7 @@ function CloudOnboardingContent() {
 
   // MCP config
   const [apiKey, setApiKey] = useState<string | null>(null);
+  const [existingKeyPrefix, setExistingKeyPrefix] = useState<string | null>(null);
   const [configTab, setConfigTab] = useState<OnboardingConfigTab>("claude-code");
   const [configView, setConfigView] = useState<"terminal" | "json">("terminal");
   const [copied, setCopied] = useState<string | null>(null);
@@ -378,8 +379,8 @@ function CloudOnboardingContent() {
               k.name === "Cloud Onboarding Key" && !k.revokedAt
           );
           if (existing) {
-            // Key exists but we can't show the raw key again — show prefix
-            setApiKey(existing.keyPrefix + "...");
+            // Key exists but we can't show the raw key again
+            setExistingKeyPrefix(existing.keyPrefix + "...");
             return;
           }
         }
@@ -554,7 +555,7 @@ function CloudOnboardingContent() {
             <div
               className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
                 i < currentStepIdx
-                  ? "bg-green-100 text-green-700"
+                  ? "bg-green-500/10 text-green-400"
                   : i === currentStepIdx
                     ? "bg-[#1772E7] text-white"
                     : "bg-[var(--dash-border)] text-[var(--dash-text-muted)]"
@@ -579,7 +580,7 @@ function CloudOnboardingContent() {
               <div
                 className={`h-px w-8 ${
                   i < currentStepIdx
-                    ? "bg-green-300"
+                    ? "bg-green-500/30"
                     : "bg-[var(--dash-border)]"
                 }`}
               />
@@ -668,7 +669,7 @@ function CloudOnboardingContent() {
                 <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
                   {selectedRepos.size}/{repoLimit === Infinity ? "\u221E" : repoLimit} repos selected
                   {repoLimit !== Infinity && selectedRepos.size >= repoLimit && (
-                    <span className="ml-2 text-amber-600">
+                    <span className="ml-2 text-amber-400">
                       — limit reached on your plan
                     </span>
                   )}
@@ -784,7 +785,7 @@ function CloudOnboardingContent() {
 
           {/* Error */}
           {submitError && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
               {submitError}
             </p>
           )}
@@ -823,7 +824,7 @@ function CloudOnboardingContent() {
           </div>
 
           {repoLimit !== Infinity && selectedRepos.size >= repoLimit && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-800">
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-center text-sm text-amber-400">
               You&apos;ve reached the {repoLimit}-repo limit on your plan.{" "}
               <button
                 onClick={() => router.push("/dashboard/billing")}
@@ -858,7 +859,7 @@ function CloudOnboardingContent() {
                       {repo.status === "ready" ? (
                         <Check className="h-5 w-5 text-green-500" />
                       ) : repo.status === "error" ? (
-                        <div className="h-5 w-5 rounded-full bg-red-100 p-1">
+                        <div className="h-5 w-5 rounded-full bg-red-500/10 p-1">
                           <div className="h-full w-full rounded-full bg-red-500" />
                         </div>
                       ) : (
@@ -884,10 +885,10 @@ function CloudOnboardingContent() {
                     <span
                       className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                         repo.status === "ready"
-                          ? "bg-green-100 text-green-700"
+                          ? "bg-green-500/10 text-green-400"
                           : repo.status === "error"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-blue-100 text-blue-700"
+                            ? "bg-red-500/10 text-red-400"
+                            : "bg-blue-500/10 text-blue-400"
                       }`}
                     >
                       {repo.status === "ready"
@@ -925,29 +926,29 @@ function CloudOnboardingContent() {
         <div className="space-y-6">
           {/* Status banner */}
           {cloudRepos.some((r) => r.status === "ready") ? (
-            <div className="flex items-center gap-3 rounded-xl border-2 border-green-200 bg-green-50 p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <Sparkles className="h-5 w-5 text-green-600" />
+            <div className="flex items-center gap-3 rounded-xl border-2 border-green-500/30 bg-green-500/10 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20">
+                <Sparkles className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-green-900">
+                <h3 className="font-semibold text-green-400">
                   Your repos are indexed!
                 </h3>
-                <p className="text-sm text-green-700">
+                <p className="text-sm text-green-400/80">
                   Add this config to your editor to start searching with Clean.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3 rounded-xl border-2 border-amber-200 bg-amber-50 p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-                <Sparkles className="h-5 w-5 text-amber-600" />
+            <div className="flex items-center gap-3 rounded-xl border-2 border-amber-500/30 bg-amber-500/10 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
+                <Sparkles className="h-5 w-5 text-amber-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-900">
+                <h3 className="font-semibold text-amber-400">
                   Indexing failed
                 </h3>
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-amber-400/80">
                   Your repos couldn&apos;t be indexed right now. You can retry from the{" "}
                   <button
                     onClick={() => router.push("/dashboard/repositories")}
@@ -962,7 +963,7 @@ function CloudOnboardingContent() {
           )}
 
           {/* API Key */}
-          {apiKey && (
+          {apiKey ? (
             <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
               <div className="border-b border-[var(--dash-border)] px-5 py-3">
                 <h3 className="text-base font-semibold text-[var(--dash-text)]">
@@ -990,7 +991,31 @@ function CloudOnboardingContent() {
                 </div>
               </div>
             </div>
-          )}
+          ) : existingKeyPrefix ? (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
+                  <Lock className="h-5 w-5 text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-[var(--dash-text)]">
+                    You already have an API key
+                  </h3>
+                  <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
+                    Your existing key (<code className="font-mono text-xs">{existingKeyPrefix}</code>) can&apos;t be displayed again.
+                    Go to <strong>Dashboard → Keys</strong> to view it or create a new one.
+                  </p>
+                </div>
+                <button
+                  onClick={() => router.push("/dashboard/keys")}
+                  className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#1772E7] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d0]"
+                >
+                  Manage Keys
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {/* MCP Config */}
           <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]" data-tutorial="mcp-config">
@@ -1116,7 +1141,7 @@ function CloudOnboardingContent() {
                 }}
                 className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                   copied === "config"
-                    ? "border border-green-200 bg-green-50 text-green-700"
+                    ? "border border-green-500/30 bg-green-500/10 text-green-400"
                     : "border border-[var(--dash-border)] bg-[var(--dash-surface)] text-[var(--dash-text)] hover:bg-[var(--dash-surface-hover)]"
                 }`}
               >
