@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { githubInstallations } from "@/lib/db/schema";
+import { githubInstallations, indexingJobs, organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyWebhookSignature } from "@/lib/github-app";
+import { getTierPriority } from "@/lib/tier-priority";
 
 /**
  * POST /api/webhooks/github — Handle GitHub App webhook events.
@@ -56,6 +57,46 @@ export async function POST(request: NextRequest) {
         .set({ active: true, updatedAt: new Date() })
         .where(eq(githubInstallations.installationId, installationId));
     }
+  }
+
+  if (event === "push") {
+    const repo = (payload.repository as Record<string, unknown>)?.full_name as string;
+    const branch = ((payload.ref as string) ?? "").replace("refs/heads/", "");
+    const installationId = (payload.installation as Record<string, unknown>)?.id as number;
+
+    if (!repo || !branch) {
+      return NextResponse.json({ ok: true });
+    }
+
+    // Find which org this installation belongs to
+    const [inst] = await db
+      .select({ orgId: githubInstallations.orgId })
+      .from(githubInstallations)
+      .where(eq(githubInstallations.installationId, installationId))
+      .limit(1);
+
+    if (!inst) {
+      return NextResponse.json({ ok: true }); // Unknown installation
+    }
+
+    // Get org tier for priority
+    const [org] = await db
+      .select({ tier: organizations.tier })
+      .from(organizations)
+      .where(eq(organizations.id, inst.orgId))
+      .limit(1);
+
+    const priority = getTierPriority(org?.tier ?? "free") + 5; // +5 bonus for webhooks
+
+    // Queue re-index
+    await db.insert(indexingJobs).values({
+      orgId: inst.orgId,
+      repoFullName: repo,
+      branch,
+      installationId,
+      priority,
+      triggeredBy: "webhook_push",
+    }).onConflictDoNothing(); // dedup
   }
 
   // Acknowledge all events (GitHub retries on non-2xx)
