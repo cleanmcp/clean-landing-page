@@ -63,6 +63,7 @@ export default function AddReposPage() {
   const [search, setSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [disconnected, setDisconnected] = useState<{ accountLogin: string; error: string }[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -85,6 +86,7 @@ export default function AddReposPage() {
         const ghData = await ghRes.json();
         setRepos(ghData.repos || []);
         if (ghData.connected) setConnected(true);
+        setDisconnected(ghData.disconnected || []);
       }
 
       if (crRes.ok) {
@@ -285,6 +287,29 @@ export default function AddReposPage() {
             </div>
           )}
 
+          {disconnected.length > 0 && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+              <p className="text-sm font-medium text-amber-400">
+                Some GitHub connections need attention:
+              </p>
+              <ul className="mt-1.5 space-y-1">
+                {disconnected.map((d) => (
+                  <li key={d.accountLogin} className="flex items-center justify-between text-sm text-amber-300/80">
+                    <span>{d.accountLogin}: {d.error}</span>
+                    <a
+                      href={installUrl || "https://github.com/apps/clean-code-search/installations/new"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-[#1772E7] hover:underline"
+                    >
+                      Reconnect
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
             <div className="flex items-center justify-between border-b border-[var(--dash-border)] px-5 py-4">
               <div>
@@ -322,7 +347,11 @@ export default function AddReposPage() {
             <div className="max-h-[28rem] overflow-y-auto">
               {filtered.length === 0 ? (
                 <p className="py-10 text-center text-sm text-[var(--dash-text-muted)]">
-                  {repos.length === 0 ? "No repositories found." : "No repos match your search."}
+                  {repos.length === 0
+                    ? disconnected.length > 0
+                      ? "Reconnect your GitHub accounts above to see repositories."
+                      : "No repositories found. Make sure the Clean GitHub App has access to your repos."
+                    : "No repos match your search."}
                 </p>
               ) : (
                 filtered.map((repo) => {
