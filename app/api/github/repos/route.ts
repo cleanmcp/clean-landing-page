@@ -3,7 +3,7 @@ import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { githubInstallations } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { listInstallationRepos } from "@/lib/github-app";
+import { listInstallationRepos, type GitHubRepo } from "@/lib/github-app";
 import { reconcileInstallation } from "@/lib/github-reconcile";
 
 /**
@@ -49,7 +49,7 @@ export async function GET() {
       });
     }
 
-    const mapRepo = (r: any, inst: { id: string; accountLogin: string }) => ({
+    const mapRepo = (r: GitHubRepo, inst: { id: string; accountLogin: string }) => ({
       id: r.id,
       fullName: r.full_name,
       name: r.name,
@@ -65,7 +65,7 @@ export async function GET() {
     });
 
     // Fetch repos per installation with auto-heal on failure
-    const repoResults: Array<{ repos: any[]; error?: string; account: string }> = [];
+    const repoResults: Array<{ repos: ReturnType<typeof mapRepo>[]; error?: string; account: string }> = [];
 
     for (const inst of installations) {
       try {
