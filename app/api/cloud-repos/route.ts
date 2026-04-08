@@ -4,13 +4,14 @@ import { db } from "@/lib/db";
 import {
   cloudRepos,
   githubInstallations,
+  indexingJobs,
   organizations,
 } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getCloudTierLimits } from "@/lib/tier-limits";
 import { engineFetch } from "@/lib/engine";
 import { audit } from "@/lib/audit";
-import { getInstallationToken } from "@/lib/github-app";
+import { getTierPriority } from "@/lib/tier-priority";
 
 /**
  * GET /api/cloud-repos — List cloud repos for the current org.
@@ -27,8 +28,8 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch engine repos + cloudRepos bookmarks + org tier in parallel
-    const [engineResult, bookmarks, [org]] = await Promise.all([
+    // Fetch engine repos + cloudRepos bookmarks + org tier + active jobs in parallel
+    const [engineResult, bookmarks, [org], activeJobs] = await Promise.all([
       engineFetch(ctx.orgId, "/repos", { signal: AbortSignal.timeout(5_000) })
         .then(async (res) => {
           if (!res.ok) return [];
@@ -74,6 +75,10 @@ export async function GET() {
         }>),
       db.select().from(cloudRepos).where(eq(cloudRepos.orgId, ctx.orgId)),
       db.select({ tier: organizations.tier }).from(organizations).where(eq(organizations.id, ctx.orgId)).limit(1),
+      db.select().from(indexingJobs).where(and(
+        eq(indexingJobs.orgId, ctx.orgId),
+        inArray(indexingJobs.status, ["pending", "running"]),
+      )),
     ]);
 
     const limits = getCloudTierLimits(org?.tier ?? "free");
@@ -87,6 +92,7 @@ export async function GET() {
     // Build lookups
     const bookmarkMap = new Map(activeBookmarks.map((b) => [b.fullName, b]));
     const engineMap = new Map(engineResult.map((e) => [e.repo, e]));
+    const jobMap = new Map(activeJobs.map((j) => [`${j.repoFullName}:${j.branch}`, j]));
 
     // Collect all unique repo names from both sources, excluding deleted
     const allRepoNames = new Set([
@@ -100,10 +106,12 @@ export async function GET() {
 
       if (engine && bookmark) {
         // Both exist — engine is primary, bookmark supplements with GitHub metadata
-        return {
+        const branch = engine.branch ?? bookmark.defaultBranch ?? "main";
+        const job = jobMap.get(`${fullName}:${branch}`);
+        const entry = {
           id: bookmark.id,
           fullName,
-          defaultBranch: engine.branch ?? bookmark.defaultBranch,
+          defaultBranch: branch,
           language: bookmark.language ?? engine.primary_language ?? null,
           private: bookmark.private,
           status: engine.status,
@@ -123,11 +131,24 @@ export async function GET() {
             },
           } : {}),
         };
+        if (job) {
+          entry.job = {
+            phase: job.currentPhase ?? "pending",
+            phase_progress: job.phaseProgress ?? 0,
+            files_processed: job.filesProcessed ?? 0,
+            files_total: job.filesTotal ?? 0,
+            entities_found: job.entitiesFound ?? 0,
+          };
+          if (job.status === "pending") entry.status = "pending";
+          if (job.status === "running") entry.status = job.currentPhase ?? "indexing";
+        }
+        return entry;
       }
 
       if (engine) {
         // Engine-only (indexed via MCP/API, no GitHub bookmark)
-        return {
+        const job = jobMap.get(`${fullName}:${engine.branch}`);
+        const entry = {
           id: engine.project_id,
           fullName,
           defaultBranch: engine.branch,
@@ -150,23 +171,56 @@ export async function GET() {
             },
           } : {}),
         };
+        if (job) {
+          entry.job = {
+            phase: job.currentPhase ?? "pending",
+            phase_progress: job.phaseProgress ?? 0,
+            files_processed: job.filesProcessed ?? 0,
+            files_total: job.filesTotal ?? 0,
+            entities_found: job.entitiesFound ?? 0,
+          };
+          if (job.status === "pending") entry.status = "pending";
+          if (job.status === "running") entry.status = job.currentPhase ?? "indexing";
+        }
+        return entry;
       }
 
       // Bookmark-only (saved in dashboard but not yet in engine)
-      return {
+      const branch = bookmark!.defaultBranch ?? "main";
+      const job = jobMap.get(`${fullName}:${branch}`);
+      const entry = {
         id: bookmark!.id,
         fullName,
-        defaultBranch: bookmark!.defaultBranch,
+        defaultBranch: branch,
         language: bookmark!.language ?? null,
         private: bookmark!.private,
-        status: "not_indexed",
-        entityCount: null,
-        lastIndexedAt: null,
-        error: null,
+        status: "not_indexed" as string,
+        entityCount: null as number | null,
+        lastIndexedAt: null as string | null,
+        error: null as string | null,
         createdAt: bookmark!.createdAt.toISOString(),
-        description: null,
+        description: null as string | null,
         source: "github" as const,
+        job: undefined as {
+          phase: string;
+          phase_progress: number;
+          files_processed: number;
+          files_total: number;
+          entities_found: number;
+        } | undefined,
       };
+      if (job) {
+        entry.job = {
+          phase: job.currentPhase ?? "pending",
+          phase_progress: job.phaseProgress ?? 0,
+          files_processed: job.filesProcessed ?? 0,
+          files_total: job.filesTotal ?? 0,
+          entities_found: job.entitiesFound ?? 0,
+        };
+        if (job.status === "pending") entry.status = "pending";
+        if (job.status === "running") entry.status = job.currentPhase ?? "indexing";
+      }
+      return entry;
     });
 
     // Sort: in-progress first, then ready, then not_indexed, then error
@@ -283,11 +337,8 @@ export async function POST(request: NextRequest) {
     // Build a lookup for repo details from the insert data
     const repoDetails = new Map(toInsert.map((r) => [r.fullName, r]));
 
-    // Pre-fetch installation tokens for all unique installations (org-level, not per-user)
-    const installationTokenCache = new Map<number, string>();
+    // Resolve UUID installation IDs to numeric GitHub installation IDs
     const installationUuidToNumeric = new Map<string, number>();
-
-    // Get all active installations for this org
     const orgInstallations = await db
       .select({
         id: githubInstallations.id,
@@ -300,61 +351,30 @@ export async function POST(request: NextRequest) {
           eq(githubInstallations.active, true)
         )
       );
-
     for (const inst of orgInstallations) {
       installationUuidToNumeric.set(inst.id, inst.installationId);
     }
 
-    // Pre-fetch installation tokens (shared across repos from same installation)
-    for (const repo of inserted) {
-      if (repo.installationId) {
-        const numericId = installationUuidToNumeric.get(repo.installationId);
-        if (numericId && !installationTokenCache.has(numericId)) {
-          try {
-            const token = await getInstallationToken(numericId);
-            installationTokenCache.set(numericId, token);
-          } catch (err) {
-            console.error(`Failed to get installation token for ${numericId}:`, err);
-          }
-        }
-      }
-    }
+    // Determine priority from org tier
+    const priority = getTierPriority(org?.tier ?? "free");
 
-    // Trigger indexing for all repos in parallel
+    // Insert indexing jobs into the queue
     await Promise.allSettled(
       inserted.map(async (repo) => {
         try {
           const details = repoDetails.get(repo.fullName);
+          const numericInstallId = repo.installationId
+            ? installationUuidToNumeric.get(repo.installationId) ?? null
+            : null;
 
-          let cloneToken: string | null = null;
-          if (repo.installationId) {
-            const numericId = installationUuidToNumeric.get(repo.installationId);
-            if (numericId) {
-              cloneToken = installationTokenCache.get(numericId) ?? null;
-            }
-          }
-
-          const engineRes = await engineFetch(
-            ctx.orgId,
-            "/repos/index",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                repo: repo.fullName,
-                branch: details?.defaultBranch ?? "main",
-                ...(cloneToken ? { token: cloneToken } : {}),
-              }),
-              signal: AbortSignal.timeout(30_000),
-            }
-          );
-
-          if (!engineRes.ok) {
-            const errBody = await engineRes.text().catch(() => "");
-            throw new Error(`Engine returned ${engineRes.status}: ${errBody}`);
-          }
-
-          // Engine owns status — no need to sync status back to cloudRepos bookmark
+          await db.insert(indexingJobs).values({
+            orgId: ctx.orgId,
+            repoFullName: repo.fullName,
+            branch: details?.defaultBranch ?? "main",
+            installationId: numericInstallId,
+            priority,
+            triggeredBy: "dashboard",
+          }).onConflictDoNothing(); // dedup: active_uniq index
 
           audit({
             orgId: ctx.orgId,
@@ -365,7 +385,7 @@ export async function POST(request: NextRequest) {
             metadata: { repo: repo.fullName, mode: "cloud" },
           });
         } catch (err) {
-          const message = err instanceof Error ? err.message : "Failed to start indexing";
+          const message = err instanceof Error ? err.message : "Failed to queue indexing";
           await db
             .update(cloudRepos)
             .set({

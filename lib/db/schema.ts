@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ============================================================================
 // USERS
@@ -415,6 +416,9 @@ export const cloudRepos = pgTable(
     entityCount: integer("entity_count"),
     lastIndexedAt: timestamp("last_indexed_at"),
     error: text("error"),
+    description: text("description"),
+    primaryLanguage: text("primary_language"),
+    tags: jsonb("tags").$type<string[]>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -423,5 +427,75 @@ export const cloudRepos = pgTable(
     index("cloud_repos_installation_id_idx").on(table.installationId),
     index("cloud_repos_full_name_idx").on(table.fullName),
     uniqueIndex("cloud_repos_org_full_name_uniq").on(table.orgId, table.fullName),
+  ]
+);
+
+// ============================================================================
+// INDEXING JOBS (priority queue — engine polls this)
+// ============================================================================
+
+export type IndexingJobStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export type IndexingJobTrigger =
+  | "dashboard"
+  | "mcp"
+  | "webhook_push"
+  | "webhook_install"
+  | "auto_branch";
+
+export const indexingJobs = pgTable(
+  "indexing_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    repoFullName: text("repo_full_name").notNull(),
+    branch: text("branch").notNull().default("main"),
+    installationId: integer("installation_id"), // GitHub App installation (numeric)
+    priority: integer("priority").notNull().default(10), // higher = first
+    status: text("status").$type<IndexingJobStatus>().notNull().default("pending"),
+
+    // Worker tracking
+    workerId: text("worker_id"),
+    startedAt: timestamp("started_at"),
+    completedAt: timestamp("completed_at"),
+
+    // Progress
+    currentPhase: text("current_phase"),
+    phaseProgress: integer("phase_progress").default(0),
+    filesProcessed: integer("files_processed").default(0),
+    filesTotal: integer("files_total").default(0),
+    entitiesFound: integer("entities_found").default(0),
+
+    // Result
+    error: text("error"),
+    entityCount: integer("entity_count"),
+
+    // Metadata
+    triggeredBy: text("triggered_by").$type<IndexingJobTrigger>(),
+    apiKeyId: uuid("api_key_id"),
+    forceReindex: boolean("force_reindex").default(false),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // The priority queue index — this IS the queue
+    index("indexing_jobs_queue_idx").on(table.priority, table.createdAt)
+      .where(sql`status = 'pending'`),
+    // Lookup by org
+    index("indexing_jobs_org_status_idx").on(table.orgId, table.status),
+    // Dedup: one active job per org+repo+branch
+    uniqueIndex("indexing_jobs_active_uniq").on(
+      table.orgId,
+      table.repoFullName,
+      table.branch,
+    ).where(sql`status IN ('pending', 'running')`),
   ]
 );
