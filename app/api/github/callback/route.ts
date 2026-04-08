@@ -75,13 +75,22 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Fetch installation info from GitHub (need account.login for checks)
+  let info;
+  try {
+    info = await getInstallationInfo(numericInstallationId);
+  } catch {
+    // If GitHub API fails, redirect with error
+    return NextResponse.redirect(`${appUrl}/dashboard/repositories?error=github_api_failed`);
+  }
+
   // --- Reject if installation is already claimed by a different org ---
   const [existingClaim] = await db
     .select({ orgId: githubInstallations.orgId })
     .from(githubInstallations)
     .where(
       and(
-        eq(githubInstallations.installationId, numericInstallationId),
+        eq(githubInstallations.accountLogin, info.account.login),
         ne(githubInstallations.orgId, ctx.orgId),
         eq(githubInstallations.active, true),
       ),
@@ -89,7 +98,7 @@ export async function GET(request: NextRequest) {
     .limit(1);
 
   if (existingClaim) {
-    console.warn(`[github/callback] Installation ${numericInstallationId} already claimed by org ${existingClaim.orgId}`);
+    console.warn(`[github/callback] Account ${info.account.login} already claimed by org ${existingClaim.orgId}`);
     return NextResponse.redirect(
       `${appUrl}/dashboard/repositories?error=installation_claimed`,
     );
@@ -97,10 +106,6 @@ export async function GET(request: NextRequest) {
 
   let installSaved = false;
   try {
-    // Fetch installation details from GitHub to verify the installation exists
-    const info = await getInstallationInfo(numericInstallationId);
-
-    // Atomic upsert using the unique constraint on (org_id, installation_id)
     await db
       .insert(githubInstallations)
       .values({
@@ -111,10 +116,10 @@ export async function GET(request: NextRequest) {
         accountAvatarUrl: info.account.avatar_url,
       })
       .onConflictDoUpdate({
-        target: [githubInstallations.orgId, githubInstallations.installationId],
+        target: [githubInstallations.orgId, githubInstallations.accountLogin],
         set: {
+          installationId: numericInstallationId,
           active: true,
-          accountLogin: info.account.login,
           accountType: info.account.type,
           accountAvatarUrl: info.account.avatar_url,
           updatedAt: new Date(),
@@ -122,31 +127,7 @@ export async function GET(request: NextRequest) {
       });
     installSaved = true;
   } catch (error) {
-    console.error("Failed to fetch GitHub installation info:", error);
-    // Still save the installation with minimal info so the connection is
-    // established even if the GitHub API call fails (e.g. missing credentials).
-    // The account details will be populated later when repos are fetched.
-    try {
-      await db
-        .insert(githubInstallations)
-        .values({
-          orgId: ctx.orgId,
-          installationId: numericInstallationId,
-          accountLogin: "unknown",
-          accountType: "User",
-          accountAvatarUrl: "",
-        })
-        .onConflictDoUpdate({
-          target: [githubInstallations.orgId, githubInstallations.installationId],
-          set: {
-            active: true,
-            updatedAt: new Date(),
-          },
-        });
-      installSaved = true;
-    } catch (dbError) {
-      console.error("Failed to save GitHub installation fallback:", dbError);
-    }
+    console.error("Failed to save GitHub installation:", error);
   }
 
   // Redirect based on context — clear the CSRF cookie on the redirect response

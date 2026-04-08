@@ -133,9 +133,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let info;
   try {
-    const info = await getInstallationInfo(installationId);
+    info = await getInstallationInfo(installationId);
+  } catch (error) {
+    console.error("Failed to verify GitHub installation:", error);
+    return NextResponse.json(
+      { error: "Failed to verify installation with GitHub" },
+      { status: 502 },
+    );
+  }
 
+  try {
     await db
       .insert(githubInstallations)
       .values({
@@ -146,10 +155,10 @@ export async function POST(request: NextRequest) {
         accountAvatarUrl: info.account.avatar_url,
       })
       .onConflictDoUpdate({
-        target: [githubInstallations.orgId, githubInstallations.installationId],
+        target: [githubInstallations.orgId, githubInstallations.accountLogin],
         set: {
+          installationId,
           active: true,
-          accountLogin: info.account.login,
           accountType: info.account.type,
           accountAvatarUrl: info.account.avatar_url,
           updatedAt: new Date(),
@@ -160,37 +169,12 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ saved: true });
     response.cookies.delete(INSTALL_STATE_COOKIE);
     return response;
-  } catch (error) {
-    console.error("Failed to verify GitHub installation:", error);
-    // Save with minimal info so the connection is established even if
-    // the GitHub API verification fails
-    try {
-      await db
-        .insert(githubInstallations)
-        .values({
-          orgId: ctx.orgId,
-          installationId,
-          accountLogin: "unknown",
-          accountType: "User",
-          accountAvatarUrl: "",
-        })
-        .onConflictDoUpdate({
-          target: [githubInstallations.orgId, githubInstallations.installationId],
-          set: {
-            active: true,
-            updatedAt: new Date(),
-          },
-        });
-      const response = NextResponse.json({ saved: true });
-      response.cookies.delete(INSTALL_STATE_COOKIE);
-      return response;
-    } catch (dbError) {
-      console.error("Failed to save GitHub installation fallback:", dbError);
-      return NextResponse.json(
-        { error: "Failed to save installation" },
-        { status: 500 }
-      );
-    }
+  } catch (dbError) {
+    console.error("Failed to save GitHub installation:", dbError);
+    return NextResponse.json(
+      { error: "Failed to save installation" },
+      { status: 500 },
+    );
   }
 }
 

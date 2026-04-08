@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { githubInstallations, indexingJobs, organizations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { verifyWebhookSignature } from "@/lib/github-app";
 import { getTierPriority } from "@/lib/tier-priority";
 
@@ -45,10 +45,22 @@ export async function POST(request: NextRequest) {
 
     if (action === "deleted" || action === "suspend") {
       // Mark all matching installations as inactive
-      await db
+      const deactivated = await db
         .update(githubInstallations)
         .set({ active: false, updatedAt: new Date() })
-        .where(eq(githubInstallations.installationId, installationId));
+        .where(eq(githubInstallations.installationId, installationId))
+        .returning({ id: githubInstallations.id });
+
+      // Cascade: mark related cloud repos as disconnected
+      if (deactivated.length > 0) {
+        const { cloudRepos } = await import("@/lib/db/schema");
+        for (const inst of deactivated) {
+          await db
+            .update(cloudRepos)
+            .set({ status: "disconnected", updatedAt: new Date() })
+            .where(eq(cloudRepos.installationId, inst.id));
+        }
+      }
     }
 
     if (action === "unsuspend") {
@@ -68,11 +80,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Find which org this installation belongs to
+    // Find which org this installation belongs to (only active)
     const [inst] = await db
       .select({ orgId: githubInstallations.orgId })
       .from(githubInstallations)
-      .where(eq(githubInstallations.installationId, installationId))
+      .where(
+        and(
+          eq(githubInstallations.installationId, installationId),
+          eq(githubInstallations.active, true),
+        )
+      )
       .limit(1);
 
     if (!inst) {

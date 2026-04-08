@@ -3,7 +3,8 @@ import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { githubInstallations } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { listInstallationRepos } from "@/lib/github-app";
+import { listInstallationRepos, type GitHubRepo } from "@/lib/github-app";
+import { reconcileInstallation } from "@/lib/github-reconcile";
 
 /**
  * GET /api/github/repos — List all repos accessible via the org's GitHub App installations.
@@ -13,6 +14,9 @@ import { listInstallationRepos } from "@/lib/github-app";
  *
  * Each repo includes our internal installation UUID so it can be linked
  * when adding cloud repos for indexing.
+ *
+ * If an installation's ID is stale (404), auto-heals via reconciliation
+ * and retries. Surfaces disconnected accounts so the frontend can warn.
  */
 export async function GET() {
   try {
@@ -45,39 +49,78 @@ export async function GET() {
       });
     }
 
-    // Fetch repos from each installation in parallel
-    const repoResults = await Promise.allSettled(
-      installations.map(async (inst) => {
-        const repos = await listInstallationRepos(inst.installationId);
-        return repos.map((r) => ({
-          id: r.id,
-          fullName: r.full_name,
-          name: r.name,
-          owner: r.owner.login,
-          ownerAvatar: r.owner.avatar_url,
-          private: r.private,
-          defaultBranch: r.default_branch,
-          language: r.language,
-          description: r.description,
-          updatedAt: r.updated_at,
-          installationId: inst.id, // Our internal UUID
-          installationAccount: inst.accountLogin,
-        }));
-      })
-    );
+    const mapRepo = (r: GitHubRepo, inst: { id: string; accountLogin: string }) => ({
+      id: r.id,
+      fullName: r.full_name,
+      name: r.name,
+      owner: r.owner.login,
+      ownerAvatar: r.owner.avatar_url,
+      private: r.private,
+      defaultBranch: r.default_branch,
+      language: r.language,
+      description: r.description,
+      updatedAt: r.updated_at,
+      installationId: inst.id,
+      installationAccount: inst.accountLogin,
+    });
 
-    // Collect successful results, skip failed installations
-    const repos = repoResults.flatMap((result) =>
-      result.status === "fulfilled" ? result.value : []
-    );
+    // Fetch repos per installation with auto-heal on failure
+    const repoResults: Array<{ repos: ReturnType<typeof mapRepo>[]; error?: string; account: string }> = [];
+
+    for (const inst of installations) {
+      try {
+        const repos = await listInstallationRepos(inst.installationId);
+        repoResults.push({
+          account: inst.accountLogin,
+          repos: repos.map((r) => mapRepo(r, inst)),
+        });
+      } catch (err) {
+        // Installation ID may be stale — try auto-heal
+        console.warn(`[github/repos] Failed to list repos for ${inst.accountLogin} (install=${inst.installationId}):`, err);
+
+        try {
+          const result = await reconcileInstallation(inst.accountLogin, ctx.orgId, inst.id);
+          if (result.healed && result.newInstallationId) {
+            try {
+              const repos = await listInstallationRepos(result.newInstallationId);
+              repoResults.push({
+                account: inst.accountLogin,
+                repos: repos.map((r) => mapRepo(r, inst)),
+              });
+              continue;
+            } catch {
+              // Healed ID also failed — fall through to error
+            }
+          }
+          repoResults.push({
+            account: inst.accountLogin,
+            repos: [],
+            error: result.error || `Failed to fetch repos from ${inst.accountLogin}`,
+          });
+        } catch {
+          repoResults.push({
+            account: inst.accountLogin,
+            repos: [],
+            error: `Failed to reconnect ${inst.accountLogin}`,
+          });
+        }
+      }
+    }
+
+    // Flatten all repos
+    const allRepos = repoResults.flatMap((r) => r.repos);
 
     // Deduplicate by fullName (same repo could appear in multiple installations — unlikely but safe)
     const seen = new Set<string>();
-    const unique = repos.filter((r) => {
+    const unique = allRepos.filter((r) => {
       if (seen.has(r.fullName)) return false;
       seen.add(r.fullName);
       return true;
     });
+
+    const disconnected = repoResults
+      .filter((r) => r.error)
+      .map((r) => ({ accountLogin: r.account, error: r.error! }));
 
     return NextResponse.json({
       repos: unique,
@@ -87,6 +130,7 @@ export async function GET() {
         accountAvatarUrl: i.accountAvatarUrl,
       })),
       connected: true,
+      disconnected,
     });
   } catch (error) {
     console.error("Failed to fetch GitHub repos:", error);
