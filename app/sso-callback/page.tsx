@@ -10,8 +10,10 @@ export default function SSOCallbackPage() {
     >
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#1772E7] border-t-transparent" />
       <AuthenticateWithRedirectCallback
-        signInFallbackRedirectUrl="/onboarding"
+        signInFallbackRedirectUrl="/dashboard"
         signUpFallbackRedirectUrl="/onboarding"
+        signInForceRedirectUrl="/dashboard"
+        signUpForceRedirectUrl="/onboarding"
       />
     </div>
   );
