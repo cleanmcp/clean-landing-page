@@ -9,6 +9,7 @@ import { HeroAnimatedWrapper, HeroRotatingText } from "@/components/landing/Hero
 import ScrollRevealText from "@/components/landing/ScrollRevealText";
 import OrbitSection from "@/components/landing/OrbitSection";
 import DifferencesSection from "@/components/landing/DifferencesSection";
+import PromptTipsSection from "@/components/landing/PromptTipsSection";
 import MotionDiv from "@/components/landing/MotionDiv";
 import TokenChart from "@/components/landing/TokenChart";
 import ScrollStack, { ScrollStackItem } from "@/components/ScrollStack";
@@ -547,7 +548,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════ 10. DIFFERENCES (BEFORE / AFTER) ═══════════ */}
+      {/* ═══════════ 10. PROMPT TIPS ═══════════ */}
+      <PromptTipsSection />
+
+      {/* ═══════════ 11. DIFFERENCES (BEFORE / AFTER) ═══════════ */}
       <DifferencesSection />
 
       {/* ═══════════ 11. IMPACT / STATS SECTION ═══════════ */}

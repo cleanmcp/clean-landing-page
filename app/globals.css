@@ -236,6 +236,19 @@ html {
   animation: pulse-scale 3s ease-in-out infinite;
 }
 
+/* Prompt tip card */
+.prompt-card {
+  background: white;
+  border: 1px solid rgba(174, 216, 255, 0.3);
+  border-radius: 16px;
+  padding: 20px 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.prompt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(121, 192, 255, 0.2);
+}
+
 /* Feature card */
 .feature-card {
   background: white;

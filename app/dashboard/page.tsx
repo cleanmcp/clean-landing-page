@@ -800,11 +800,25 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center">
+                  <div className="py-6 text-center">
                     <Search className="mx-auto mb-3 h-10 w-10 text-muted-foreground/25" strokeWidth={1.5} />
-                    <p className="text-sm text-muted-foreground">No searches yet</p>
-                    <p className="mt-1 text-sm text-muted-foreground/70">
-                      Use the API or MCP to search code
+                    <p className="text-sm font-medium text-muted-foreground">Try asking Clean...</p>
+                    <div className="mt-3 flex flex-wrap justify-center gap-2 px-4">
+                      {[
+                        "Which API endpoints are accessible without authentication?",
+                        "What happens when checkout fails after payment succeeds?",
+                        "What parts of the codebase would break if we renamed the User table?",
+                      ].map((tip) => (
+                        <span
+                          key={tip}
+                          className="inline-block rounded-lg bg-muted/50 border border-border/50 px-3 py-1.5 text-xs text-muted-foreground leading-relaxed"
+                        >
+                          &ldquo;{tip}&rdquo;
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-3 text-xs text-muted-foreground/50">
+                      Use these prompts with any MCP-compatible agent
                     </p>
                   </div>
                 )}
