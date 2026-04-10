@@ -21,6 +21,7 @@ import {
   LogOut,
   Zap,
   ArrowRight,
+  RefreshCw,
 } from "lucide-react";
 import { PlanPickerDialog } from "@/components/dashboard/plan-picker-dialog";
 
@@ -37,6 +38,7 @@ interface NavItem {
 const MENU_ITEMS: NavItem[] = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview", exact: true },
   { href: "/dashboard/repositories", icon: GitBranch, label: "Repositories" },
+  { href: "/dashboard/cross-platform", icon: RefreshCw, label: "Cross-Platform" },
   { href: "/dashboard/keys", icon: Key, label: "Keys" },
   { href: "/dashboard/usage", icon: BarChart3, label: "Usage" },
   { href: "/dashboard/team", icon: Users, label: "Team" },
@@ -180,6 +182,7 @@ interface CommandItem {
 const COMMAND_ITEMS: CommandItem[] = [
   { id: "overview", label: "Overview", href: "/dashboard", icon: LayoutDashboard, section: "Pages", keywords: ["home", "dashboard"] },
   { id: "repos", label: "Repositories", href: "/dashboard/repositories", icon: GitBranch, section: "Pages", keywords: ["repos", "github", "index"] },
+  { id: "cross-platform", label: "Cross-Platform Sync", href: "/dashboard/cross-platform", icon: RefreshCw, section: "Pages", keywords: ["sync", "cross", "platform", "multi"] },
   { id: "keys", label: "API Keys", href: "/dashboard/keys", icon: Key, section: "Pages", keywords: ["api", "token", "secret"] },
   { id: "usage", label: "Usage", href: "/dashboard/usage", icon: BarChart3, section: "Pages", keywords: ["stats", "analytics", "metrics"] },
   { id: "team", label: "Team", href: "/dashboard/team", icon: Users, section: "Pages", keywords: ["members", "invite", "people"] },

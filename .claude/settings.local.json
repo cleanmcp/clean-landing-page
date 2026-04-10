@@ -28,11 +28,17 @@
       "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/app/dashboard -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.jsx \\\\\\))",
       "Bash(find /c/Users/Clarissa/Documents/Code/clean/test/clean-landing-page/components/ui -type f -name *.tsx)",
       "Bash(git reset:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(git pull:*)",
+      "Bash(ssh-add:*)",
+      "Bash(GIT_SSH_COMMAND=\"ssh -i /c/Users/Clarissa/.ssh/id_ed25519\" git pull:*)",
+      "Bash(git stash:*)",
+      "mcp__Neon__run_sql_transaction"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "clean"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

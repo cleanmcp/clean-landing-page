@@ -6,10 +6,51 @@ import { and, eq } from "drizzle-orm";
 import { listInstallationRepos } from "@/lib/github-app";
 
 /**
+ * Fetch repos using a GitHub PAT (fallback when no App installations exist).
+ */
+async function listReposViaPAT(): Promise<
+  { id: number; fullName: string; name: string; owner: string; ownerAvatar: string; private: boolean; defaultBranch: string; language: string | null; description: string | null; updatedAt: string }[]
+> {
+  const pat = process.env.GITHUB_PAT;
+  if (!pat) return [];
+
+  const repos: { id: number; fullName: string; name: string; owner: string; ownerAvatar: string; private: boolean; defaultBranch: string; language: string | null; description: string | null; updatedAt: string }[] = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(
+      `https://api.github.com/user/repos?per_page=100&page=${page}&sort=updated`,
+      { headers: { Authorization: `Bearer ${pat}`, Accept: "application/vnd.github+json" } },
+    );
+    if (!res.ok) break;
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) break;
+    for (const r of data) {
+      repos.push({
+        id: r.id,
+        fullName: r.full_name,
+        name: r.name,
+        owner: r.owner.login,
+        ownerAvatar: r.owner.avatar_url,
+        private: r.private,
+        defaultBranch: r.default_branch,
+        language: r.language,
+        description: r.description,
+        updatedAt: r.updated_at,
+      });
+    }
+    if (data.length < 100) break;
+    page++;
+  }
+  return repos;
+}
+
+/**
  * GET /api/github/repos — List all repos accessible via the org's GitHub App installations.
  *
  * Fetches repos from ALL active installations for the org (user might have
  * installed the app on their personal account + one or more GitHub orgs).
+ *
+ * Falls back to GITHUB_PAT if no installations are linked.
  *
  * Each repo includes our internal installation UUID so it can be linked
  * when adding cloud repos for indexing.
@@ -37,7 +78,16 @@ export async function GET() {
         )
       );
 
+    // Fallback: use GITHUB_PAT if no App installations exist
     if (installations.length === 0) {
+      const patRepos = await listReposViaPAT();
+      if (patRepos.length > 0) {
+        return NextResponse.json({
+          repos: patRepos,
+          installations: [],
+          connected: true,
+        });
+      }
       return NextResponse.json({
         repos: [],
         installations: [],

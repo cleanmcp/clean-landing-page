@@ -499,3 +499,101 @@ export const indexingJobs = pgTable(
     ).where(sql`status IN ('pending', 'running')`),
   ]
 );
+
+// ============================================================================
+// EARLY ACCESS (feature gate)
+// ============================================================================
+
+export const earlyAccessUsers = pgTable(
+  "early_access_users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    feature: text("feature").notNull(),
+    grantedAt: timestamp("granted_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("early_access_users_user_feature_uniq").on(
+      table.userId,
+      table.feature,
+    ),
+    index("early_access_users_feature_idx").on(table.feature),
+  ]
+);
+
+// ============================================================================
+// CROSS-PLATFORM SYNC
+// ============================================================================
+
+export const syncProjects = pgTable(
+  "sync_projects",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("sync_projects_org_id_idx").on(table.orgId),
+  ]
+);
+
+export const syncProjectRepos = pgTable(
+  "sync_project_repos",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => syncProjects.id, { onDelete: "cascade" }),
+    repoFullName: text("repo_full_name").notNull(),
+    stack: text("stack").notNull(),
+    branch: text("branch").notNull().default("main"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("sync_project_repos_project_id_idx").on(table.projectId),
+    uniqueIndex("sync_project_repos_project_repo_uniq").on(
+      table.projectId,
+      table.repoFullName,
+    ),
+  ]
+);
+
+export type SyncRunStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "partial_failure"
+  | "failed";
+
+export const syncRuns = pgTable(
+  "sync_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => syncProjects.id, { onDelete: "cascade" }),
+    sourceRepoFullName: text("source_repo_full_name").notNull(),
+    commitSha: text("commit_sha").notNull(),
+    branch: text("branch").notNull(),
+    status: text("status").$type<SyncRunStatus>().notNull().default("pending"),
+    targetCount: integer("target_count").notNull(),
+    completedCount: integer("completed_count").notNull().default(0),
+    failedCount: integer("failed_count").notNull().default(0),
+    error: text("error"),
+    startedAt: timestamp("started_at"),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("sync_runs_project_id_idx").on(table.projectId),
+    index("sync_runs_created_at_idx").on(table.createdAt),
+  ]
+);
