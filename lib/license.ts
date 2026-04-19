@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 const TIER_LIMITS: Record<string, { max_repos: number; max_users: number }> = {
   free: { max_repos: 3, max_users: 1 },
   pro: { max_repos: 25, max_users: 10 },
+  max: { max_repos: 999_999, max_users: 10 },
   enterprise: { max_repos: 999_999, max_users: 999_999 },
 };
 
