@@ -30,6 +30,10 @@ interface UsageData {
   apiKeys: UsageMetric;
   searches: UsageMetric;
   storage: UsageMetric;
+  creditBalance: number;
+  creditsPerSearch: number;
+  creditGrantMonthly: number;
+  creditPeriodEnd: string | null;
 }
 
 interface BillingData {
@@ -152,6 +156,92 @@ function UsageBarCard({
             style={{
               width: `${pct}%`,
               background: barColor ?? "linear-gradient(90deg, #1772E7, #5EB1FF)",
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function SearchesRemainingCard({
+  creditBalance,
+  creditsPerSearch,
+  creditGrantMonthly,
+  creditPeriodEnd,
+  searchesThisMonth,
+}: {
+  creditBalance: number;
+  creditsPerSearch: number;
+  creditGrantMonthly: number;
+  creditPeriodEnd: string | null;
+  searchesThisMonth: number;
+}) {
+  const unlimited = creditGrantMonthly === -1 || creditsPerSearch === 0;
+  const searchesRemaining = unlimited
+    ? null
+    : creditsPerSearch > 0
+      ? Math.floor(Math.max(0, creditBalance) / creditsPerSearch)
+      : 0;
+  const totalSearchesInGrant = unlimited
+    ? null
+    : creditsPerSearch > 0
+      ? Math.floor(creditGrantMonthly / creditsPerSearch)
+      : 0;
+  const pctUsed =
+    unlimited || !totalSearchesInGrant
+      ? 0
+      : Math.min(100, Math.max(0, 100 - (searchesRemaining! / totalSearchesInGrant) * 100));
+
+  return (
+    <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)] p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-[var(--dash-text-muted)]" strokeWidth={1.5} />
+            <span className="text-sm font-medium text-[var(--dash-text)]">Searches remaining</span>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span
+              className="text-5xl font-bold text-[var(--dash-text)]"
+              style={{ fontFamily: "var(--font-geist-mono)" }}
+            >
+              {unlimited ? "∞" : (searchesRemaining ?? 0).toLocaleString()}
+            </span>
+            {!unlimited && totalSearchesInGrant != null && (
+              <span className="text-lg text-[var(--dash-text-muted)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                / {totalSearchesInGrant.toLocaleString()}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-[var(--dash-text-muted)]">
+            {unlimited
+              ? "Unlimited on your current plan"
+              : creditPeriodEnd
+                ? `Resets ${formatDate(creditPeriodEnd)}`
+                : `${creditBalance.toLocaleString()} credits at ${creditsPerSearch}/search`}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-wide text-[var(--dash-text-muted)]">This month</p>
+          <p
+            className="mt-1 text-2xl font-semibold text-[var(--dash-text)]"
+            style={{ fontFamily: "var(--font-geist-mono)" }}
+          >
+            {searchesThisMonth.toLocaleString()}
+          </p>
+          <p className="text-xs text-[var(--dash-text-muted)]">logged searches</p>
+        </div>
+      </div>
+
+      {!unlimited && totalSearchesInGrant != null && totalSearchesInGrant > 0 && (
+        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--dash-bg)]">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${pctUsed}%`,
+              background: "linear-gradient(90deg, #1772E7, #5EB1FF)",
             }}
           />
         </div>
@@ -292,16 +382,23 @@ export default function UsagePage() {
         </div>
       </motion.div>
 
-      {/* Section 2: Usage Bars */}
+      {/* Section 2: Searches remaining (credit-based, primary) */}
       {usage && (
         <motion.div custom={1} initial="hidden" animate="visible" variants={fadeUp}>
+          <SearchesRemainingCard
+            creditBalance={usage.creditBalance}
+            creditsPerSearch={usage.creditsPerSearch}
+            creditGrantMonthly={usage.creditGrantMonthly}
+            creditPeriodEnd={usage.creditPeriodEnd}
+            searchesThisMonth={usage.searches.used ?? 0}
+          />
+        </motion.div>
+      )}
+
+      {/* Section 3: Usage Bars */}
+      {usage && (
+        <motion.div custom={2} initial="hidden" animate="visible" variants={fadeUp}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <UsageBarCard
-              label="Searches / mo"
-              icon={Search}
-              used={usage.searches.used}
-              limit={usage.searches.limit}
-            />
             <UsageBarCard
               label="API Keys"
               icon={Key}

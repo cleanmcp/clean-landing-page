@@ -5,6 +5,8 @@ import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getStripe } from "@/lib/stripe";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/billing - Return current plan info and Stripe invoices
 export async function GET() {
   try {

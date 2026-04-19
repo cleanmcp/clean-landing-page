@@ -6,6 +6,8 @@ import { generateOrgToken } from "@/lib/org-tokens";
 import { audit } from "@/lib/audit";
 import { eq, and, desc } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/org-tokens — list tokens for the user's org
 export async function GET() {
   try {
