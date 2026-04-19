@@ -590,16 +590,19 @@ export default function KeysPage() {
         </div>
       </div>
 
-      {/* License Key (owner only) */}
+      </>
+      )}
+
+      {/* Clean Activation Key — shown to every tier when a key is provisioned */}
       {orgInfo?.licenseKey && (
         <>
           <div className="border-t border-[var(--dash-border)]" />
           <div>
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-[var(--dash-text)]">License Key</h2>
+                <h2 className="text-3xl font-bold text-[var(--dash-text)]">Clean Activation Key</h2>
                 <p className="mt-1 text-sm text-[var(--dash-text-muted)]">
-                  Your Clean license key. Use this when running the installer.
+                  Use this key when running the Clean installer or configuring your MCP client.
                 </p>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--dash-accent)]/15 px-2.5 py-1 text-xs font-semibold text-[var(--dash-accent-light)]">
@@ -637,8 +640,6 @@ export default function KeysPage() {
             </div>
           </div>
         </>
-      )}
-      </>
       )}
 
       {/* Revoke API Key Dialog */}

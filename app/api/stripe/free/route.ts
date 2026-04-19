@@ -1,8 +1,8 @@
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { generateLicenseKey } from "@/lib/license";
 import { getAuthContext } from "@/lib/auth";
+import { provisionFreeTier } from "@/lib/provision";
 
 export async function POST() {
   const ctx = await getAuthContext();
@@ -12,12 +12,8 @@ export async function POST() {
     return Response.json({ error: "Only owners and admins can activate plans" }, { status: 403 });
   }
 
-  // Free tier is always cloud-hosted.
-  const hostingMode: "cloud" | "self-hosted" = "cloud";
-
   const orgId = ctx.orgId;
 
-  // Check if already has a license
   const [org] = await db
     .select({ licenseKey: organizations.licenseKey, tier: organizations.tier })
     .from(organizations)
@@ -27,28 +23,6 @@ export async function POST() {
     return Response.json({ error: "License already exists" }, { status: 409 });
   }
 
-  // Generate free tier license
-  const licenseKey = generateLicenseKey({
-    customerId: orgId,
-    tier: "free",
-    months: 12,
-  });
-
-  const claims = JSON.parse(
-    Buffer.from(licenseKey.split(".")[1], "base64").toString()
-  );
-
-  await db
-    .update(organizations)
-    .set({
-      tier: "free",
-      licenseKey,
-      licenseJti: claims.jti,
-      licenseExpiresAt: new Date(claims.exp * 1000),
-      licenseRevoked: false,
-      hostingMode,
-    })
-    .where(eq(organizations.id, orgId));
-
-  return Response.json({ success: true, licenseKey, hostingMode });
+  const { licenseKey } = await provisionFreeTier(orgId);
+  return Response.json({ success: true, licenseKey, hostingMode: "cloud" as const });
 }

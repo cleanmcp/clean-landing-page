@@ -8,6 +8,8 @@ import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getCloudTierLimits } from "@/lib/tier-limits";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/repos - List all indexed repositories
 export async function GET() {
   try {

@@ -1,10 +1,42 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
-import { orgMembers, users } from "@/lib/db/schema";
+import { orgMembers, organizations, users } from "@/lib/db/schema";
 import type { OrgRole } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { ensurePersonalOrg } from "@/lib/personal-org";
+import { provisionFreeTier } from "@/lib/provision";
+
+/**
+ * Ensure a free-tier org has a license + credits. Fires once per org on the
+ * first authenticated request after signup (the original `/api/stripe/free`
+ * POST was never called on the signup path, leaving 90% of free orgs with
+ * licenseKey=NULL and creditBalance=0). Idempotent — safe to call on every
+ * auth resolution; the update is a no-op once a license exists.
+ */
+async function ensureFreeTierProvisioned(orgId: string): Promise<void> {
+  const [org] = await db
+    .select({
+      tier: organizations.tier,
+      licenseKey: organizations.licenseKey,
+      creditPeriodStart: organizations.creditPeriodStart,
+    })
+    .from(organizations)
+    .where(eq(organizations.id, orgId))
+    .limit(1);
+
+  if (!org) return;
+  const needsLicense = !org.licenseKey;
+  const needsCredits = org.creditPeriodStart == null;
+  const isFreeLike = org.tier == null || org.tier === "free";
+  if (!isFreeLike || (!needsLicense && !needsCredits)) return;
+
+  try {
+    await provisionFreeTier(orgId);
+  } catch (err) {
+    console.error("[auth] auto-provision free tier failed", orgId, err);
+  }
+}
 
 /**
  * Get the current user's ID, orgId, and role from Clerk + database.
@@ -38,6 +70,7 @@ export async function getAuthContext(): Promise<{
       .limit(1);
 
     if (pinned) {
+      await ensureFreeTierProvisioned(pinned.orgId);
       return { userId, orgId: pinned.orgId, role: pinned.role };
     }
   }
@@ -51,6 +84,7 @@ export async function getAuthContext(): Promise<{
     .limit(1);
 
   if (membership) {
+    await ensureFreeTierProvisioned(membership.orgId);
     return { userId, orgId: membership.orgId, role: membership.role };
   }
 
@@ -68,6 +102,7 @@ export async function getAuthContext(): Promise<{
       .onConflictDoNothing();
 
     const orgId = await ensurePersonalOrg(userId, name);
+    await ensureFreeTierProvisioned(orgId);
     return { userId, orgId, role: "OWNER" };
   } catch {
     return null;

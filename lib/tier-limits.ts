@@ -35,18 +35,31 @@ export function getTierLimits(tier: string) {
 export type Tier = SelfHostedTier;
 
 /**
- * Credit grant amounts per tier.  Reset on subscription create, update, and
- * recurring invoice payment.  -1 = unlimited (engine convention).
+ * Full per-tier credit configuration. Engine charges `creditsPerSearch` credits
+ * per request and allows up to `overageCap` extra usage past the grant.
+ * -1 = unlimited (engine convention).
  */
-export const CREDIT_GRANTS: Record<string, number> = {
-  free: 10,
-  pro: 500,
-  max: 5_000,
-  enterprise: -1,
+export type CreditConfig = {
+  grantMonthly: number;
+  creditsPerSearch: number;
+  rolloverCap: number;
+  overageCap: number;
 };
 
+export const CREDIT_CONFIGS: Record<string, CreditConfig> = {
+  free: { grantMonthly: 200, creditsPerSearch: 20, rolloverCap: 0, overageCap: 0 },
+  pro: { grantMonthly: 10_000, creditsPerSearch: 20, rolloverCap: 5_000, overageCap: 5_000 },
+  max: { grantMonthly: 100_000, creditsPerSearch: 20, rolloverCap: 50_000, overageCap: 50_000 },
+  enterprise: { grantMonthly: -1, creditsPerSearch: 0, rolloverCap: -1, overageCap: -1 },
+};
+
+export function getCreditConfig(tier: string): CreditConfig {
+  return CREDIT_CONFIGS[tier] ?? CREDIT_CONFIGS.free;
+}
+
+/** @deprecated Use getCreditConfig(tier).grantMonthly. Kept for backwards compatibility. */
 export function getCreditGrant(tier: string): number {
-  return CREDIT_GRANTS[tier] ?? CREDIT_GRANTS.free;
+  return getCreditConfig(tier).grantMonthly;
 }
 
 /** Return cloud tier limits with Infinity replaced by -1 for JSON serialization (-1 = unlimited). */

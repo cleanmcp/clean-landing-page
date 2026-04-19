@@ -643,18 +643,20 @@ export default function DashboardPage() {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [showSetup, setShowSetup] = useState(true);
   const [hasLicense, setHasLicense] = useState<boolean | null>(null);
+  const [activityUpdatedAt, setActivityUpdatedAt] = useState<number | null>(null);
+  const [activityStale, setActivityStale] = useState(false);
+  const [activityNowTick, setActivityNowTick] = useState(0);
 
   const fetchActivity = useCallback(async () => {
     try {
       const res = await fetch("/api/dashboard/activity");
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data?.activity)) {
-          setActivity(data.activity);
-        }
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data?.activity)) setActivity(data.activity);
+      setActivityUpdatedAt(Date.now());
+      setActivityStale(false);
     } catch {
-      // silently ignore
+      setActivityStale(true);
     }
   }, []);
 
@@ -678,15 +680,15 @@ export default function DashboardPage() {
       fetch("/api/cloud-repos")
         .then((r) => (r.ok ? r.json() : { repos: [] }))
         .then((d) => setRepoCount(d.repos?.length ?? 0)),
-      fetch("/api/dashboard/activity")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
-          if (Array.isArray(d?.activity)) setActivity(d.activity);
-        }),
+      fetchActivity(),
     ]);
 
     const interval = setInterval(fetchActivity, ACTIVITY_POLL_MS);
-    return () => clearInterval(interval);
+    const tick = setInterval(() => setActivityNowTick((n) => n + 1), 1_000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(tick);
+    };
   }, [fetchActivity]);
 
   const statValues = {
@@ -816,10 +818,35 @@ export default function DashboardPage() {
         <TabsContent value="activity" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
-              <CardDescription>
-                Latest account and API events.
-              </CardDescription>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
+                  <CardDescription>
+                    Latest account and API events.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {activityUpdatedAt !== null && (
+                    <span
+                      className="flex items-center gap-1.5"
+                      title={new Date(activityUpdatedAt).toLocaleString()}
+                      data-activity-tick={activityNowTick}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${activityStale ? "bg-muted-foreground/60" : "bg-emerald-500"}`} />
+                      {`Updated ${Math.max(0, Math.floor((Date.now() - activityUpdatedAt) / 1000))}s ago`}
+                    </span>
+                  )}
+                  {activityStale && (
+                    <button
+                      type="button"
+                      onClick={() => fetchActivity()}
+                      className="rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
+                    >
+                      Retry
+                    </button>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {activity.length > 0 ? (

@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { searchLogs } from "@/lib/db/schema";
 import { eq, sql, desc, gte } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/stats - Real metrics from SearchLog
 export async function GET() {
   try {

@@ -13,6 +13,8 @@ import { engineFetch } from "@/lib/engine";
 import { audit } from "@/lib/audit";
 import { getTierPriority } from "@/lib/tier-priority";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/cloud-repos — List cloud repos for the current org.
  *
@@ -28,51 +30,38 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch engine repos + cloudRepos bookmarks + org tier + active jobs in parallel
-    const [engineResult, bookmarks, [org], activeJobs] = await Promise.all([
+    // Fetch engine repos + cloudRepos bookmarks + org tier + active jobs in parallel.
+    // If the engine fetch fails we track the reason so the client can render a
+    // banner instead of silently showing stale/empty state.
+    type EngineRepo = {
+      project_id: string;
+      repo: string;
+      branch: string;
+      status: string;
+      entity_count: number | null;
+      last_indexed_at: string | null;
+      error: string | null;
+      description?: string | null;
+      primary_language?: string | null;
+      tags?: string[] | null;
+      job?: {
+        phase: string;
+        phase_progress: number | null;
+        files_processed: number;
+        files_total: number;
+        entities_found: number;
+      } | null;
+    };
+    type EngineFetchOutcome = { ok: true; repos: EngineRepo[] } | { ok: false };
+
+    const [engineOutcome, bookmarks, [org], activeJobs] = await Promise.all([
       engineFetch(ctx.orgId, "/repos", { signal: AbortSignal.timeout(5_000) })
-        .then(async (res) => {
-          if (!res.ok) return [];
+        .then(async (res): Promise<EngineFetchOutcome> => {
+          if (!res.ok) return { ok: false };
           const data = await res.json();
-          return (data.repos ?? []) as Array<{
-            project_id: string;
-            repo: string;
-            branch: string;
-            status: string;
-            entity_count: number | null;
-            last_indexed_at: string | null;
-            error: string | null;
-            description?: string | null;
-            primary_language?: string | null;
-            tags?: string[] | null;
-            job?: {
-              phase: string;
-              phase_progress: number | null;
-              files_processed: number;
-              files_total: number;
-              entities_found: number;
-            } | null;
-          }>;
+          return { ok: true, repos: (data.repos ?? []) as EngineRepo[] };
         })
-        .catch(() => [] as Array<{
-          project_id: string;
-          repo: string;
-          branch: string;
-          status: string;
-          entity_count: number | null;
-          last_indexed_at: string | null;
-          error: string | null;
-          description?: string | null;
-          primary_language?: string | null;
-          tags?: string[] | null;
-          job?: {
-            phase: string;
-            phase_progress: number | null;
-            files_processed: number;
-            files_total: number;
-            entities_found: number;
-          } | null;
-        }>),
+        .catch((): EngineFetchOutcome => ({ ok: false })),
       db.select().from(cloudRepos).where(eq(cloudRepos.orgId, ctx.orgId)),
       db.select({ tier: organizations.tier }).from(organizations).where(eq(organizations.id, ctx.orgId)).limit(1),
       db.select().from(indexingJobs).where(and(
@@ -82,6 +71,8 @@ export async function GET() {
     ]);
 
     const limits = getCloudTierLimits(org?.tier ?? "free");
+    const engineResult = engineOutcome.ok ? engineOutcome.repos : [];
+    const engineError = engineOutcome.ok ? null : "engine_unreachable";
 
     // Separate deleted markers from active bookmarks
     const deletedNames = new Set(
@@ -235,6 +226,7 @@ export async function GET() {
     return NextResponse.json({
       repos: merged,
       repoLimit: limits.repos === Infinity ? null : limits.repos,
+      ...(engineError ? { engineError } : {}),
     });
   } catch (error) {
     console.error("Failed to fetch cloud repos:", error);

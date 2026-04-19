@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { searchLogs } from "@/lib/db/schema";
 import { eq, sql, and, gte } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export interface DailyDataPoint {
   date: string; // YYYY-MM-DD
   searches: number;

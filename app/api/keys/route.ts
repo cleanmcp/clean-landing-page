@@ -9,6 +9,8 @@ import { eq, isNull, and, desc, sql } from "drizzle-orm";
 import { organizations } from "@/lib/db/schema";
 import { getTierLimits, getCloudTierLimits, getCloudTierLimitsForSync } from "@/lib/tier-limits";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/keys - List all API keys for the user
 export async function GET() {
   try {

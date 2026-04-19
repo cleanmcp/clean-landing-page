@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { getEngineStatus } from "@/lib/engine";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/engine-status - Check engine connection status
 export async function GET() {
   try {

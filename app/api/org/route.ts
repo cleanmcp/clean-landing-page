@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { organizations, orgMembers, users, apiKeys } from "@/lib/db/schema";
 import { and, eq, isNull, sql } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/org - Get current user's organization info
 export async function GET() {
   try {

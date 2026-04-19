@@ -5,6 +5,8 @@ import { organizations, orgMembers, cloudRepos, apiKeys, searchLogs } from "@/li
 import { eq, and, isNull, sql, gte } from "drizzle-orm";
 import { getCloudTierLimits } from "@/lib/tier-limits";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const ctx = await getAuthContext();
@@ -13,7 +15,13 @@ export async function GET() {
     }
 
     const [org] = await db
-      .select({ tier: organizations.tier })
+      .select({
+        tier: organizations.tier,
+        creditBalance: organizations.creditBalance,
+        creditsPerSearch: organizations.creditsPerSearch,
+        creditGrantMonthly: organizations.creditGrantMonthly,
+        creditPeriodEnd: organizations.creditPeriodEnd,
+      })
       .from(organizations)
       .where(eq(organizations.id, ctx.orgId))
       .limit(1);
@@ -58,6 +66,10 @@ export async function GET() {
       apiKeys: { used: keyCount?.count ?? 0, limit: toLimit(limits.apiKeys) },
       searches: { used: searchCount?.count ?? 0, limit: toLimit(limits.searchesPerMonth) },
       storage: { used: null, limit: toLimit(limits.storageMb) },
+      creditBalance: org?.creditBalance ?? 0,
+      creditsPerSearch: org?.creditsPerSearch ?? 20,
+      creditGrantMonthly: org?.creditGrantMonthly ?? 0,
+      creditPeriodEnd: org?.creditPeriodEnd?.toISOString() ?? null,
     });
   } catch (error) {
     console.error("Failed to fetch usage:", error);

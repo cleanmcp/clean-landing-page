@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { auditLogs, apiKeys, users } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export interface ActivityItem {
   id: string;
   action: string;
