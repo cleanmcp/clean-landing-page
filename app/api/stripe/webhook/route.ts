@@ -13,7 +13,24 @@ import { eq, sql, and } from "drizzle-orm";
 import type Stripe from "stripe";
 import { syncAllKeysForOrg } from "@/lib/engine-sync";
 import { enforceRepoLimits } from "@/lib/enforce-repo-limits";
-import { getCreditGrant } from "@/lib/tier-limits";
+import { getCreditConfig } from "@/lib/tier-limits";
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+function creditFields(tier: string, periodEnd: Date | null) {
+  const c = getCreditConfig(tier);
+  const now = new Date();
+  return {
+    creditBalance: c.grantMonthly,
+    creditGrantMonthly: c.grantMonthly,
+    creditsPerSearch: c.creditsPerSearch,
+    creditRolloverCap: c.rolloverCap,
+    overageCap: c.overageCap,
+    overageUsed: 0,
+    creditPeriodStart: now,
+    creditPeriodEnd: periodEnd ?? new Date(now.getTime() + THIRTY_DAYS_MS),
+  };
+}
 
 /** Safely convert a Stripe Unix timestamp (seconds) to a Date, or null. */
 function toDate(ts: number | null | undefined): Date | null {
@@ -98,7 +115,7 @@ async function handleSubscriptionCreated(sub: Stripe.Subscription) {
         seatLimit,
         licenseExpiresAt: periodEnd,
         stripeCustomerId: sub.customer as string,
-        creditBalance: getCreditGrant(tier),
+        ...creditFields(tier, periodEnd),
       })
       .where(eq(organizations.id, orgId)),
   ]);
@@ -149,7 +166,7 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
   if (orgId) {
     await db
       .update(organizations)
-      .set({ tier, seatLimit, licenseExpiresAt: periodEnd, creditBalance: getCreditGrant(tier) })
+      .set({ tier, seatLimit, licenseExpiresAt: periodEnd, ...creditFields(tier, periodEnd) })
       .where(eq(organizations.id, orgId));
 
     // Re-sync all keys so engine picks up new tier limits + credit balance
@@ -188,7 +205,7 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   if (orgId) {
     await db
       .update(organizations)
-      .set({ tier: "free", seatLimit: 1, licenseExpiresAt: null, creditBalance: getCreditGrant("free") })
+      .set({ tier: "free", seatLimit: 1, licenseExpiresAt: null, ...creditFields("free", null) })
       .where(eq(organizations.id, orgId));
 
     // Re-sync all keys so engine picks up free-tier limits
@@ -297,7 +314,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
       .update(organizations)
       .set({
         ...(invoicePeriodEnd ? { licenseExpiresAt: invoicePeriodEnd } : {}),
-        creditBalance: getCreditGrant(tier),
+        ...creditFields(tier, invoicePeriodEnd),
       })
       .where(eq(organizations.id, orgId));
 
