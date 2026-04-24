@@ -23,7 +23,6 @@ const TEXT_IN_IMAGE = new Set(["talunt", "leanmcp"]);
 // Display names for logos (filename stem → label)
 const DISPLAY_NAMES: Record<string, string> = {
   githired: "GitHired",
-  jigsaw: "Jigsaw",
   leanmcp: "LeanMCP",
   matcap: "MatCap",
   quirk: "Quirk",
