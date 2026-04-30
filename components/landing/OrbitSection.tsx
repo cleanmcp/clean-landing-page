@@ -36,7 +36,7 @@ export default function OrbitSection() {
       </motion.div>
 
       {/* Bottom ellipse glow — before orbit wrapper so orbit renders on top */}
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-[-195px] w-[2800px] h-[420px] pointer-events-none">
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-[-285px] w-[2800px] h-[420px] pointer-events-none">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img alt="" src={`${A}/orbit-gradient.svg`} className="w-full h-full" />
       </div>
@@ -47,7 +47,7 @@ export default function OrbitSection() {
         style={{ transformOrigin: "50% 100%" }}
       >
         {/* Radial glow behind the rings */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[236px] w-[994px] h-[564px] pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[286px] w-[994px] h-[564px] pointer-events-none">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" src={`${A}/orbit-glow.svg`} className="w-full h-full" />
         </div>

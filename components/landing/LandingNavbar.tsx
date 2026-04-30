@@ -76,7 +76,8 @@ export default function LandingNavbar() {
         </Link>
 
         <div className="relative z-10 hidden items-center gap-6 lg:flex">
-          <a href="https://discord.gg/f7fA4aze9F" target="_blank" rel="noopener noreferrer" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Discord</a>
+          <a href="#agent" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Agent</a>
+          <a href="#mcp" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">MCP</a>
           <a href="https://docs.tryclean.ai" target="_blank" rel="noopener noreferrer" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Docs</a>
           <Link href="/pricing-plan" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Pricing</Link>
           <Link href="/sign-in" className="text-base font-semibold text-white hover:opacity-80 transition-opacity">Sign In</Link>
@@ -118,13 +119,18 @@ export default function LandingNavbar() {
             >
               <div className="flex flex-col gap-1">
                 <a
-                  href="https://discord.gg/f7fA4aze9F"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#agent"
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg px-4 py-3 text-base font-semibold text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  Discord
+                  Agent
+                </a>
+                <a
+                  href="#mcp"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-4 py-3 text-base font-semibold text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  MCP
                 </a>
                 <a
                   href="https://docs.tryclean.ai"

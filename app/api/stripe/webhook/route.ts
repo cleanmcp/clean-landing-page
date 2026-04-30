@@ -14,6 +14,7 @@ import type Stripe from "stripe";
 import { syncAllKeysForOrg } from "@/lib/engine-sync";
 import { enforceRepoLimits } from "@/lib/enforce-repo-limits";
 import { getCreditGrant } from "@/lib/tier-limits";
+import { getAgentSubPlanFromPriceId } from "@/lib/agent-tiers";
 
 /** Safely convert a Stripe Unix timestamp (seconds) to a Date, or null. */
 function toDate(ts: number | null | undefined): Date | null {
@@ -62,16 +63,54 @@ async function handleSubscriptionCreated(sub: Stripe.Subscription) {
 
   if (!userId || !orgId) {
     console.warn(
-      `[webhook] customer.subscription.created: missing metadata userId/orgId on sub ${sub.id}`
+      `[webhook] customer.subscription.created: missing metadata userId/orgId on sub ${sub.id}. metadata=${JSON.stringify(sub.metadata)}`
     );
     return;
   }
 
   const firstItem = sub.items.data[0];
   const priceId = firstItem?.price.id ?? "";
-  const { plan, tier, seatLimit } = getPlanFromPriceId(priceId);
+  console.log(
+    `[webhook] subscription.created sub=${sub.id} price=${priceId} user=${userId} org=${orgId}`
+  );
   const periodStart = toDate(firstItem?.current_period_start) ?? new Date();
   const periodEnd = toDate(firstItem?.current_period_end) ?? new Date();
+
+  // Agent product — persist metering fields and DO NOT touch organizations.tier.
+  // The agent subscription is independent of any cloud subscription the user
+  // might also hold; they bill separately and unlock different surfaces.
+  const agentPlan = getAgentSubPlanFromPriceId(priceId);
+  if (agentPlan) {
+    console.log(`[webhook] → agent branch tier=${agentPlan.tierKey} limit=${agentPlan.tokensLimit}`);
+    await db
+      .insert(subscriptions)
+      .values({
+        stripeSubscriptionId: sub.id,
+        stripeCustomerId: sub.customer as string,
+        orgId,
+        userId,
+        status: sub.status as SubscriptionStatus,
+        plan: agentPlan.plan,
+        stripePriceId: priceId,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        canceledAt: toDate(sub.canceled_at),
+        trialEnd: toDate(sub.trial_end),
+        product: "agent",
+        tierKey: agentPlan.tierKey,
+        tokensUsedThisPeriod: 0,
+        tokensLimit: agentPlan.tokensLimit,
+      })
+      .onConflictDoNothing();
+    console.log(`[webhook] ✓ inserted agent subscription ${sub.id}`);
+    return;
+  }
+
+  console.log(`[webhook] → cloud branch (no agent plan matched price ${priceId})`);
+
+  // Cloud product (existing flow) — unchanged.
+  const { plan, tier, seatLimit } = getPlanFromPriceId(priceId);
 
   await Promise.all([
     db
@@ -120,9 +159,35 @@ async function handleSubscriptionCreated(sub: Stripe.Subscription) {
 async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
   const firstItem = sub.items.data[0];
   const priceId = firstItem?.price.id ?? "";
-  const { tier, seatLimit } = getPlanFromPriceId(priceId);
   const periodStart = toDate(firstItem?.current_period_start) ?? new Date();
   const periodEnd = toDate(firstItem?.current_period_end) ?? new Date();
+
+  // Agent product: update metering fields and reset usage for the new period.
+  const agentPlan = getAgentSubPlanFromPriceId(priceId);
+  if (agentPlan) {
+    await db
+      .update(subscriptions)
+      .set({
+        status: sub.status as SubscriptionStatus,
+        stripePriceId: priceId,
+        plan: agentPlan.plan,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        canceledAt: toDate(sub.canceled_at),
+        trialEnd: toDate(sub.trial_end),
+        product: "agent",
+        tierKey: agentPlan.tierKey,
+        tokensUsedThisPeriod: 0,
+        tokensLimit: agentPlan.tokensLimit,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(subscriptions.stripeSubscriptionId, sub.id));
+    return;
+  }
+
+  // Cloud product (existing flow) — unchanged.
+  const { tier, seatLimit } = getPlanFromPriceId(priceId);
 
   await db
     .update(subscriptions)
@@ -168,9 +233,9 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
 // customer.subscription.deleted
 // ---------------------------------------------------------------------------
 async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
-  // Grab orgId before updating
+  // Grab orgId + product before updating so cloud cleanup only runs for cloud subs.
   const [existing] = await db
-    .select({ orgId: subscriptions.orgId })
+    .select({ orgId: subscriptions.orgId, product: subscriptions.product })
     .from(subscriptions)
     .where(eq(subscriptions.stripeSubscriptionId, sub.id))
     .limit(1);
@@ -183,6 +248,11 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
       updatedAt: sql`now()`,
     })
     .where(eq(subscriptions.stripeSubscriptionId, sub.id));
+
+  // Agent subs: cancellation flips status; nothing to reset on organizations.
+  if (existing?.product === "agent") {
+    return;
+  }
 
   const orgId = existing?.orgId ?? sub.metadata?.orgId ?? null;
   if (orgId) {
@@ -219,13 +289,16 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
       : invoice.customer?.id ?? null;
 
   // 1. Try to find subscription row by Stripe sub ID
-  let subRecord: { id: string; orgId: string | null; userId: string } | null = null;
+  let subRecord:
+    | { id: string; orgId: string | null; userId: string; product: string }
+    | null = null;
   if (stripeSubId) {
     const [row] = await db
       .select({
         id: subscriptions.id,
         orgId: subscriptions.orgId,
         userId: subscriptions.userId,
+        product: subscriptions.product,
       })
       .from(subscriptions)
       .where(eq(subscriptions.stripeSubscriptionId, stripeSubId))
@@ -281,6 +354,20 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
       paidAt,
     })
     .onConflictDoNothing();
+
+  // Agent-product sub: reset the per-period token counter on renewal.
+  // Skip the cloud-only licenseExpiresAt/creditBalance reset below.
+  if (subRecord?.product === "agent" && subRecord.id) {
+    await db
+      .update(subscriptions)
+      .set({
+        tokensUsedThisPeriod: 0,
+        currentPeriodEnd: toDate(invoice.period_end) ?? sql`current_period_end`,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(subscriptions.id, subRecord.id));
+    return;
+  }
 
   // Keep license_expires_at in sync with invoice period and reset credits
   const invoicePeriodEnd = toDate(invoice.period_end);
@@ -350,6 +437,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  console.log(`[webhook] → ${event.type} (${event.id})`);
+
   // Idempotency guard — wrapped so a DB hiccup here doesn't block everything
   try {
     const alreadyProcessed = await markEventProcessed(event.id, event.type);
@@ -378,6 +467,25 @@ export async function POST(request: NextRequest) {
       case "invoice.payment_failed":
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
+      case "invoice_payment.paid": {
+        // v2 event (Stripe API 2026+). Payload is an InvoicePayment, not an
+        // Invoice, so we fetch the underlying invoice and reuse the existing
+        // handler. This fires in addition to `invoice.payment_succeeded` on
+        // most accounts, but on some 2026+ accounts it's the only signal.
+        const ip = event.data.object as { invoice?: string };
+        if (ip.invoice && typeof ip.invoice === "string") {
+          try {
+            const invoice = await getStripe().invoices.retrieve(ip.invoice);
+            await handleInvoicePaymentSucceeded(invoice);
+          } catch (err) {
+            console.error(
+              `[webhook] invoice_payment.paid: failed to retrieve invoice ${ip.invoice}:`,
+              err,
+            );
+          }
+        }
+        break;
+      }
       default:
         break;
     }

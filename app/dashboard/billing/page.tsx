@@ -7,6 +7,7 @@ import {
   ExternalLink,
   RefreshCw,
   ShieldCheck,
+  Terminal,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { PlanPickerDialog } from "@/components/dashboard/plan-picker-dialog";
@@ -23,6 +24,16 @@ interface Invoice {
   pdf: string | null;
 }
 
+interface AgentSubscription {
+  tier: "starter" | "pro" | "enterprise";
+  tierLabel: string;
+  status: string;
+  tokensUsed: number;
+  tokensLimit: number;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+}
+
 interface BillingData {
   tier: "free" | "pro" | "max" | "enterprise";
   licenseExpiresAt: string | null;
@@ -30,6 +41,7 @@ interface BillingData {
   stripeSubscriptionId: string | null;
   subscriptionStatus: string | null;
   invoices: Invoice[];
+  agent: AgentSubscription | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -277,8 +289,128 @@ export default function BillingPage() {
         </div>
       </motion.div>
 
+      {/* Clean Agent subscription card — only shown when the user has an
+          agent sub. Independent from cloud. */}
+      {data?.agent && (
+        <motion.div custom={1} initial="hidden" animate="visible" variants={fadeUp}>
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+            <div className="border-b border-[var(--dash-border)] px-5 py-4">
+              <h3 className="text-base font-semibold text-[var(--dash-text)]">
+                Clean Agent Subscription
+              </h3>
+              <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
+                Unlocks the desktop command center.
+              </p>
+            </div>
+            <div className="px-5 py-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--dash-accent-glow)]">
+                    <Terminal className="h-5 w-5 text-[var(--dash-accent-light)]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-[var(--dash-text)]">
+                        {data.agent.tierLabel}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-[var(--dash-accent)]/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-[var(--dash-accent-light)]">
+                        Agent
+                      </span>
+                      {data.agent.status === "past_due" && (
+                        <span className="inline-flex items-center rounded-full bg-[var(--dash-warning)]/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-[var(--dash-warning)]">
+                          Past due
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
+                      Renews{" "}
+                      <span className="font-medium">
+                        {formatDate(data.agent.currentPeriodEnd)}
+                      </span>
+                      {data.agent.cancelAtPeriodEnd && " — cancels at period end"}
+                    </p>
+                    {data.agent.tokensLimit > 0 && (
+                      <div className="mt-3 w-64">
+                        <div className="h-1.5 overflow-hidden rounded-full bg-[var(--dash-bg)]">
+                          <div
+                            className="h-full bg-[var(--dash-accent)]"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.round(
+                                  (data.agent.tokensUsed / data.agent.tokensLimit) * 100,
+                                ),
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <p
+                          className="mt-1 text-xs text-[var(--dash-text-muted)]"
+                          style={{ fontFamily: "var(--font-geist-mono)" }}
+                        >
+                          {data.agent.tokensUsed.toLocaleString()} /{" "}
+                          {data.agent.tokensLimit.toLocaleString()} tokens
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={handleManageSubscription}
+                    disabled={portalLoading}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface)] px-4 py-2 text-sm font-medium text-[var(--dash-text)] transition-colors hover:border-[var(--dash-border-strong)] hover:bg-[var(--dash-surface-hover)] disabled:opacity-50"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Manage
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Clean Agent upsell — shown when the user has no agent sub. Keeps the
+          two products visible side by side. */}
+      {!loading && !data?.agent && (
+        <motion.div custom={1} initial="hidden" animate="visible" variants={fadeUp}>
+          <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
+            <div className="border-b border-[var(--dash-border)] px-5 py-4">
+              <h3 className="text-base font-semibold text-[var(--dash-text)]">
+                Clean Agent Subscription
+              </h3>
+              <p className="mt-0.5 text-sm text-[var(--dash-text-muted)]">
+                Desktop command center for AI coding. Separate from Cloud.
+              </p>
+            </div>
+            <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--dash-bg)]">
+                  <Terminal className="h-5 w-5 text-[var(--dash-text-muted)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[var(--dash-text)]">
+                    No Agent subscription
+                  </p>
+                  <p className="text-sm text-[var(--dash-text-muted)]">
+                    Starter from $15/mo · Pro $50/mo
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setUpgradeOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--dash-accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1565d8]"
+              >
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Invoice history */}
-      <motion.div custom={1} initial="hidden" animate="visible" variants={fadeUp}>
+      <motion.div custom={2} initial="hidden" animate="visible" variants={fadeUp}>
         <div className="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)]">
           <div className="border-b border-[var(--dash-border)] px-5 py-4">
             <h3 className="text-base font-semibold text-[var(--dash-text)]">

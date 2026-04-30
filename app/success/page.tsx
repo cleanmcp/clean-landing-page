@@ -3,9 +3,27 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 
 export default function SuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <SuccessPageInner />
+    </Suspense>
+  );
+}
+
+function SuccessPageInner() {
+  const searchParams = useSearchParams();
+  const isAgent = searchParams.get("product") === "agent";
+  const subtext = isAgent
+    ? "Your Clean Agent subscription is active. Return to the desktop app — it will unlock within a few seconds."
+    : "Your subscription is active. Your team now has access to all plan features.";
+  const ctaHref = isAgent ? "/dashboard/billing" : "/dashboard";
+  const ctaLabel = isAgent ? "View Billing →" : "Go to Dashboard →";
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a]">
       {/* Background dot grid */}
@@ -55,7 +73,7 @@ export default function SuccessPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.35 }}
           >
-            Your subscription is active. Your team now has access to all plan features.
+            {subtext}
           </motion.p>
 
           {/* CTA */}
@@ -65,10 +83,10 @@ export default function SuccessPage() {
             transition={{ duration: 0.5, delay: 0.45 }}
           >
             <Link
-              href="/dashboard"
+              href={ctaHref}
               className="btn-primary inline-flex items-center gap-2 rounded-xl px-8 py-3 text-base font-medium"
             >
-              Go to Dashboard →
+              {ctaLabel}
             </Link>
           </motion.div>
         </motion.div>

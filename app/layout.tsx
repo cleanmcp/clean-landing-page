@@ -21,7 +21,7 @@ const zodiak = localFont({
   variable: "--font-display",
   weight: "100 900",
   style: "normal",
-  display: "optional",
+  display: "swap",
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({

@@ -16,11 +16,11 @@ export function HeroAnimatedWrapper({ children }: { children: React.ReactNode })
   );
 }
 
-export function HeroRotatingText() {
+export function HeroRotatingText({ texts }: { texts?: string[] } = {}) {
   return (
     <div className="h-[80px] sm:h-[120px] lg:h-[165px] flex items-end justify-center overflow-hidden min-w-[320px] sm:min-w-[540px] lg:min-w-[750px]">
       <RotatingText
-        texts={["agents", "engineers", "codebases"]}
+        texts={texts ?? ["agents", "engineers", "codebases"]}
         mainClassName="text-[60px] sm:text-[100px] lg:text-[140px] font-bold tracking-[-2px] sm:tracking-[-4px] inline-flex items-center justify-center"
         style={{ fontFamily: "var(--font-display)" }}
         elementLevelClassName="gradient-text-hero"

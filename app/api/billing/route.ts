@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { organizations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { organizations, subscriptions } from "@/lib/db/schema";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { getStripe } from "@/lib/stripe";
+import { AGENT_TIERS, type AgentTierKey } from "@/lib/agent-tiers";
 
 // GET /api/billing - Return current plan info and Stripe invoices
 export async function GET() {
@@ -76,6 +77,40 @@ export async function GET() {
       }
     }
 
+    // Agent subscription (if any). Independent from cloud — a user can hold
+    // both, one, or neither.
+    const [agentSub] = await db
+      .select({
+        status: subscriptions.status,
+        tierKey: subscriptions.tierKey,
+        tokensUsedThisPeriod: subscriptions.tokensUsedThisPeriod,
+        tokensLimit: subscriptions.tokensLimit,
+        currentPeriodEnd: subscriptions.currentPeriodEnd,
+        cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+      })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, ctx.userId),
+          eq(subscriptions.product, "agent"),
+          inArray(subscriptions.status, ["active", "trialing", "past_due"]),
+        ),
+      )
+      .orderBy(desc(subscriptions.currentPeriodEnd))
+      .limit(1);
+
+    const agent = agentSub
+      ? {
+          tier: (agentSub.tierKey ?? "starter") as AgentTierKey,
+          tierLabel: AGENT_TIERS[(agentSub.tierKey ?? "starter") as AgentTierKey]?.label ?? "Starter",
+          status: agentSub.status,
+          tokensUsed: agentSub.tokensUsedThisPeriod ?? 0,
+          tokensLimit: agentSub.tokensLimit ?? 0,
+          currentPeriodEnd: agentSub.currentPeriodEnd.toISOString(),
+          cancelAtPeriodEnd: agentSub.cancelAtPeriodEnd,
+        }
+      : null;
+
     return NextResponse.json({
       tier: org.tier ?? "free",
       licenseExpiresAt: org.licenseExpiresAt
@@ -85,6 +120,7 @@ export async function GET() {
       stripeSubscriptionId: org.stripeSubscriptionId ?? null,
       subscriptionStatus,
       invoices,
+      agent,
     });
   } catch (error) {
     console.error("Failed to fetch billing info:", error);

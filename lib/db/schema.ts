@@ -282,6 +282,15 @@ export type SubscriptionStatus =
 
 export type Plan = "free" | "pro" | "max" | "enterprise";
 
+// Product namespace — "cloud" = existing search/cloud product, "agent" = desktop agent.
+// The same table backs both; handlers filter by product so the two price catalogs
+// never interfere with each other.
+export type SubscriptionProduct = "cloud" | "agent";
+
+// Agent-product tier keys. Distinct from cloud `Plan` so pricing decisions for one
+// product can move independently of the other.
+export type AgentTierKey = "starter" | "pro" | "enterprise";
+
 export const subscriptions = pgTable(
   "subscriptions",
   {
@@ -302,6 +311,12 @@ export const subscriptions = pgTable(
     cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
     canceledAt: timestamp("canceled_at"),
     trialEnd: timestamp("trial_end"),
+    // Agent-product metering. `product` defaults to 'cloud' so existing rows
+    // keep their semantics; agent rows populate tier_key + tokens_limit.
+    product: text("product").$type<SubscriptionProduct>().notNull().default("cloud"),
+    tierKey: text("tier_key").$type<AgentTierKey>(),
+    tokensUsedThisPeriod: integer("tokens_used_this_period").notNull().default(0),
+    tokensLimit: integer("tokens_limit"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -310,6 +325,42 @@ export const subscriptions = pgTable(
     index("subscriptions_user_id_idx").on(table.userId),
     index("subscriptions_stripe_customer_id_idx").on(table.stripeCustomerId),
     index("subscriptions_status_idx").on(table.status),
+    index("subscriptions_user_product_status_idx").on(
+      table.userId,
+      table.product,
+      table.status,
+    ),
+  ]
+);
+
+// ============================================================================
+// USAGE EVENTS (agent-product token metering)
+// ============================================================================
+
+export const usageEvents = pgTable(
+  "usage_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subscriptionId: uuid("subscription_id").references(
+      () => subscriptions.id,
+      { onDelete: "set null" },
+    ),
+    userId: text("user_id").notNull(),
+    sessionId: text("session_id"),
+    // Clients pass an idempotency key per turn so retries don't double-count.
+    idempotencyKey: text("idempotency_key").unique(),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    cacheReadTokens: integer("cache_read_tokens"),
+    cacheCreationTokens: integer("cache_creation_tokens"),
+    billableTokens: integer("billable_tokens").notNull(),
+    isByok: boolean("is_byok").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("usage_events_subscription_id_idx").on(table.subscriptionId),
+    index("usage_events_user_id_idx").on(table.userId),
+    index("usage_events_created_at_idx").on(table.createdAt),
   ]
 );
 

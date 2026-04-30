@@ -1,0 +1,957 @@
+{
+  "projectId": "55234ffc6e5a",
+  "rootPath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page",
+  "files": {
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\drizzle.config.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\drizzle.config.ts",
+      "contentHash": "a83a6217862cc8474ce15bd333f84d32cab35a6996376f343f9707c4e822cf03",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\layout.tsx",
+      "contentHash": "3197862b2e5fdd21124d3aa77ca872af2a3dd6b5b99c98fbe896dcb8f8186400",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\Grainient.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\Grainient.tsx",
+      "contentHash": "5171140baf7e5c855af96faf8b258e72d2eaebadaf405e77358dba85f60502fe",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\eslint.config.mjs": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\eslint.config.mjs",
+      "contentHash": "870f1adccecf3051cbcd9fd307cef51d7633cf510979c181a81f4b1797273493",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\empty-state.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\empty-state.tsx",
+      "contentHash": "60d2ead7e104d6b0d3733864593341da4266f0dc53939f5386ff525b43b0b629",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\admin\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\admin\\page.tsx",
+      "contentHash": "b496e655d43990388542d22130413e8f24dd7f1174417df291e2b0039b5cabfc",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\contact\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\contact\\layout.tsx",
+      "contentHash": "69aca5ff74949304f084d3edbc121f420da76437b51167272f49cc7015c4e28d",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\beta-agreement\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\beta-agreement\\layout.tsx",
+      "contentHash": "40cdc2ca1c9a4c6404f2ac3044ee0688c5f06ae861373115159532f184ac2667",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\client-layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\client-layout.tsx",
+      "contentHash": "de6e0cb715e9861c9bd623241a72bd60e7e633484475562c5ce9d6cc56911af6",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\Icons.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\Icons.tsx",
+      "contentHash": "012a059608fda65581b129f6d28f2b6f83cd9481c0789a6386f8ed05e016a7e0",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\not-found.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\not-found.tsx",
+      "contentHash": "7e8380bcf6c1168ffc0da97f42e647e851a6300153b7e8ebca1380cbd0a10846",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\middleware.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\middleware.ts",
+      "contentHash": "19d2d58265795910fe693345a9eb9687bd1e381c24c9d1428d064233eb86a03e",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\forgot-password\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\forgot-password\\page.tsx",
+      "contentHash": "1823ee9e6c06151f163118beb9e9e702dc837e0ce8381f20a8a00d05bb41619c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\billing\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\billing\\route.ts",
+      "contentHash": "0f971d8a9fd24272e1f0dd666cb32700823dcd2b6bb9a058c1aea14b82b22465",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cloud-repos\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cloud-repos\\route.ts",
+      "contentHash": "d5af549ffceff83535a9aacb3620fa2a732739a4db4608d7672d3cb25a65eae7",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\plan-picker-dialog.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\plan-picker-dialog.tsx",
+      "contentHash": "885e5567c429d5fee03f1823fa7bbbbea982ade8b988932a9a9194533e1c8324",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\invites\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\invites\\route.ts",
+      "contentHash": "ee7871442f6b7d9775cbbd8b0941b9240eb429931cfd0a6764d69d00c51d7b6d",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\engine-status\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\engine-status\\route.ts",
+      "contentHash": "233f02a79848e2c9636047fe2241273807ac031dce92bbdb78a5048872d50064",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org-tokens\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org-tokens\\route.ts",
+      "contentHash": "7c5ba5e5c43d0047ea63b4629cb3e68adc53e8e400108f3c5bab5743cb0c027c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\repos\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\repos\\route.ts",
+      "contentHash": "3685b4790dc907a2a2e7b6befdcc7368e87928b78c2ed1079bba5c7eb18a74d1",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stats\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stats\\route.ts",
+      "contentHash": "42adbeec95a80685eb6df23be35e84c75102608f3b838374475c81df1379adf2",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\license\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\license\\route.ts",
+      "contentHash": "ed6f49ba2618bed51fb554f142556d0e0e143a5281b2aec32cbbfa4ff2b228dd",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\onboarding\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\onboarding\\route.ts",
+      "contentHash": "78b5a3e3c7a4336bf878856607058038fbc0725b972f4b9eabf2f3eb462a5b0f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\keys\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\keys\\route.ts",
+      "contentHash": "8c533d23980cc06de6a3536800c39703ba8ab84adf05d9cc9ef2842c0be7e657",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\usage\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\usage\\route.ts",
+      "contentHash": "a9ef97415c4d95032455acd60ef8d9eb7515c8b591c3b29cb49ff08ae6868ef7",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\waitlist\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\waitlist\\route.ts",
+      "contentHash": "d245511022e770a0247179699d2db311edfe99b9f34694f2539125971675ec62",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\beta-agreement\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\beta-agreement\\page.tsx",
+      "contentHash": "fcbc92b40e488e17dba077f234e2fa091189d84a712d41931cfb13bfb4a3e855",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\contact\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\contact\\page.tsx",
+      "contentHash": "8d027fb39b502cbf5ec5e58c5b48cc77c6d8b257c9576f2a9378783c351fa008",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\IconSprite.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\IconSprite.tsx",
+      "contentHash": "f3648c36ceb07641cc8c0e9574484e35752abc5c98785bd6ffa14979a6cbc16c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\error.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\error.tsx",
+      "contentHash": "0be9e5ff81f26a889fb6783cbe06dcc07f77406c8d0dcd9813fdaadf463e1ad0",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\invite\\[token]\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\invite\\[token]\\page.tsx",
+      "contentHash": "3fc8389d45d217b12f184fbf910b75890a7916f60bf5de623ba51e20ed775fab",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org\\route.ts",
+      "contentHash": "3a8698082c252b1428fcebdf7a1b531e7bbf9db7e44ab6b821f4a67eea21d170",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\billing\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\billing\\page.tsx",
+      "contentHash": "3912ff13153590460c78682f6ec1fe55bd9877a5ca1b2007f127c913e10bd1c4",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\hooks\\use-mobile.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\hooks\\use-mobile.ts",
+      "contentHash": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\admin.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\admin.ts",
+      "contentHash": "6fd3def22d8a23373ded1188b7aab18fdc32d2a2f3cb13b3a8e64fea7d2190de",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\page.tsx",
+      "contentHash": "d7a0557988f47a40011874c9ef90deecaca4c959f854ccbf66389d04dfb3fdcf",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\next-env.d.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\next-env.d.ts",
+      "contentHash": "083e23c4c5e7761db151134ea1ef7896120c86c5888cdc8a861f534f7e86d6fd",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\admin\\waitlist\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\admin\\waitlist\\route.ts",
+      "contentHash": "59da81aaa106c3e1493e80753d659109605ed878a9c57012772c6ec89d832ffe",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cli\\create-key\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cli\\create-key\\route.ts",
+      "contentHash": "663af1881cabbb212b30533470a0560e99ce87cfb53ff57284abd0b466fd183f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cli\\provision\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cli\\provision\\route.ts",
+      "contentHash": "26fd3c50ba9095701ca0ccbceb20932d8a165b064862d0695e4c2bea31bdb629",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\dashboard\\activity\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\dashboard\\activity\\route.ts",
+      "contentHash": "089754350604804f14a66d0900c0ac58a9a2ab15ef727faed0883671cc53d2e9",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cron\\followup\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\cron\\followup\\route.ts",
+      "contentHash": "696e563d57fc453db433401aa28b8f8a3477e794472f5bbdd9f0b0584d139483",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\sidebar.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\sidebar.tsx",
+      "contentHash": "ad84ef93027c7e7ebdad574f1775c2371ff7380a608c8c2f8e07d963627515f8",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\install\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\install\\route.ts",
+      "contentHash": "44fd73ed852f542a1669f89fd20b782896a4540a42e3cb7ea45388ab9ec922b9",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\callback\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\callback\\route.ts",
+      "contentHash": "9063ae6943cb446ee750c1361ea609265fe1ccee93ad016622825f068127b527",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\repos\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\repos\\route.ts",
+      "contentHash": "60497afc7f8edd0e91decb190863ae8e2ae1e318a62121c1f1607ebf62523822",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\billing\\portal\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\billing\\portal\\route.ts",
+      "contentHash": "4634f4b675d5028f917e8e44366cb020a3d9490d25a943159edf41bd13811c54",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\invites\\accept\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\invites\\accept\\route.ts",
+      "contentHash": "c591cff3e69994c5f5ca3b0ead3d35d2db2df6185fc7a30e6e95750eeaacfff7",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\internal\\clone-token\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\internal\\clone-token\\route.ts",
+      "contentHash": "08d896eba7eecb1858d41b18c720e9cce48e04b2054a6ef01218ccab1eaf2692",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\dashboard\\stats\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\dashboard\\stats\\route.ts",
+      "contentHash": "6cab16bc5c62d47c0013aaeba203cf60a135ec72f11d6a773736c1d388b5d0df",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\internal\\search-usage\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\internal\\search-usage\\route.ts",
+      "contentHash": "81301a3bc8031a412139e3a5e3f786adf8817399508e03da4194b9d0786730bb",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\checkout\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\checkout\\route.ts",
+      "contentHash": "f427c77f8d4a9a0479b20ea228b36e38ef8a6b6b87709bbb3f36b5ac1b3d8848",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\purchase\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\purchase\\route.ts",
+      "contentHash": "a07cece28411779ed5bccc764b47cd7f6b870b6cdbe99f1613ce5df7a5dcfa14",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\free\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\free\\route.ts",
+      "contentHash": "353ebea1d858f8c007aad809a10ed6c6ee2c46afe6dd1642139477abd7f59872",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\waitlist\\check\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\waitlist\\check\\route.ts",
+      "contentHash": "fb30bc9552401e5c202b7b2f0a1a81085806acb18a6bff52636b8d1032f773c8",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\webhooks\\clerk\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\webhooks\\clerk\\route.ts",
+      "contentHash": "155da0090becc158365c9d8d61eb669f7e5c0ef1f02b23b47138008fa8743a6c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org\\members\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org\\members\\route.ts",
+      "contentHash": "bd07608f573f3e6a87a1d4ef9da2dfc720211a412985f9a3c6b808e6766cf535",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\webhooks\\github\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\webhooks\\github\\route.ts",
+      "contentHash": "cb03318db04862cd033d5dca79ac0d25851afac11ec1e40572eb9a8879359728",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\provision\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\provision\\route.ts",
+      "contentHash": "1a7dccc319c0df9775e28101923330a00ac5659d27fdc072067a1ad0a986663a",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\webhook\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\stripe\\webhook\\route.ts",
+      "contentHash": "4d3c5bf83b6e5ef883616e81e026b1af212e5710c535288fad4a44375a493b74",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\layout.tsx",
+      "contentHash": "4ceb49c38442bd273c3ee742c0667984933f42ad9edbb96f4333252e4790a93f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\Navbar.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\Navbar.tsx",
+      "contentHash": "6d88dd4d8abc1d94f1a413964b6e0027fee4c782faedbd19049c5c6f0d8143d2",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\onboarding\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\onboarding\\page.tsx",
+      "contentHash": "db90be61b09cf2ef8f25b0fa5512260ae7c0d9c48cec388f8319a2ed86c2fee8",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\api-keys.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\api-keys.ts",
+      "contentHash": "1a5d02c6544ef5c5cd534175dcdd6da69e6a5cfb2e87654d9266c277829c4b8e",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\next.config.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\next.config.ts",
+      "contentHash": "467a400f23315642a669b30713a62e9fb0a7e6029939ba14823f2dec2734adf0",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\robots.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\robots.ts",
+      "contentHash": "9f147506a1e349da0cb928fb369a0bff919a89871417d5bb78fa9a24dee7145c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\tutorial-overlay.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\dashboard\\tutorial-overlay.tsx",
+      "contentHash": "2b4ebdc861f0b8789a822573fc34c92724616fe73ead02e908a67204d70301d3",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\install\\link\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\github\\install\\link\\route.ts",
+      "contentHash": "658db67909b32edec7575296f3781805880019e4c74c75aa6cedaf9d7c95bcb9",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org-tokens\\[id]\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\org-tokens\\[id]\\route.ts",
+      "contentHash": "0e38a352db51f48dd7fd14a0e6d182393e8b9c2a01283fc597b4608b3ec37c4f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\keys\\[id]\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\keys\\[id]\\route.ts",
+      "contentHash": "961f7b994e5d300c9357a8614290bb38fba62e5d1bb22c8fcef4a38064106841",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\license\\status\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\license\\status\\route.ts",
+      "contentHash": "7f5a77ff03a1c530cc6b5b17ffe9a95e11b5399810fe1d2ae9c5947056eb46cb",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\DifferencesSection.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\DifferencesSection.tsx",
+      "contentHash": "3f1b7c4c1aab6e5c5d44781de893feb6a47123ba5c2922857d6dfab1455b601a",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\page.tsx",
+      "contentHash": "d0d958590ba0e4ece14047155f3aace9985a8b83eb15acb36fc4ddea168ea932",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\keys\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\keys\\page.tsx",
+      "contentHash": "78e41e353a1bb192e2c96365e4ea09526f4cc0e024f5acd0ad21638e42171811",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\PostHogProvider.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\PostHogProvider.tsx",
+      "contentHash": "5e118cb89d7456b0ccd30f0006aebc538c7ad5a66ae49c7ea8f28c04c3d8a912",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\pricing-plan\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\pricing-plan\\layout.tsx",
+      "contentHash": "dc3407299a3946a5485d84c9f1aead993850dfef39c29b792d0a3db96611b060",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\privacy\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\privacy\\layout.tsx",
+      "contentHash": "534734d4f58ac5fc1df298ff9d2fed40a1530f5b20d89dae2cc39f9803ef0b30",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\audit.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\audit.ts",
+      "contentHash": "137bc02c8c1fc17b607514b3bbb8047d75408e1c044b7b0875ce482941b5183d",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\postcss.config.mjs": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\postcss.config.mjs",
+      "contentHash": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sitemap.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sitemap.ts",
+      "contentHash": "87364d74e902dac7c42b8f377c52e64e9154957472d38a62d033b4c3cd1c8f5c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\admin\\waitlist\\[id]\\route.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\api\\admin\\waitlist\\[id]\\route.ts",
+      "contentHash": "63351f41c5b9041383b52ee45378d73f36aa94e7fd1e1e2bc0ac643cfc2d168c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\onboarding\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\onboarding\\page.tsx",
+      "contentHash": "fe8204e727615d84998bb47e38145412c60ac5345fe8be01173a418a6960735b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\HeroContent.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\HeroContent.tsx",
+      "contentHash": "8da2504c9f2c5226bac4e86957b84d785b0d0d11b4876ca69cc38e583614f83c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\RotatingText.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\RotatingText.tsx",
+      "contentHash": "772f440cc1cea68e189a904270272f628dc9377f8fca236871ce5e97b19c7580",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\keys\\new\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\keys\\new\\page.tsx",
+      "contentHash": "4d3f18fd35e76ce36f5a9e9d1f3bc09c67ba236261a3932d4e6fd6ecce3c9c15",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\auth.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\auth.ts",
+      "contentHash": "9e629976f58a39d352a4834c3a5e50a640b122d597304c67b35cf053e2332664",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\privacy\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\privacy\\page.tsx",
+      "contentHash": "c3e6b869a11e1a60be3b0a9cfdfca5f8e972f1fcaa7ef80c166b05242097a86c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sign-up\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sign-up\\page.tsx",
+      "contentHash": "0417a8225374a2ed3d1e567b7edc5b45f3384f5c4b21aec32490dec1f2fffc59",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\pricing-plan\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\pricing-plan\\page.tsx",
+      "contentHash": "e26e7ac8ef52c2ef7d92ef0ea343e1397ae2018a2da30f4f20bad64f162bde4b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sign-in\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sign-in\\page.tsx",
+      "contentHash": "4cc4e4b9f9ffd3f96da3920580fdbe6943b2060ed4b6535fb630fdd98e4866b1",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\LandingNavbar.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\LandingNavbar.tsx",
+      "contentHash": "f0240000d24c126a1560e977ac796ebbcaa46c034d189786be01f0d6abc69963",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\usage\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\usage\\page.tsx",
+      "contentHash": "e6c8e028110027a578e40a44a7a3a56613e104ac5bf194ad09ad29b05728d6a6",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\repositories\\cloud-repos.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\repositories\\cloud-repos.tsx",
+      "contentHash": "650698417dd0b3bc8c37dbb87689cf7d0bf65f702af3fc49ccc17221c3e2512d",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\team\\invite-modal.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\team\\invite-modal.tsx",
+      "contentHash": "f56d7eb4e7fb898ccace4a088dd58f2b4897e679d62f32c6ad720fad34dbbce6",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\clerk-org.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\clerk-org.ts",
+      "contentHash": "60658b4366a19a884c60314f80aca8d2e55367eadc13fb3b45d7ccd63a0e4ef1",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ScrollStack.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ScrollStack.tsx",
+      "contentHash": "103ed202c97327cbca368b1793870d7ddc010697ed51e50696ce4036e002682b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\types\\ogl.d.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\types\\ogl.d.ts",
+      "contentHash": "1f9cfcb5c8bcf4dec5e22ec0f2930b74fd31bf8f967d55da48dde8fba0a15c95",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sso-callback\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\sso-callback\\page.tsx",
+      "contentHash": "901e849d3a5729e1638081322d8391ca8fa1a2c93e4335e05a636ae5a53b0b4f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\terms\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\terms\\layout.tsx",
+      "contentHash": "084b1b6d84ca70444855cb7fdfb43a9645dcd474aecca2735c866e9ee5011318",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\waitlist\\layout.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\waitlist\\layout.tsx",
+      "contentHash": "5bb73b50c62ef8345adadf11fb4550401fa44de8a6e38c9c5eb7a794f4bdfd19",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\repositories\\add\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\repositories\\add\\page.tsx",
+      "contentHash": "a882c4f988a89e2a7004f933b154e2877f7e55eb6ff351040983e2e7a17e826a",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\scripts\\delete-seed-data.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\scripts\\delete-seed-data.ts",
+      "contentHash": "a999288fb1b34d9c6a00f700dd185364252244ea70919b368893828c8683858b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\success\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\success\\page.tsx",
+      "contentHash": "7987a8b8d9ca36d864e01e7f04f1a0f5ea6316edb3607af17322e3eb2721c621",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\team\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\team\\page.tsx",
+      "contentHash": "5108fdf48596a288eff69aca30bc6e16796b75be6e2e88f48366812218a6ab42",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\MotionDiv.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\MotionDiv.tsx",
+      "contentHash": "0bd0bcba983429a6bbad77fbb9e538d738554be4bdc9f32e9601e84d4dba761e",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\repositories\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\dashboard\\repositories\\page.tsx",
+      "contentHash": "9b09914c2ff770af5c7d8b95334139d528b63d7b3725cbbf46f8a581f554800f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\email.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\email.ts",
+      "contentHash": "f4ab5e77aba61d250f5fb1a757bac854aa624c7fd07d0e736be2194618957584",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ScrollVelocity.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ScrollVelocity.tsx",
+      "contentHash": "34df98e0ae8c9d2b2aade80a758c9324490923dc0cc5c5cdd34737ae815c4036",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\terms\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\terms\\page.tsx",
+      "contentHash": "4a35a87feb08dea6aa5a44c86b83ce7aa2b4806d73713dd3b361171c9b4eb6a7",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\waitlist\\page.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\app\\waitlist\\page.tsx",
+      "contentHash": "dd29ed86112cec345fc18ae4a0daaa5c1580740a3096f1963d985b2a1c5d71b2",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\video\\video_1\\index.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\video\\video_1\\index.ts",
+      "contentHash": "7be8cb476904797bc8504390a0ff81ba5fe73afd57408ecb330776520852c09e",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567707
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\scripts\\seed-search-logs.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\scripts\\seed-search-logs.ts",
+      "contentHash": "409ddbe9468a386fca01db388273b736956fa8845b3cc05e83991790e4e74724",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\db\\index.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\db\\index.ts",
+      "contentHash": "a0c01332bab837576a00dc0efc46fd316d1e07c5b68fc6d5db980c595d89e773",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\OrbitSection.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\OrbitSection.tsx",
+      "contentHash": "e86869803ebc50066b2b056235bfcfd11c2397a4bea01b6077b345387da69ca7",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\enforce-repo-limits.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\enforce-repo-limits.ts",
+      "contentHash": "a706a04919cf39030cc6d7f3bd0872bcda88957e690af150e8f856c4ab06a72e",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\video\\video_1\\Root.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\video\\video_1\\Root.tsx",
+      "contentHash": "880dc3a61c50f59420e1150d300f75c225cf4bab6763966278c025c35b601c1b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\db\\schema.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\db\\schema.ts",
+      "contentHash": "34b5ef6bcce973aaff187c1de556f083ed0cc291fde55156ab42d300b691feaa",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\engine-sync.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\engine-sync.ts",
+      "contentHash": "8ba59ba8f93516317eda672061e7b15fcb6bc43c979e4b36f85836da5e3ed01b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\video\\video_1\\SyncedContext.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\video\\video_1\\SyncedContext.tsx",
+      "contentHash": "5e7a598027353d94ecc702fc1f3efb3f25e21a1737b801b892bb80f960f15d2b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\upgrade-modal.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\upgrade-modal.tsx",
+      "contentHash": "cac83a46ff9debb2ea23392ba45ff6da4eacb988d82f9b741c0966428f1c7ed2",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\ScrollRevealText.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\ScrollRevealText.tsx",
+      "contentHash": "c1ba90d587f7820bb6e584f69bc0b1197254614b435a6fe5199f2cd15a4e6818",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\alert-dialog.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\alert-dialog.tsx",
+      "contentHash": "b27da98808e3a0fbbb42044525a3aff37c3de355c9256d93fa88ee68b533d956",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\systaliko-ui\\cards\\cards-stack.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\systaliko-ui\\cards\\cards-stack.tsx",
+      "contentHash": "ed2deb915f6b27ec9bf7a22a87699911f52e6ebb559c91da375256c449b774d4",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\engine.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\engine.ts",
+      "contentHash": "3d0ff4c5f76acd9311dc5382b551cf531e412014b7bed7da6a6971986d73d49c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\avatar.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\avatar.tsx",
+      "contentHash": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\TokenChart.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\TokenChart.tsx",
+      "contentHash": "58046d637201bb4946bbf6eec15d045e86c54ac39790c26b4eec6563f6333b0f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\TrustedByMarquee.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\landing\\TrustedByMarquee.tsx",
+      "contentHash": "004bf9339b2a7631d758d527689cbcdbd98671e951d2b75b76c9b55875ae557b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\badge.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\badge.tsx",
+      "contentHash": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-app.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-app.ts",
+      "contentHash": "e97e8e797fc7ba5f039210f00062a92a0924860aee933ed6cd1b2875fa846809",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\button.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\button.tsx",
+      "contentHash": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-clerk.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-clerk.ts",
+      "contentHash": "53a0500bfd6a6f2dbd87671f6995cea20d3e52fe8df4a5f6ac24d0f1e4dc8457",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-install-state.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-install-state.ts",
+      "contentHash": "e3ce8b346fd9aeec646c88f32cc154d03dbb7e134af66dcc8c6e5a4d016add87",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\card.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\card.tsx",
+      "contentHash": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-oauth.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-oauth.ts",
+      "contentHash": "4dc73b5525445d672ae26055379fd623977f511924a5ce7e7fcb9ff58cf24a94",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\chart.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\chart.tsx",
+      "contentHash": "bee01ff8816c27eee41cde57cc53f74d855b0ed13e7b23fcd5cd0194313fbfc0",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-reconcile.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\github-reconcile.ts",
+      "contentHash": "0ac5e8e1df989a80724595e1b750db72bb5cb9fbd9efc2136b3fd90808ded57b",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\dialog.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\dialog.tsx",
+      "contentHash": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\license.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\license.ts",
+      "contentHash": "0ce801188290492c3dcfb7f409cb1604242f875f11876ced58335e262fbde5f1",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\dropdown-menu.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\dropdown-menu.tsx",
+      "contentHash": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\input.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\input.tsx",
+      "contentHash": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\mcp-setup.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\mcp-setup.ts",
+      "contentHash": "dda81b19fab25d264d1eb1911ae516273141d5deedbdb13e55c59dcbdb63a4d9",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\label.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\label.tsx",
+      "contentHash": "e7dd9557a44ca32bef1ff0fcac441b89c81b35fc8833f4ab140fa73e6a95437e",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\org-tokens.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\org-tokens.ts",
+      "contentHash": "26df4c367734c91071f4916a8164ba22e20ae6681306c30bcf6342acce196820",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\progress.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\progress.tsx",
+      "contentHash": "34afe53ed7b9aa5a943c0926316588877b926d6e938a08626453e89145f6f769",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\personal-org.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\personal-org.ts",
+      "contentHash": "c2147a665395553af062559786618dd1ea87d4ecef37f484e353de84748bd8dc",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\slug.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\slug.ts",
+      "contentHash": "9f242daa4e1a4a92d9d2aa4fa27a765f5b804bf49e0dcc2a46147f07ef6ead6a",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\select.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\select.tsx",
+      "contentHash": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\stripe.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\stripe.ts",
+      "contentHash": "e414839f1f3923d9672a2365ef6a7f8a74445845b752dacbb6b926e4a13f7131",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\separator.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\separator.tsx",
+      "contentHash": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\sync-seats.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\sync-seats.ts",
+      "contentHash": "68b3b5ded180e4925d0f154f4de4dc74eb7bfef21d16dfc341b13f26e1377b37",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\tier-limits.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\tier-limits.ts",
+      "contentHash": "5141b408a1f7eaf49b1edffebc501ff9e154f3e77f6d35837f7254ab7dcdbdb4",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\sheet.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\sheet.tsx",
+      "contentHash": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\tier-priority.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\tier-priority.ts",
+      "contentHash": "49b2292974a5495402b0f7a4e04b84c9888d4946c403355ddda642f4f73f19da",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\skeleton.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\skeleton.tsx",
+      "contentHash": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\utils.ts": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\lib\\utils.ts",
+      "contentHash": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\table.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\table.tsx",
+      "contentHash": "cf65cec1e11b263e994c08f14714cacc32ed88e3c7354da56824a6b4579b945f",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\tabs.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\tabs.tsx",
+      "contentHash": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    },
+    "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\tooltip.tsx": {
+      "filePath": "C:\\Users\\Clarissa\\Documents\\Code\\clean\\test\\clean-landing-page\\components\\ui\\tooltip.tsx",
+      "contentHash": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4",
+      "entityCount": 0,
+      "lastIndexedAt": 1776151567708
+    }
+  },
+  "totalEntities": 758,
+  "gitHead": "6b2d8fe531ceac51e7ee552cbfb87901802b2b0f",
+  "lastIndexedAt": 1776151567708
+}
